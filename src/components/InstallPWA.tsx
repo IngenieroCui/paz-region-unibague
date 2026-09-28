@@ -93,19 +93,19 @@ export default function InstallPWA() {
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
             <path 
               d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" 
-              fill="var(--color-primary-main)"
+              fill="#FFD200"
               opacity="0.2"
             />
             <path 
               d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" 
-              stroke="var(--color-primary-main)"
+              stroke="#FFD200"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
             <path 
               d="M12 8v8m-4-4h8" 
-              stroke="var(--color-primary-main)"
+              stroke="#FFD200"
               strokeWidth="2"
               strokeLinecap="round"
             />
@@ -114,7 +114,7 @@ export default function InstallPWA() {
         
         <div className="install-pwa-text">
           <h3>📱 Instalar aplicación</h3>
-          <p>Instala esta plantilla en tu dispositivo para acceso rápido y trabajar sin conexión</p>
+          <p>Instala la plataforma en tu dispositivo para acceso rápido y trabajar sin conexión</p>
         </div>
         
         <div className="install-pwa-actions">

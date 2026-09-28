@@ -3,9 +3,9 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--bg-primary);
-  border-top: 2px solid var(--color-primary);
-  box-shadow: var(--shadow-xl);
+  background: #0D192B;
+  border-top: 4px solid #FFD200;
+  box-shadow: 0 -4px 12px rgba(13, 25, 43, 0.2);
   z-index: 1000;
   animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -37,7 +37,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-primary-light);
+  background: rgba(255, 210, 0, 0.1);
   border-radius: var(--radius-lg);
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -60,14 +60,14 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #FFFFFF;
   margin-bottom: var(--spacing-xs);
 }
 
 .install-pwa-text p {
   margin: 0;
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.8);
   line-height: 1.4;
 }
 
@@ -91,39 +91,39 @@
 }
 
 .install-primary {
-  background: var(--color-primary);
-  color: var(--color-primary-contrast);
+  background: #FFD200;
+  color: #0D192B;
   padding: var(--spacing-sm) var(--spacing-lg);
   font-size: 0.9375rem;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .install-primary:hover {
-  background: var(--color-primary-dark);
-  box-shadow: var(--shadow-lg);
+  background: #FFC107;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
   transform: translateY(-1px);
 }
 
 .install-primary:active {
   transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .install-dismiss {
   background: transparent;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.6);
   padding: var(--spacing-sm);
   width: 36px;
   height: 36px;
 }
 
 .install-dismiss:hover {
-  background: var(--color-neutral-100);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
 }
 
 .install-dismiss:active {
-  background: var(--color-neutral-200);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Responsive */
