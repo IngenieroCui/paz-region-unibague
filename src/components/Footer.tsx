@@ -19,13 +19,13 @@ const Footer = () => {
         {/* Izquierda - Brand */}
         <div className="footer-section footer-brand">
           <div className="brand-logo">
-            <img src="/imagenes_corporativas/web/icon-192.png" alt="Usocoello Logo" className="brand-img" />
+            <img src="/logos/web/icon-192.png" alt="Universidad de Ibagué Logo" className="brand-img" />
           </div>
           <div className="brand-text">
             <h3 style={{ fontSize: '14px', maxWidth: '300px', whiteSpace: 'normal', lineHeight: '1.2' }}>
-              ASOCIACION DE USUARIOS DEL DISTRITO DE ADECUACION DE TIERRAS DE LOS RIOS COELLO Y CUCUANA
+              UNIVERSIDAD DE IBAGUÉ
             </h3>
-            <p>USOCOELLO </p>
+            <p>PROGRAMA DE PAZ Y REGIÓN</p>
           </div>
         </div>
 
@@ -95,7 +95,7 @@ const Footer = () => {
             © {new Date().getFullYear()} Todos los derechos reservados
           </p>
           <p className="footer-entity">
-            USOCOELLO
+            Universidad de Ibagué - Paz y Región
           </p>
         </div>
       </div>
