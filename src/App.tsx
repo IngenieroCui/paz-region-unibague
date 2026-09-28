@@ -23,7 +23,9 @@ function App() {
             <button className="btn-secondary" onClick={() => navigate('/estudiantes/login')}>
               Ingreso Estudiantes
             </button>
-            <button className="btn-primary">Ingreso Empresas</button>
+            <button className="btn-primary" onClick={() => navigate('/empresas/login')}>
+              Ingreso Empresas
+            </button>
             <button className="btn-secondary" onClick={() => navigate('/admin/login')}>
               Ingreso Docentes
             </button>
