@@ -1,123 +1,82 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
 import './App.css'
 import Footer from './components/Footer'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="app-container">
+      <header className="header">
+        <div className="logo-container">
+          <img src="/logos/web/icon-192.png" alt="Unibagué Logo" className="logo" />
+          <div className="logo-text">
+            <span className="brand-title">Paz y Región</span>
+            <span className="brand-subtitle">Universidad de Ibagué</span>
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+        <nav className="nav-menu">
+          <button className="nav-link">Inicio</button>
+          <button className="nav-link">Convocatorias</button>
+          <button className="nav-link">Noticias</button>
+          <button className="btn-primary">Inscríbete aquí</button>
+        </nav>
+      </header>
 
-      <div className="ticks"></div>
+      <main className="main-content">
+        <section className="hero-section">
+          <div className="hero-content">
+            <h1 className="hero-title">
+              Construyendo <span className="highlight">Paz</span> y{' '}
+              <span className="highlight">Región</span>
+            </h1>
+            <p className="hero-description">
+              Un programa de la Universidad de Ibagué comprometido con el
+              desarrollo, la paz y la transformación social de nuestro territorio.
+            </p>
+            <div className="hero-actions">
+              <button className="btn-primary large">Descubre el Programa</button>
+              <button className="btn-secondary large">Dona aquí</button>
+            </div>
+          </div>
+          <div className="hero-image-container">
+            <div className="hero-image-placeholder">
+              <div className="hero-shape"></div>
+            </div>
+          </div>
+        </section>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <section className="roles-section">
+          <h2>Información por perfiles</h2>
+          <div className="roles-grid">
+            <div className="role-card" style={{ '--role-color': '#6F42C1' } as React.CSSProperties}>
+              <div className="role-icon">🎓</div>
+              <h3>Futuros Estudiantes</h3>
+              <p>Descubre cómo ser parte de Paz y Región.</p>
+            </div>
+            <div className="role-card" style={{ '--role-color': '#DC3545' } as React.CSSProperties}>
+              <div className="role-icon">📝</div>
+              <h3>Estudiantes Actuales</h3>
+              <p>Información, fechas y recursos importantes.</p>
+            </div>
+            <div className="role-card" style={{ '--role-color': '#FFC107' } as React.CSSProperties}>
+              <div className="role-icon">👩‍🏫</div>
+              <h3>Profesores</h3>
+              <p>Convocatorias y guías para docentes.</p>
+            </div>
+            <div className="role-card" style={{ '--role-color': '#0D6EFD' } as React.CSSProperties}>
+              <div className="role-icon">🎓</div>
+              <h3>Graduados</h3>
+              <p>Mantente conectado con nuestra red.</p>
+            </div>
+            <div className="role-card" style={{ '--role-color': '#198754' } as React.CSSProperties}>
+              <div className="role-icon">💼</div>
+              <h3>Empresarios</h3>
+              <p>Alianzas y proyectos conjuntos.</p>
+            </div>
+          </div>
+        </section>
+      </main>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
       <Footer />
-    </>
+    </div>
   )
 }
 
