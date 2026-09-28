@@ -1,7 +1,10 @@
+import { useNavigate } from 'react-router-dom'
 import './App.css'
 import Footer from './components/Footer'
 
 function App() {
+  const navigate = useNavigate()
+
   return (
     <div className="app-container">
       <header className="header">
@@ -19,7 +22,9 @@ function App() {
           <div style={{ display: 'flex', gap: '0.75rem', marginLeft: '1rem' }}>
             <button className="btn-secondary">Ingreso Estudiantes</button>
             <button className="btn-primary">Ingreso Empresas</button>
-            <button className="btn-secondary">Ingreso Docentes</button>
+            <button className="btn-secondary" onClick={() => navigate('/admin/login')}>
+              Ingreso Docentes
+            </button>
           </div>
         </nav>
       </header>
