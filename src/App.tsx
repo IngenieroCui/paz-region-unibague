@@ -17,8 +17,9 @@ function App() {
           <button className="nav-link">Convocatorias</button>
           <button className="nav-link">Noticias</button>
           <div style={{ display: 'flex', gap: '0.75rem', marginLeft: '1rem' }}>
-            <button className="btn-primary">Ingreso Estudiantes</button>
-            <button className="btn-secondary">Ingreso Empresas</button>
+            <button className="btn-secondary">Ingreso Estudiantes</button>
+            <button className="btn-primary">Ingreso Empresas</button>
+            <button className="btn-secondary">Ingreso Docentes</button>
           </div>
         </nav>
       </header>
