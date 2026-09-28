@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import './login.css';
+import './student_login.css';
 
-export default function AdminLogin() {
+export default function EstudiantesLogin() {
   const [codigo, setCodigo] = useState('');
   const [password, setPassword] = useState('');
 
@@ -17,18 +17,18 @@ export default function AdminLogin() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <img 
-            src="/logos/web/icon-192.png" 
-            alt="Unibagué Logo" 
-            className="login-logo" 
+          <img
+            src="/logos/web/icon-192.png"
+            alt="Unibagué Logo"
+            className="login-logo"
           />
-          <h2>Acceso Administrador</h2>
+          <h2>Acceso Estudiantes</h2>
           <p>Programa Paz y Región</p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="login-form">
           <div className="input-group">
-            <label htmlFor="codigo">Código de Administrador</label>
+            <label htmlFor="codigo">Código de Estudiante</label>
             <input
               type="text"
               id="codigo"

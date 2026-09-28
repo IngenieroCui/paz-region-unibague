@@ -3,7 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
-import AdminLogin from './users/admin/login.tsx'
+import AdminLogin from './users/admin/admin_login.tsx'
+import EstudiantesLogin from './users/estudiantes/student_login.tsx'
+
 
 const router = createBrowserRouter([
   {
@@ -13,6 +15,10 @@ const router = createBrowserRouter([
   {
     path: "/admin/login",
     element: <AdminLogin />,
+  },
+  {
+    path: "/estudiantes/login",
+    element: <EstudiantesLogin />,
   },
 ]);
 
