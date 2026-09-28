@@ -11,12 +11,86 @@
   background-color: var(--white);
   border-radius: 16px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  padding: 3rem 2.5rem;
+  padding: 2.5rem 2rem;
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
+  transition: max-width 0.3s ease;
+}
+
+.login-card.wide {
+  max-width: 720px;
+}
+
+/* Tabs */
+.auth-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 0.5rem;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+  color: var(--secondary);
+  border-bottom-color: var(--secondary);
+}
+
+.tab-btn:hover:not(.active) {
+  color: var(--text-h);
+}
+
+/* Form grid layout */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem 1.25rem;
+}
+
+.form-grid .full-width {
+  grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-grid .full-width {
+    grid-column: span 1;
+  }
+}
+
+.input-group select,
+.input-group textarea {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  color: var(--text-h);
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.input-group select:focus,
+.input-group textarea:focus {
+  outline: none;
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
 @media (prefers-color-scheme: dark) {
