@@ -2,7 +2,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 
 export default function ProtectedRoute() {
-  const storedUser = localStorage.getItem('usocoello_user');
+  const storedUser = localStorage.getItem('unibague_user');
   
   if (!storedUser) {
     // Si no hay sesión, mandamos al login
