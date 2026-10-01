@@ -1,0 +1,56 @@
+# Matriz RLS v0
+Todas las tablas propias tienen RLS. ADMIN significa rol persistido, no metadata. CRUD siempre sujeto a constraints y triggers de campos. anon no recibe acceso a tablas privadas.
+| Recurso | STUDENT | ORGANIZATION | ADMIN |
+| --- | --- | --- | --- |
+| UserProfiles | Leer/editar propio; identidad ligada a Auth | Leer/editar propio; identidad ligada a Auth | CRUD |
+| Roles | Leer catálogo | Leer catálogo | CRUD |
+| UserRoles | Leer propios | Leer propios | CRUD |
+| AcademicPeriods | Leer catálogo | Leer catálogo | CRUD |
+| AcademicPrograms | Leer catálogo | Leer catálogo | CRUD |
+| Municipalities | Leer catálogo | Leer catálogo | CRUD |
+| OrganizationTypes | Leer catálogo | Leer catálogo | CRUD |
+| Skills | Leer catálogo | Leer catálogo | CRUD |
+| SystemConfigurations | Leer is_public (también anon) | Leer is_public (también anon) | CRUD |
+| FeatureFlags | Leer is_public (también anon) | Leer is_public (también anon) | CRUD |
+| Students | Crear/leer/editar propio; identidad/activación protegidas | — | CRUD |
+| StudentPeriodParticipations | Leer propia | — | CRUD |
+| StudentExperiences | CRUD propio | — | CRUD |
+| StudentSkills | CRUD propio | — | CRUD |
+| StudentInterests | CRUD propio | — | CRUD |
+| StudentLocationPreferences | CRUD propio | — | CRUD |
+| StudentDocuments | CRUD propio | — | CRUD |
+| Organizations | — | Registro RPC P3; miembros leen, managers editan perfil; verificación protegida | CRUD |
+| OrganizationMembers | — | Leer membresías de su organización | CRUD |
+| OrganizationDocuments | — | CRUD manager propio | CRUD |
+| OrganizationReviews | — | SELECT de su organización por membresía activa; sin writes | CRUD |
+| Projects | — | Leer miembro / CRUD manager de organización propietaria | CRUD |
+| ProjectPositions | — | Leer miembro / CRUD manager de organización propietaria | CRUD |
+| ProjectPositionPrograms | — | Leer miembro / CRUD manager de organización propietaria | CRUD |
+| ProjectRequirements | — | Leer miembro / CRUD manager de organización propietaria | CRUD |
+| ProjectPositionSkills | — | Leer miembro / CRUD manager de organización propietaria | CRUD |
+| MatchingConfigurations | — | — | CRUD |
+| MatchingRuns | — | — | CRUD |
+| MatchCandidates | — | — | CRUD |
+| Assignments | Leer propias | Leer plazas de su organización | CRUD |
+| AssignmentEvents | — | — | CRUD |
+| Notifications | Leer propias / RPC read_at | Leer propias / RPC read_at | Leer/crear/borrar; RPC solo propia |
+| AuditLogs | — | — | Solo leer (trigger escribe) |
+## Storage y funciones
+| Recurso | STUDENT | ORGANIZATION | ADMIN |
+| --- | --- | --- | --- |
+| student-documents | CRUD paths de Student propio | — | CRUD |
+| organization-documents | — | CRUD manager propia | CRUD |
+| current_roles / ownership helpers | Ejecutar authenticated | Ejecutar authenticated | Ejecutar authenticated |
+| mark_notification_read | Solo propia | Solo propia | Solo propia |
+
+Sin INSERT directo de Assignments desde Student/Organization; sin escritura cliente en AuditLogs; sin UPDATE genérico Notifications. Matching solo ADMIN, sin scores globales para otros roles. Escrituras OrganizationReviews y acceso AssignmentEvents siguen ADMIN. P3 permite SELECT de revisiones a miembros activos de su entidad. Un miembro no puede insertar organizaciones/membresías directamente ni modificar can_manage; solo la RPC P3 crea su organización y membresía inicial tras validar el rol persistido.
+
+Policies USING validan la fila existente; WITH CHECK la nueva fila. Helpers SECURITY DEFINER evitan recursión RLS, usan auth.uid() y rol persistido; search_path vacío y EXECUTE revocado de PUBLIC/anon. Helpers técnicos en schema privado no expuesto por REST. Triggers invoker protegen campos institucionales aun con un UPDATE de fila propia.
+
+Pruebas pgTAP en supabase/tests/security.test.sql comprueban denegaciones, cambios de UUID, metadatos manipulados, campos protegidos, notificaciones, auditoría y Storage. Ejecutar en Supabase local antes de desplegar; el entorno actual carece de Docker/CLI y no certifica RLS runtime Supabase.
+
+P3: registro SECURITY DEFINER exige auth.uid + rol ORGANIZATION persistido, con EXECUTE solo authenticated y sin policy INSERT genérica. RPCs de orden SECURITY INVOKER validan propietario y usan las policies P2. Los miembros no pueden cambiar status/verified_at/verified_by/created_by; los triggers P2 siguen activos.
+
+## Extensión P4 · Projects + Admin
+
+No se reemplazan policies P2/P3. Triggers adicionales limitan los writes ya autorizados: Organization manager solo crea draft, edita draft/changes_required y envía submitted; miembros sin can_manage no escriben. Ningún miembro puede autoaprobarse ni alterar plazas/perfil de proyectos en revisión. ADMIN mantiene gestión operativa. Nuevas RPC revocan PUBLIC/anon y conceden EXECUTE solo authenticated, con validación ADMIN para revisión/periodo/dashboard/estudiantes. Totales de proyectos son SECURITY INVOKER bajo RLS. Hay 61 aserciones P4 preparadas en supabase/tests/p4.test.sql; el PASS WASM es suplementario. Detalle: [PROJECTS_ADMIN_P4.md](PROJECTS_ADMIN_P4.md).

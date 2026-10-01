@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useNavigate } from 'react-router-dom'
 import './App.css'
 import Footer from './components/Footer'
@@ -91,6 +92,14 @@ function App() {
       <Footer />
     </div>
   )
+=======
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createAppRoutes } from './app/router'
+import { AppProviders } from './app/providers'
+import { InstallPWA } from './components/feedback/InstallPWA'
+import { PwaUpdate } from './components/feedback/PwaUpdate'
+const router = createBrowserRouter(createAppRoutes())
+export default function App() {
+  return <AppProviders><RouterProvider router={router} /><InstallPWA /><PwaUpdate /></AppProviders>
+>>>>>>> dev
 }
-
-export default App
