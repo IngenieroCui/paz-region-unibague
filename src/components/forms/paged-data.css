@@ -1,0 +1,13 @@
+.p4-table { overflow: auto; max-width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.p4-table table { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }
+.p4-table caption { text-align: left; padding: 1rem; font-weight: 600; }
+.p4-table th, .p4-table td { text-align: left; padding: .9rem 1rem; border-top: 1px solid var(--border); vertical-align: top; }
+.p4-table th { background: var(--background); white-space: nowrap; }
+.p4-table td { min-width: 110px; overflow-wrap: anywhere; max-width: 320px; }
+.p4-table a, .p4-table button { display: inline-flex; align-items: center; min-height: 44px; }
+.p4-pagination { justify-content: space-between; margin-block: 1rem; }
+.p4-subsection { border-left: 3px solid var(--border); padding-left: 1rem; margin-block: 1rem; }
+.p4-metrics { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 1rem; }
+.p4-metrics strong { display: block; font-size: 1.8rem; }
+.p4-json { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--text-xs); max-height: 18rem; overflow: auto; }
+.p4-catalog-dialog { width: min(760px, calc(100vw - 2rem)); max-height: 90vh; overflow: auto; }
