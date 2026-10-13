@@ -25,7 +25,7 @@ insert into "PYRUnibague_Calls"(id,organization_id,academic_period_id,title) val
 insert into "PYRUnibague_CallPositions"(call_id,project_position_id) values(pg_temp.p7id(60),pg_temp.p7id(40)),(pg_temp.p7id(60),pg_temp.p7id(41)),(pg_temp.p7id(61),pg_temp.p7id(40));
 update "PYRUnibague_Calls" set status='submitted' where id=pg_temp.p7id(60);
 update "PYRUnibague_Projects" set status='submitted' where id=pg_temp.p7id(30);
-select ok((select count(*)=0 from "PYRUnibague_Assignments"),'Call creation/submission creates no assignment');
+select ok((select count(*)=0 from "PYRUnibague_Assignments" where academic_period_id=pg_temp.p7id(10)),'Call creation/submission creates no assignment');
 select set_config('request.jwt.claim.sub',pg_temp.p7id(1)::text,true);
 update "PYRUnibague_Projects" set status='approved' where id=pg_temp.p7id(30);
 update "PYRUnibague_Calls" set status='open' where id=pg_temp.p7id(60);
@@ -49,8 +49,8 @@ select lives_ok($q$select pyr_unibague_confirm_assignment_batch(pg_temp.p7id(10)
  jsonb_build_object('kind','confirm','student_id',pg_temp.p7id(3),'position_id',pg_temp.p7id(40),'candidate_id',pg_temp.p7id(90),'source','MATCHING'),
  jsonb_build_object('kind','confirm','student_id',pg_temp.p7id(4),'position_id',pg_temp.p7id(40),'candidate_id',pg_temp.p7id(91),'source','MATCHING')))$q$,'Reviewed batch confirms both students transactionally');
 select ok((select count(*)=2 from "PYRUnibague_AdvisorStudentAssignments" where advisor_id=pg_temp.p7id(5) and is_current and source_assignment_id is not null),'Each confirmed student links to advisor with assignment source');
-select ok((select bool_and(metadata#>>'{integrations,advisor}'='linked') from "PYRUnibague_AssignmentEvents"),'Advisor integration recorded in immutable events');
-select ok((select count(*)=0 from "PYRUnibague_GroupMembers"),'Multiple groups never cause arbitrary membership');
+select ok((select bool_and(metadata#>>'{integrations,advisor}'='linked') from "PYRUnibague_AssignmentEvents" where assignment_id in(select id from "PYRUnibague_Assignments" where academic_period_id=pg_temp.p7id(10))),'Advisor integration recorded in immutable events');
+select ok((select count(*)=0 from "PYRUnibague_GroupMembers" where group_id in(pg_temp.p7id(70),pg_temp.p7id(71))),'Multiple groups never cause arbitrary membership');
 
 -- 3: Assignment -> individual advisor -> explicitly selected group -> ficha.
 insert into "PYRUnibague_GroupMembers"(group_id,assignment_id) select pg_temp.p7id(70),id from "PYRUnibague_Assignments" where academic_period_id=pg_temp.p7id(10) and is_active;
@@ -94,7 +94,7 @@ select throws_ok($q$select pyr_unibague_reassign_assignment(pg_temp.p7id(10),nul
  'position_id',pg_temp.p7id(41),'source','MANUAL','allow_unscored',true,'reason_code','OTHER','reason_text','Failure must roll back'))$q$,'P0001',null,'Integration failure rolls back entire reassignment');
 select ok((select count(*)=1 from "PYRUnibague_Assignments" where student_id=pg_temp.p7id(3) and is_active and project_position_id=pg_temp.p7id(40)),'Failed integration preserves original assignment and capacity');
 select ok((select count(*)=1 from "PYRUnibague_AdvisorStudentAssignments" where participation_id=pg_temp.p7id(103) and advisor_id=pg_temp.p7id(5) and is_current),'Failed integration preserves current advisor');
-select ok((select count(*)=2 from "PYRUnibague_GroupMembers" where status='active'),'Failed integration rolls back membership retirement');
+select ok((select count(*)=2 from "PYRUnibague_GroupMembers" where status='active' and group_id in(pg_temp.p7id(70),pg_temp.p7id(71))),'Failed integration rolls back membership retirement');
 reset role;
 select is((select count(*)::integer from "PYRUnibague_Notifications" where user_id in(pg_temp.p7id(3),pg_temp.p7id(4))),2,'No notifications survive failed integration rollback');
 drop trigger p7_fail_integration on "PYRUnibague_AdvisorStudentAssignments";
@@ -108,7 +108,7 @@ select ok((select count(*)=1 from "PYRUnibague_Assignments" where project_positi
 select lives_ok($q$select pyr_unibague_unassign_assignment(pg_temp.p7id(10),null,pyr_unibague_assignment_snapshot(pg_temp.p7id(10),null)->>'revision',jsonb_build_object(
  'student_id',pg_temp.p7id(4),'assignment_id',(select id from "PYRUnibague_Assignments" where student_id=pg_temp.p7id(4) and is_active),'reason_code','OTHER','reason_text','P7 withdrawal'))$q$,'Withdrawal closes all integrated current responsibilities');
 select ok(not exists(select 1 from "PYRUnibague_AdvisorStudentAssignments" where participation_id=pg_temp.p7id(104) and is_current),'No active advisor remains for withdrawn participation');
-select ok((select count(*)=2 and bool_and(status='inactive') from "PYRUnibague_GroupMembers"),'All group histories survive retirement');
+select ok((select count(*)=2 and bool_and(status='inactive') from "PYRUnibague_GroupMembers" where group_id in(pg_temp.p7id(70),pg_temp.p7id(71))),'All group histories survive retirement');
 select pyr_unibague_change_organization_advisor(pg_temp.p7id(20),pg_temp.p7id(10),null);
 select lives_ok($q$select pyr_unibague_confirm_assignment(pg_temp.p7id(10),null,pyr_unibague_assignment_snapshot(pg_temp.p7id(10),null)->>'revision',jsonb_build_object(
  'student_id',pg_temp.p7id(8),'position_id',pg_temp.p7id(40),'source','MANUAL','allow_unscored',true,'reason_code','OTHER','reason_text','No organization advisor'))$q$,'Missing advisor never invalidates valid student assignment');

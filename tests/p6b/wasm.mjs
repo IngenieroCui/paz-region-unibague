@@ -31,7 +31,7 @@ end $$;
 `)
 
 try {
- for (const file of (await readdir(root+'/supabase/migrations')).filter(file => /20261001000[1-7]_/.test(file) || file === '202610010009_calls_projects_groups_p6b.sql').sort()) {
+ for (const file of (await readdir(root+'/supabase/migrations')).filter(file => /(?:20261001000[1-7]_|_p8_00[1-7]_)/.test(file) || /(?:202610010009_|_p8_009_)/.test(file)).sort()) {
   await db.exec(await readFile(root+'/supabase/migrations/'+file,'utf8')); console.log('Applied:',file)
  }
  await db.exec(await readFile(root+'/supabase/seed.sql','utf8'))

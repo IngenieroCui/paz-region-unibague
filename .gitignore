@@ -30,3 +30,5 @@ coverage
 playwright-report
 test-results
 /work/
+
+/supabase/.temp/

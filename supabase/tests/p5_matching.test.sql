@@ -44,7 +44,7 @@ select lives_ok($q$update public."PYRUnibague_MatchingConfigurations" set name='
 update "PYRUnibague_MatchingConfigurations" set is_active=true where id='55000000-0000-0000-0000-000000000060';
 select throws_ok($q$update public."PYRUnibague_MatchingRuns" set summary='{}' where id='55000000-0000-0000-0000-000000000070'$q$,'23514',null,'Historical snapshot cannot be erased');
 select lives_ok($q$insert into public."PYRUnibague_MatchCandidates"(matching_run_id,student_id,project_position_id,is_eligible,total_score) values ('55000000-0000-0000-0000-000000000070','55000000-0000-0000-0000-000000000020','55000000-0000-0000-0000-000000000050',true,80)$q$,'ADMIN writes candidates');
-select ok((select count(*)=1 from "PYRUnibague_MatchCandidates"),'ADMIN reads candidates');
+select ok((select count(*)=1 from "PYRUnibague_MatchCandidates" where student_id='55000000-0000-0000-0000-000000000020'),'ADMIN reads candidates');
 select throws_ok($q$update public."PYRUnibague_MatchCandidates" set is_eligible=false where matching_run_id='55000000-0000-0000-0000-000000000070'$q$,'23514',null,'Blocked candidate cannot retain a total score');
 update "PYRUnibague_MatchingRuns" set status='completed',completed_at=now() where id='55000000-0000-0000-0000-000000000070';
 select lives_ok($q$insert into public."PYRUnibague_MatchingRuns"(id,academic_period_id,matching_configuration_id,status) values ('55000000-0000-0000-0000-000000000071','55000000-0000-0000-0000-000000000010','55000000-0000-0000-0000-000000000060','running')$q$,'Completed run allows rerun');

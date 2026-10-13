@@ -1,6 +1,6 @@
 // Supplemental single-session PostgreSQL WASM; Auth/Storage are stubs.
 // Never reports real Supabase, pgTAP extension or multi-connection certification.
-import { readFile, readdir, writeFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 const modulePath = process.env.PYR_PGLITE_MODULE
 if (!modulePath) { console.log('SKIPPED: PYR_PGLITE_MODULE unavailable'); process.exit(0) }
 const { PGlite } = await import(modulePath)
@@ -35,45 +35,8 @@ try {
     from pg_constraint c join pg_class t on t.oid=c.conrelid join pg_class rt on rt.oid=c.confrelid
     join pg_namespace n on n.oid=t.relnamespace join pg_namespace rn on rn.oid=rt.relnamespace
     where c.contype='f' and n.nspname='public' and rn.nspname='public' order by c.conname`)
-  const typesPath = 'src/lib/supabase/database.types.ts'
-  const original = await readFile(typesPath, 'utf8')
-  if (process.argv.includes('--write-types')) {
-    const scalar = c => {
-      if (c.column_name === 'zone_type') return "'rural' | 'urban'"
-      if (c.column_name === 'status' && c.table_name === 'PYRUnibague_Calls') return "'draft' | 'submitted' | 'changes_required' | 'open' | 'closed'"
-      if (c.column_name === 'status' && c.table_name === 'PYRUnibague_Groups') return "'active' | 'closed'"
-      if (c.column_name === 'status' && c.table_name === 'PYRUnibague_GroupMembers') return "'active' | 'inactive'"
-      return c.udt_name === 'jsonb' ? 'Json' : c.udt_name === '_text' ? 'string[]' : c.udt_name === 'bool' ? 'boolean' : ['int4','int8','numeric'].includes(c.udt_name) ? 'number' : 'string'
-    }
-    let output = '// Schema-synchronized fallback from 001-012 catalog (PGlite), NOT official CLI generation.\n' + original.split('\n').slice(1,3).join('\n') + '\n'
-    for (const table of tables) {
-      const cols = columns.filter(c => c.table_name === table)
-      output += `  ${table}: {\n`
-      for (const kind of ['Row','Insert','Update']) {
-        output += `    ${kind}: {\n`
-        for (const c of cols) output += `      ${c.column_name}${kind === 'Update' || (kind === 'Insert' && (c.is_nullable === 'YES' || c.column_default !== null)) ? '?' : ''}: ${scalar(c)}${c.is_nullable === 'YES' ? ' | null' : ''}\n`
-        output += '    }\n'
-      }
-      output += '    Relationships: [\n'
-      for (const fk of fks.filter(f => f.table_name === table)) output += `      { foreignKeyName: ${JSON.stringify(fk.conname)}; columns: ${JSON.stringify(fk.columns)}; isOneToOne: ${fk.one_to_one}; referencedRelation: ${JSON.stringify(fk.referenced_table)}; referencedColumns: ${JSON.stringify(fk.referenced_columns)} },\n`
-      output += '    ]\n  }\n'
-    }
-    const integratedRpc = ['project_team','project_institutional','student_assignment','assignment_snapshot','confirm_assignment_batch','confirm_assignment','reassign_assignment','unassign_assignment']
-    let functions = original.slice(original.indexOf('; Views:'))
-    for (const name of integratedRpc) functions = functions.replace(new RegExp('^pyr_unibague_' + name + ':.*\\r?\\n','gm'), '')
-    output += '}' + functions
-    output = output.replace('Functions: {', `Functions: {
-pyr_unibague_project_team: { Args: { p_project_id: string }; Returns: Json }
-pyr_unibague_project_institutional: { Args: { p_project_id: string }; Returns: Json }
-pyr_unibague_student_assignment: { Args: { p_period_id: string }; Returns: Json }
-pyr_unibague_assignment_snapshot: { Args: { p_period_id: string; p_run_id?: string | null }; Returns: Json }
-pyr_unibague_confirm_assignment_batch: { Args: { p_period_id: string; p_run_id: string | null; p_revision: string; p_actions: Json }; Returns: Json }
-pyr_unibague_confirm_assignment: { Args: { p_period_id: string; p_run_id: string | null; p_revision: string; p_action: Json }; Returns: Json }
-pyr_unibague_reassign_assignment: { Args: { p_period_id: string; p_run_id: string | null; p_revision: string; p_action: Json }; Returns: Json }
-pyr_unibague_unassign_assignment: { Args: { p_period_id: string; p_run_id: string | null; p_revision: string; p_action: Json }; Returns: Json }`)
-    await writeFile(typesPath, output)
-    console.log('Wrote catalog-synchronized fallback; not official Supabase generation.')
-  }
+  const typesPath = 'src/lib/supabase/database.generated.ts'
+  if (process.argv.includes('--write-types')) throw new Error('Use Supabase gen types for database.generated.ts; WASM does not overwrite official types.')
   const types = await readFile(typesPath, 'utf8')
   for (const c of columns) {
     const body = types.split(c.table_name + ': {')[1]?.split('Row: {')[1]?.split('    }')[0]

@@ -52,7 +52,7 @@ select lives_ok($q$select public.pyr_unibague_change_organization_advisor(pg_tem
 select ok((select count(*)=2 and count(*) filter(where is_current)=1 from "PYRUnibague_AdvisorOrganizationAssignments" where organization_id=pg_temp.p6id(201) and academic_period_id=pg_temp.p6id(301)),'Change retains history and one current advisor');
 select ok((select advisor_id=pg_temp.p6id(101) from "PYRUnibague_AdvisorStudentAssignments" where participation_id=pg_temp.p6id(501) and is_current),'Organization change does not propagate to student');
 select ok(pyr_unibague_private.advisor_for_project(pg_temp.p6id(601))=false,'Unrelated ADMIN without ADVISOR is not an advisor for project');
-select ok((select bool_and(assigned_by=auth.uid()) from "PYRUnibague_AdvisorOrganizationAssignments"),'Organization change actor is persisted ADMIN');
+select ok((select bool_and(assigned_by=auth.uid()) from "PYRUnibague_AdvisorOrganizationAssignments" where organization_id=pg_temp.p6id(201) and academic_period_id=pg_temp.p6id(301)),'Organization change actor is persisted ADMIN');
 select public.pyr_unibague_change_organization_advisor(pg_temp.p6id(201),pg_temp.p6id(301),pg_temp.p6id(102));
 select ok((select count(*)=2 from "PYRUnibague_AdvisorOrganizationAssignments" where organization_id=pg_temp.p6id(201) and academic_period_id=pg_temp.p6id(301)),'Same advisor request is idempotent');
 select throws_ok($q$select public.pyr_unibague_change_student_advisor(pg_temp.p6id(501),pg_temp.p6id(102),current_date,null,pg_temp.p6id(902))$q$,'23514',null,'Source must belong to the same student and period');
