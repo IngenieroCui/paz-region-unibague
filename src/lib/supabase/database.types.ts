@@ -1,6 +1,297 @@
 // Schema-synchronized fallback, NOT CLI-generated. Regenerate with Supabase CLI.
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 export type Database = { public: { Tables: {
+  PYRUnibague_StaffProfiles: {
+    Row: {
+      id: string
+      user_id: string
+      staff_code: string | null
+      phone: string | null
+      academic_unit: string | null
+      status: string
+      created_at: string
+      updated_at: string
+    }
+    Insert: {
+      id?: string
+      user_id: string
+      staff_code?: string | null
+      phone?: string | null
+      academic_unit?: string | null
+      status: string
+      created_at?: string
+      updated_at?: string
+    }
+    Update: {
+      id?: string
+      user_id?: string
+      staff_code?: string | null
+      phone?: string | null
+      academic_unit?: string | null
+      status?: string
+      created_at?: string
+      updated_at?: string
+    }
+    Relationships: [
+
+    ]
+  }
+  PYRUnibague_OrganizationContacts: {
+    Row: {
+      id: string
+      organization_id: string
+      user_id: string | null
+      full_name: string
+      position_title: string | null
+      email: string | null
+      phone: string | null
+      is_primary: boolean
+      created_at: string
+      updated_at: string
+    }
+    Insert: {
+      id?: string
+      organization_id: string
+      user_id?: string | null
+      full_name: string
+      position_title?: string | null
+      email?: string | null
+      phone?: string | null
+      is_primary?: boolean
+      created_at?: string
+      updated_at?: string
+    }
+    Update: {
+      id?: string
+      organization_id?: string
+      user_id?: string | null
+      full_name?: string
+      position_title?: string | null
+      email?: string | null
+      phone?: string | null
+      is_primary?: boolean
+      created_at?: string
+      updated_at?: string
+    }
+    Relationships: [
+      { foreignKeyName: "pyr_p6a_OrganizationContacts_organization_id"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_Organizations"; referencedColumns: ["id"] },
+    ]
+  }
+  PYRUnibague_AdvisorOrganizationAssignments: {
+    Row: {
+      id: string
+      advisor_id: string
+      organization_id: string
+      academic_period_id: string
+      starts_on: string
+      ends_on: string | null
+      is_current: boolean
+      assigned_by: string | null
+      created_at: string
+      updated_at: string
+    }
+    Insert: {
+      id?: string
+      advisor_id: string
+      organization_id: string
+      academic_period_id: string
+      starts_on: string
+      ends_on?: string | null
+      is_current?: boolean
+      assigned_by?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Update: {
+      id?: string
+      advisor_id?: string
+      organization_id?: string
+      academic_period_id?: string
+      starts_on?: string
+      ends_on?: string | null
+      is_current?: boolean
+      assigned_by?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Relationships: [
+      { foreignKeyName: "pyr_p6a_AdvisorOrganizationAssignments_advisor_id"; columns: ["advisor_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_StaffProfiles"; referencedColumns: ["id"] },
+      { foreignKeyName: "pyr_p6a_AdvisorOrganizationAssignments_organization_id"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_Organizations"; referencedColumns: ["id"] },
+      { foreignKeyName: "pyr_p6a_AdvisorOrganizationAssignments_academic_period_id"; columns: ["academic_period_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_AcademicPeriods"; referencedColumns: ["id"] },
+    ]
+  }
+  PYRUnibague_AdvisorStudentAssignments: {
+    Row: {
+      id: string
+      advisor_id: string
+      participation_id: string
+      starts_on: string
+      ends_on: string | null
+      is_current: boolean
+      reason: string | null
+      source_assignment_id: string | null
+      created_at: string
+      updated_at: string
+    }
+    Insert: {
+      id?: string
+      advisor_id: string
+      participation_id: string
+      starts_on: string
+      ends_on?: string | null
+      is_current?: boolean
+      reason?: string | null
+      source_assignment_id?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Update: {
+      id?: string
+      advisor_id?: string
+      participation_id?: string
+      starts_on?: string
+      ends_on?: string | null
+      is_current?: boolean
+      reason?: string | null
+      source_assignment_id?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Relationships: [
+      { foreignKeyName: "pyr_p6a_AdvisorStudentAssignments_advisor_id"; columns: ["advisor_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_StaffProfiles"; referencedColumns: ["id"] },
+      { foreignKeyName: "pyr_p6a_AdvisorStudentAssignments_participation_id"; columns: ["participation_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_StudentPeriodParticipations"; referencedColumns: ["id"] },
+      { foreignKeyName: "pyr_p6a_AdvisorStudentAssignments_source_assignment_id"; columns: ["source_assignment_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_Assignments"; referencedColumns: ["id"] },
+    ]
+  }
+  PYRUnibague_StudentSpecialCases: {
+    Row: {
+      id: string
+      participation_id: string
+      case_type_code: string
+      requested_municipality_id: string | null
+      status: string
+      reviewed_by: string | null
+      decision_notes: string | null
+      created_at: string
+      updated_at: string
+    }
+    Insert: {
+      id?: string
+      participation_id: string
+      case_type_code: string
+      requested_municipality_id?: string | null
+      status: string
+      reviewed_by?: string | null
+      decision_notes?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Update: {
+      id?: string
+      participation_id?: string
+      case_type_code?: string
+      requested_municipality_id?: string | null
+      status?: string
+      reviewed_by?: string | null
+      decision_notes?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Relationships: [
+      { foreignKeyName: "pyr_p6a_StudentSpecialCases_participation_id"; columns: ["participation_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_StudentPeriodParticipations"; referencedColumns: ["id"] },
+      { foreignKeyName: "pyr_p6a_StudentSpecialCases_requested_municipality_id"; columns: ["requested_municipality_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_Municipalities"; referencedColumns: ["id"] },
+    ]
+  }
+  PYRUnibague_ProjectTechnicalTeachers: {
+    Row: {
+      id: string
+      project_id: string
+      teacher_id: string
+      responsibility: string | null
+      created_at: string
+      updated_at: string
+    }
+    Insert: {
+      id?: string
+      project_id: string
+      teacher_id: string
+      responsibility?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Update: {
+      id?: string
+      project_id?: string
+      teacher_id?: string
+      responsibility?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Relationships: [
+      { foreignKeyName: "pyr_p6a_ProjectTechnicalTeachers_project_id"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_Projects"; referencedColumns: ["id"] },
+      { foreignKeyName: "pyr_p6a_ProjectTechnicalTeachers_teacher_id"; columns: ["teacher_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_StaffProfiles"; referencedColumns: ["id"] },
+    ]
+  }
+  PYRUnibague_ProjectInterlocutors: {
+    Row: {
+      id: string
+      project_id: string
+      organization_contact_id: string
+      is_primary_for_project: boolean
+      notes: string | null
+      created_at: string
+      updated_at: string
+    }
+    Insert: {
+      id?: string
+      project_id: string
+      organization_contact_id: string
+      is_primary_for_project?: boolean
+      notes?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Update: {
+      id?: string
+      project_id?: string
+      organization_contact_id?: string
+      is_primary_for_project?: boolean
+      notes?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Relationships: [
+      { foreignKeyName: "pyr_p6a_ProjectInterlocutors_project_id"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_Projects"; referencedColumns: ["id"] },
+      { foreignKeyName: "pyr_p6a_ProjectInterlocutors_organization_contact_id"; columns: ["organization_contact_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_OrganizationContacts"; referencedColumns: ["id"] },
+    ]
+  }
+  PYRUnibague_ProjectParticipatingOrganizations: {
+    Row: {
+      id: string
+      project_id: string
+      organization_id: string
+      participation_note: string | null
+      created_at: string
+    }
+    Insert: {
+      id?: string
+      project_id: string
+      organization_id: string
+      participation_note?: string | null
+      created_at?: string
+    }
+    Update: {
+      id?: string
+      project_id?: string
+      organization_id?: string
+      participation_note?: string | null
+      created_at?: string
+    }
+    Relationships: [
+      { foreignKeyName: "pyr_p6a_ProjectParticipatingOrganizations_project_id"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_Projects"; referencedColumns: ["id"] },
+      { foreignKeyName: "pyr_p6a_ProjectParticipatingOrganizations_organization_id"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "PYRUnibague_Organizations"; referencedColumns: ["id"] },
+    ]
+  }
   PYRUnibague_UserProfiles: {
     Row: {
       user_id: string
@@ -375,6 +666,7 @@ export type Database = { public: { Tables: {
       status: string
       eligible_for_matching: boolean
       profile_completed_at: string | null
+      arl_provider_name: string | null
       created_at: string
       updated_at: string
     }
@@ -385,6 +677,7 @@ export type Database = { public: { Tables: {
       status: string
       eligible_for_matching?: boolean
       profile_completed_at?: string | null
+      arl_provider_name?: string | null
       created_at?: string
       updated_at?: string
     }
@@ -395,6 +688,7 @@ export type Database = { public: { Tables: {
       status?: string
       eligible_for_matching?: boolean
       profile_completed_at?: string | null
+      arl_provider_name?: string | null
       created_at?: string
       updated_at?: string
     }
@@ -1222,6 +1516,10 @@ export type Database = { public: { Tables: {
     ]
   }
 }; Views: { [_ in never]: never }; Functions: {
+pyr_unibague_change_organization_advisor: { Args: { p_organization_id: string; p_academic_period_id: string; p_advisor_id: string | null; p_starts_on?: string }; Returns: string | null }
+pyr_unibague_change_student_advisor: { Args: { p_participation_id: string; p_advisor_id: string | null; p_starts_on?: string; p_reason?: string | null; p_source_assignment_id?: string | null }; Returns: string | null }
+pyr_unibague_save_organization_contact: { Args: { p_organization_id: string; p_full_name: string; p_id?: string | null; p_position_title?: string | null; p_email?: string | null; p_phone?: string | null; p_user_id?: string | null; p_is_primary?: boolean }; Returns: string }
+pyr_unibague_advisor_workspace: { Args: { p_academic_period_id: string }; Returns: Json }
 pyr_unibague_review_organization: { Args: { p_organization_id: string; p_decision: string; p_notes?: string | null }; Returns: undefined }
 pyr_unibague_set_current_academic_period: { Args: { p_period_id: string }; Returns: undefined }
 pyr_unibague_admin_dashboard: { Args: Record<string, never>; Returns: Json }

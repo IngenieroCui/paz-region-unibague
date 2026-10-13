@@ -35,3 +35,11 @@ it('resolves 0/1/multiple roles and deduplicates trusted codes', async () => {
   mocks.rpc.mockResolvedValue({ data: ['ADMIN','ADMIN'], error: null })
   expect(await currentRoles()).toEqual(['ADMIN'])
 })
+it('accepts ADVISOR only from the persisted-role RPC and preserves multirole selection', async () => {
+  mocks.rpc.mockResolvedValue({ data: ['ADVISOR'], error: null })
+  expect(await currentRoles()).toEqual(['ADVISOR'])
+  expect(workspaceForRoles(['ADVISOR'])).toBe('/app/advisor')
+  expect(workspaceForRoles(['ADMIN', 'ADVISOR'])).toBe('/select-role')
+  mocks.rpc.mockResolvedValue({ data: ['COORDINATOR'], error: null })
+  await expect(currentRoles()).rejects.toThrow('verification')
+})

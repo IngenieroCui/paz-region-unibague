@@ -3,6 +3,7 @@ type Row=Record<string,unknown>
 export async function p4Api(page:Page,role:'ADMIN'|'ORGANIZATION'='ADMIN',options:{readOnly?:boolean;count?:number;emptyCatalogs?:boolean}={}){
  const now='2026-10-01T12:00:00Z',uid='04000000-0000-0000-0000-00000000000'+(role==='ADMIN'?'1':'2'),oid='44000000-0000-0000-0000-000000000001',sid='84000000-0000-0000-0000-000000000001',pid='14000000-0000-0000-0000-000000000001',projectId='54000000-0000-0000-0000-000000000001'
  const tables:Record<string,Row[]>={};const names=['UserProfiles','Roles','UserRoles','AcademicPeriods','AcademicPrograms','Municipalities','OrganizationTypes','Skills','Students','StudentExperiences','StudentSkills','StudentInterests','StudentLocationPreferences','StudentDocuments','StudentPeriodParticipations','Organizations','OrganizationMembers','OrganizationDocuments','OrganizationReviews','Projects','ProjectPositions','ProjectPositionPrograms','ProjectPositionSkills','ProjectRequirements','SystemConfigurations','FeatureFlags','AuditLogs']
+ names.push('MatchingConfigurations','MatchingRuns','MatchCandidates')
  names.forEach(name=>tables['PYRUnibague_'+name]=[])
  const table=(name:string)=>tables['PYRUnibague_'+name]!
  table('UserProfiles').push({user_id:uid,display_name:'Cuenta P4',institutional_email:'p4@example.test',created_at:now,updated_at:now},{user_id:'04000000-0000-0000-0000-000000000005',display_name:'Estudiante P4',institutional_email:'student@example.test',created_at:now,updated_at:now})

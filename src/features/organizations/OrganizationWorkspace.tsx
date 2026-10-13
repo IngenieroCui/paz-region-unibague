@@ -13,6 +13,7 @@ import { Alert, EmptyState, ErrorState } from '../../components/feedback/States'
 import { Editor } from '../../components/forms/Editor'
 import { FeatureError, nullable, validUrl } from '../../lib/supabase/feature-helpers'
 import { DocumentsPanel } from '../documents/DocumentsPanel'
+import { OrganizationContacts } from './OrganizationContacts'
 
 export default function OrganizationWorkspace() {
   const { session } = useAuth()
@@ -30,7 +31,7 @@ export default function OrganizationWorkspace() {
     {data.organizations.length > 1 && <Select label="Organización activa" value={org.id} onChange={event => setParams({ organization: event.target.value })}>{data.organizations.map(row => <option key={row.id} value={row.id}>{row.display_name ?? row.legal_name}</option>)}</Select>}
     {!data.canManage && <Alert title="Acceso de consulta">Tu membresía permite consultar el perfil y sus revisiones. La edición y los documentos requieren permiso de gestión.</Alert>}
     {!section && <OrganizationHome data={data} />}
-    {section === 'profile' && <><PageHeader title="Perfil de organización" description="Mantén actualizada la información de tu organización." /><OrganizationProfile key={org.id} data={data} reload={resource.reload} /><AdministrativeInfo data={data} /></>}
+    {section === 'profile' && <><PageHeader title="Perfil de organización" description="Mantén actualizada la información de tu organización." /><OrganizationProfile key={org.id} data={data} reload={resource.reload} /><OrganizationContacts key={'contacts-'+org.id} organizationId={org.id} canManage={data.canManage} /><AdministrativeInfo data={data} /></>}
     {section === 'documents' && <><PageHeader title="Documentación" description="Gestiona documentos privados con categorías libres. No hay requisitos documentales oficiales definidos." /><DocumentsPanel key={org.id} scope="organization" ownerId={org.id} userId={session.user.id} documents={data.documents} canManage={data.canManage} reload={resource.reload} /></>}
     {section === 'reviews' && <><PageHeader title="Revisión y estado" description="Consulta las decisiones de coordinación. Esta información es de solo lectura." /><AdministrativeInfo data={data} /><ReviewTimeline data={data} /></>}
   </div>
