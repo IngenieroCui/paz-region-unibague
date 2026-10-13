@@ -1,6 +1,8 @@
 import { allPages, check, client, FeatureError } from '../../../lib/supabase/feature-helpers'
 import type { Row } from '../../../lib/supabase/feature-helpers'
-export type Project = Row<'PYRUnibague_Projects'>
+import { projectClient } from './institutional'
+import type { ZoneType } from './institutional'
+export type Project = Row<'PYRUnibague_Projects'> & { zone_type?: ZoneType }
 export type Position = Row<'PYRUnibague_ProjectPositions'>
 export const projectStates: Record<string,string> = { draft: 'Borrador', submitted: 'Enviado para revisión', changes_required: 'Cambios solicitados', approved: 'Aprobado', closed: 'Cerrado' }
 export const projectStateLabel = (value: string) => projectStates[value] ?? value
@@ -37,7 +39,7 @@ export async function listProjects(page: number, search: string, filters: {organ
   return {rows:(result.data??[]).map(row=>({...row,capacity:totals.data?.find(total=>total.project_id===row.id)?.total_capacity??0})),count:result.count??0}
 }
 export async function projectDetail(id: string, page=0) {
-  const db=await client()
+  const db=await projectClient()
   const [project,positions]=await Promise.all([
     db.from('PYRUnibague_Projects').select('*, PYRUnibague_Organizations(legal_name)').eq('id',id).single(),
     db.from('PYRUnibague_ProjectPositions').select('*',{count:'exact'}).eq('project_id',id).order('created_at').order('id').range(page*25,page*25+24),
@@ -52,11 +54,15 @@ export async function projectDetail(id: string, page=0) {
   return {project:project.data!,positions:positions.data??[],count:positions.count??0,programs,skills,requirements}
 }
 export type ProjectDetail = Awaited<ReturnType<typeof projectDetail>>
-export type ProjectEdit = Pick<Project,'name'|'summary'|'description'|'academic_period_id'|'municipality_id'|'modality'>
+export type ProjectEdit = Pick<Project,'name'|'summary'|'description'|'academic_period_id'|'municipality_id'|'modality'|'zone_type'>
 export async function saveProject(id: string|null, organization: string, user: string, fields: ProjectEdit) {
   if (!fields.name.trim() || !fields.academic_period_id) throw new FeatureError('Nombre y periodo son obligatorios.')
   const edit: ProjectEdit={name:fields.name.trim(),summary:fields.summary,description:fields.description,academic_period_id:fields.academic_period_id,municipality_id:fields.municipality_id,modality:fields.modality}
-  const db=await client()
+  if (fields.zone_type !== undefined) {
+    if (fields.zone_type !== null && fields.zone_type !== 'rural' && fields.zone_type !== 'urban') throw new FeatureError('Zona de proyecto inválida.')
+    edit.zone_type = fields.zone_type
+  }
+  const db=await projectClient()
   const result=id ? await db.from('PYRUnibague_Projects').update(edit).eq('id',id).select('id').single() : await db.from('PYRUnibague_Projects').insert({...edit,organization_id:organization,created_by:user,status:'draft'}).select('id').single()
   check(result.error);return result.data!.id
 }
