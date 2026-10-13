@@ -1,4 +1,4 @@
-// Schema-synchronized fallback from 001-011 catalog (PGlite), NOT official CLI generation.
+// Schema-synchronized fallback from 001-012 catalog (PGlite), NOT official CLI generation.
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 export type Database = { public: { Tables: {
   PYRUnibague_AcademicPeriods: {
@@ -1655,6 +1655,9 @@ export type Database = { public: { Tables: {
     ]
   }
 }; Views: { [_ in never]: never }; Functions: {
+pyr_unibague_operational_summary: { Args: { p_period_id: string }; Returns: Json }
+pyr_unibague_operational_export: { Args: { p_period_id: string; p_kind: string; p_after_id?: string | null }; Returns: Json }
+pyr_unibague_advisor_project_team: { Args: { p_project_id: string }; Returns: Json }
 pyr_unibague_project_team: { Args: { p_project_id: string }; Returns: Json }
 pyr_unibague_project_institutional: { Args: { p_project_id: string }; Returns: Json }
 pyr_unibague_student_assignment: { Args: { p_period_id: string }; Returns: Json }

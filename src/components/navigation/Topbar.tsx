@@ -10,6 +10,6 @@ export function Topbar({ role, preview, onOpenMenu }: { role: Role; preview: boo
     <span>Paz y Región <span className="breadcrumb-divider">/</span> <strong>{roleLabels[role]}</strong></span></div>
     {preview && <nav className="role-switch" aria-label="Cambiar vista de desarrollo">{roles.map(item =>
       <Link key={item} to={'/dev/' + rolePaths[item]} aria-current={item === role ? 'page' : undefined}>{roleLabels[item]}</Link>)}</nav>}
-    {!preview && <div className="auth-actions"><Link to="/select-role">Cambiar espacio</Link><Logout /></div>}
+    {!preview && <div className="auth-actions"><Link to={'/app/' + rolePaths[role] + '/notifications'}>Notificaciones</Link><Link to="/select-role">Cambiar espacio</Link><Logout /></div>}
     <Badge tone="info">{preview ? 'Preview' : 'Mi espacio'}</Badge></header>
 }

@@ -33,7 +33,7 @@ Todas las tablas propias tienen RLS. ADMIN significa rol persistido, no metadata
 | MatchCandidates | — | — | CRUD |
 | Assignments | Leer propias | Leer plazas de su organización | CRUD |
 | AssignmentEvents | — | — | CRUD |
-| Notifications | Leer propias / RPC read_at | Leer propias / RPC read_at | Leer/crear/borrar; RPC solo propia |
+| Notifications | Leer propias / RPC read_at | Leer propias / RPC read_at | Leer propias / RPC read_at; sin escritura arbitraria |
 | AuditLogs | — | — | Solo leer (trigger escribe) |
 ## Storage y funciones
 | Recurso | STUDENT | ORGANIZATION | ADMIN |
@@ -66,3 +66,5 @@ No se reemplazan policies P2/P3. Triggers adicionales limitan los writes ya auto
 | Matching / snapshot / confirmación | Permitido, decisión explícita | Denegado | Denegado | Denegado |
 
 Las proyecciones SECURITY DEFINER de 011 comprueban auth.uid y autorización persistida, usan search_path vacío y EXECUTE solo authenticated. No amplían policies de identidades, documentos o candidatos. El helper transaccional permanece privado sin EXECUTE de authenticated. Auditoría de asesorías registra actor y campos, eventos de asignación conservan resultados de integración. Ver reportes P6-A/B/C y P6_INTEGRATION_REPORT para límites de pruebas simuladas y validación real pendiente.
+
+012 agrega summary/export exclusivamente ADMIN y una proyección de equipos ADVISOR que filtra estudiantes por responsabilidad individual vigente, aun cuando el asesor tenga acceso a la organización del proyecto. Notifications conserva solo la policy propia: tampoco ADMIN puede leer mensajes ajenos ni emitir avisos arbitrarios. El trigger privado de AssignmentEvents crea avisos al estudiante destinatario en la misma transacción. Los enlaces incluyen el periodo. Se conserva mark-read idempotente propio. Sin ampliación de acceso a documentos, identidades, puntajes o Storage.

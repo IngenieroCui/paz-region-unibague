@@ -9,6 +9,7 @@ import RouteError from './RouteError'
 import { RouteRoot, Landing, Auth, Status, Callback, Reset, SelectRole } from './RouteRoot'
 
 const studentPage = async () => ({ Component: (await import('../features/students/StudentWorkspace')).default })
+const studentAssignmentPage = async () => ({ Component: (await import('../features/assignments/StudentAssignment')).StudentAssignmentPage })
 const organizationPage = async () => ({ Component: (await import('../features/organizations/OrganizationWorkspace')).default })
 const projectsPage = async () => ({ Component: (await import('../features/projects/ProjectsWorkspace')).default })
 const adminPage = async () => ({ Component: (await import('../features/admin/AdminWorkspace')).default })
@@ -19,11 +20,16 @@ const assignmentsPage = async () => ({ Component: (await import('../features/ass
 const callsAdminPage = async () => ({ Component: (await import('../features/calls')).AdminCallsPage })
 const callsOrganizationPage = async () => ({ Component: (await import('../features/calls')).OrganizationCallsPage })
 const groupsPage = async () => ({ Component: (await import('../features/groups')).GroupsPage })
-function moduleRoutes(role: typeof roles[number]): RouteObject[] {
-  if (role === 'ADMIN') return [{ index: true, lazy: adminPage }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: ['projects','groups'].includes(item.path) ? projectsPage : item.path === 'matching' ? matchingPage : item.path === 'calls' ? callsAdminPage : item.path === 'assignments' ? assignmentsPage : ['advisors', 'special-cases'].includes(item.path) ? advisorsAdminPage : adminPage })), { path: 'students/:studentId', lazy: adminPage }, { path: 'organizations/:organizationId', lazy: adminPage }, { path: 'projects/:projectId', lazy: projectsPage }, { path: 'calls/:callId', lazy: callsAdminPage }, { path: 'projects/:projectId/groups', lazy: groupsPage }]
+const operationsPage = async () => ({ Component: (await import('../features/operations/OperationsWorkspace')).OperationsWorkspace })
+const notificationsPage = async () => ({ Component: (await import('../features/notifications/NotificationsWorkspace')).NotificationsWorkspace })
+function roleModuleRoutes(role: typeof roles[number]): RouteObject[] {
+  if (role === 'ADMIN') return [{ index: true, lazy: adminPage }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: ['projects','groups'].includes(item.path) ? projectsPage : item.path === 'operations' ? operationsPage : item.path === 'matching' ? matchingPage : item.path === 'calls' ? callsAdminPage : item.path === 'assignments' ? assignmentsPage : ['advisors', 'special-cases'].includes(item.path) ? advisorsAdminPage : adminPage })), { path: 'students/:studentId', lazy: adminPage }, { path: 'organizations/:organizationId', lazy: adminPage }, { path: 'projects/:projectId', lazy: projectsPage }, { path: 'calls/:callId', lazy: callsAdminPage }, { path: 'projects/:projectId/groups', lazy: groupsPage }]
   if (role === 'ADVISOR') return [{ index: true, lazy: advisorPage }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: advisorPage }))]
   const lazy = role === 'STUDENT' ? studentPage : organizationPage
-  return [{ index: true, lazy }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: role === 'ORGANIZATION' ? ['projects','groups'].includes(item.path) ? projectsPage : item.path === 'calls' ? callsOrganizationPage : lazy : lazy })), ...(role === 'ORGANIZATION' ? [{ path: 'projects/new', lazy: projectsPage }, { path: 'projects/:projectId', lazy: projectsPage }, { path: 'calls/:callId', lazy: callsOrganizationPage }, { path: 'projects/:projectId/groups', lazy: groupsPage }] : [])]
+  return [{ index: true, lazy }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: role === 'ORGANIZATION' ? ['projects','groups'].includes(item.path) ? projectsPage : item.path === 'calls' ? callsOrganizationPage : lazy : item.path === 'assignment' ? studentAssignmentPage : lazy })), ...(role === 'ORGANIZATION' ? [{ path: 'projects/new', lazy: projectsPage }, { path: 'projects/:projectId', lazy: projectsPage }, { path: 'calls/:callId', lazy: callsOrganizationPage }, { path: 'projects/:projectId/groups', lazy: groupsPage }] : [])]
+}
+function moduleRoutes(role: typeof roles[number]): RouteObject[] {
+  return [...roleModuleRoutes(role), { path: 'notifications', lazy: notificationsPage }]
 }
 export function createAppRoutes(preview = import.meta.env.DEV): RouteObject[] {
   return [{ element: <RouteRoot />, errorElement: <RouteError />, children: [

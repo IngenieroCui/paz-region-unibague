@@ -69,3 +69,13 @@ Se conservan los guards, la selección de organización y las rutas P3/P4. Las r
 | /app/student | Incluye destino confirmado, asesor y compañeros vinculados | STUDENT, proyección propia |
 
 La ficha imprimible y relaciones institucionales están en los detalles existentes de proyectos. Interlocutores de organización permanece en `/app/organization/profile`. Las rutas productivas no incluyen harnesses de prueba.
+
+## Cierre operativo P7
+
+| Ruta | Superficie | Acceso |
+| --- | --- | --- |
+| /app/admin/operations?period=:periodId | Pendientes de coordinación y CSV del periodo | ADMIN |
+| /app/student/assignment?period=:periodId | Estado, municipio, destino, asesor, grupo y compañeros propios | STUDENT |
+| /app/:role/notifications | Centro personal de notificaciones en student/organization/advisor/admin | Rol persistido del espacio |
+
+El periodo se conserva desde los indicadores hacia Projects/Assignments. La consulta de equipos del asesor se abre dentro de /app/advisor/projects, sin acciones administrativas ni datos de estudiantes ajenos. Los accesos del inicio de organización conservan ?organization= en perfil, documentos y proyectos.

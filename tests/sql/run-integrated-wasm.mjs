@@ -45,7 +45,7 @@ try {
       if (c.column_name === 'status' && c.table_name === 'PYRUnibague_GroupMembers') return "'active' | 'inactive'"
       return c.udt_name === 'jsonb' ? 'Json' : c.udt_name === '_text' ? 'string[]' : c.udt_name === 'bool' ? 'boolean' : ['int4','int8','numeric'].includes(c.udt_name) ? 'number' : 'string'
     }
-    let output = '// Schema-synchronized fallback from 001-011 catalog (PGlite), NOT official CLI generation.\n' + original.split('\n').slice(1,3).join('\n') + '\n'
+    let output = '// Schema-synchronized fallback from 001-012 catalog (PGlite), NOT official CLI generation.\n' + original.split('\n').slice(1,3).join('\n') + '\n'
     for (const table of tables) {
       const cols = columns.filter(c => c.table_name === table)
       output += `  ${table}: {\n`

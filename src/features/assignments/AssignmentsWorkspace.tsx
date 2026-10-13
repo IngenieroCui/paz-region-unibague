@@ -16,7 +16,7 @@ import './assignments.css'
 
 export function AssignmentsWorkspace() {
   const metadata = useResource(loadAssignmentMetadata)
-  const [periodSelection, setPeriod] = useState(''); const [runId, setRun] = useState(''); const [tab, setTab] = useState('overview')
+  const [periodSelection, setPeriod] = useState(() => new URLSearchParams(window.location.search).get('period') ?? ''); const [runId, setRun] = useState(''); const [tab, setTab] = useState('overview')
   const period = periodSelection || metadata.data?.periods.find(p => p.is_current)?.id || metadata.data?.periods[0]?.id || ''
   if (metadata.loading) return <p role="status">Cargando asignaciones…</p>
   if (metadata.error) return <ErrorState title={metadata.error} onRetry={() => void metadata.reload()} />

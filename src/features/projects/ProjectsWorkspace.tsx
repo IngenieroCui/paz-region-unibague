@@ -48,7 +48,7 @@ export default function ProjectsWorkspace({ readInstitutional = readInstitutiona
 function ProjectList({catalogs,organization,canManage,base,suffix,admin}:{catalogs:Catalogs;organization:string;canManage:boolean;base:string;suffix:string;admin:boolean}) {
   const [params]=useSearchParams()
   const [status,setStatus]=useState(params.get('status')??'')
-  const [period,setPeriod]=useState('')
+  const [period,setPeriod]=useState(params.get('period')??'')
   const [municipality,setMunicipality]=useState('')
   const [modality,setModality]=useState('')
   const list=usePaged(useCallback((page:number,search:string)=>listProjects(page,search,{organization,period,status,municipality,modality}),[organization,period,status,municipality,modality]))

@@ -24,8 +24,6 @@ export default function AdminWorkspace(){
  if(section==='users')return <UsersPage/>
  if(section==='settings')return <SettingsPage/>
  if(section==='audit')return <AuditPage/>
- if(section==='matching')return <><PageHeader title="Matching"/><Alert title="Motor de matching pendiente de integración P5"/></>
- if(section==='assignments')return <><PageHeader title="Asignaciones"/><Alert title="Asignaciones pendientes de integración P6"/></>
  return <Dashboard/>
 }
 function Dashboard(){
@@ -36,6 +34,7 @@ function Dashboard(){
  const metrics=[['Estudiantes registrados',data.students],['Estudiantes participando',data.participating],['Elegibles para matching',data.eligible],['Organizaciones',data.organizations],['Organizaciones pendientes',data.pendingOrganizations],['Proyectos',data.projects],['Proyectos pendientes',data.pendingProjects],['Plazas',data.positions],['Capacidad total',data.capacity]] as const
  const missing=[['programs','Programas académicos'],['municipalities','Municipios'],['types','Tipos de organización'],['skills','Habilidades']] as const
  return <div className="module-stack"><PageHeader title="Resumen administrativo" description={'Periodo actual: '+(data.period??'Sin configurar')}/><p>Participación y elegibilidad corresponden al periodo actual. Las demás métricas abarcan los registros disponibles.</p><div className="p4-metrics">{metrics.map(([label,value])=><Card key={label}><h2>{label}</h2><strong>{value.toLocaleString('es-CO')}</strong></Card>)}</div>
+ <Card><h2>Pendientes por periodo y exportaciones</h2><Link className="button button--secondary" to="/app/admin/operations">Abrir coordinación operativa y CSV</Link></Card>
  <Card><h2>Requieren atención · {data.pendingOrganizations+data.pendingProjects}</h2><div className="module-actions"><Link className="button button--secondary" to="/app/admin/organizations?status=pending">Revisar organizaciones ({data.pendingOrganizations})</Link><Link className="button button--secondary" to="/app/admin/projects?status=submitted">Revisar proyectos ({data.pendingProjects})</Link></div></Card>
  {!data.period&&<Alert tone="warning" title="Configura el periodo actual"><Link to="/app/admin/settings?catalog=AcademicPeriods">Crear o seleccionar periodo académico</Link></Alert>}
  {missing.filter(([key])=>data[key]===0).map(([key,label])=><Alert key={key} tone="warning" title={'Catálogo pendiente: '+label}><Link to={'/app/admin/settings?catalog='+({programs:'AcademicPrograms',municipalities:'Municipalities',types:'OrganizationTypes',skills:'Skills'}[key])}>Configurar {label.toLowerCase()}</Link></Alert>)}

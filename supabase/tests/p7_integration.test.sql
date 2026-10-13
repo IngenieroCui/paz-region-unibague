@@ -1,4 +1,4 @@
--- Six integrated flows. Disposable fixtures; run against 001-011, rollback all data.
+-- Integrated flows A-H. Disposable fixtures; run against 001-012, rollback all data.
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
@@ -33,6 +33,9 @@ insert into "PYRUnibague_ProjectParticipatingOrganizations"(project_id,organizat
 select ok((select sum(capacity)=3 from "PYRUnibague_ProjectPositions" where project_id=pg_temp.p7id(30)),'2+1 real slots regardless of duplicate calls');
 select public.pyr_unibague_change_organization_advisor(pg_temp.p7id(20),pg_temp.p7id(10),pg_temp.p7id(5));
 insert into "PYRUnibague_Groups"(id,project_id,name) values(pg_temp.p7id(70),pg_temp.p7id(30),'Equipo A'),(pg_temp.p7id(71),pg_temp.p7id(30),'Equipo B');
+select is((pyr_unibague_operational_summary(pg_temp.p7id(10))->>'unassignedEligible')::integer,3,'Pending panel counts real eligible unassigned students');
+select is((pyr_unibague_operational_summary(pg_temp.p7id(10))->>'vacantCapacity')::integer,3,'Pending capacity is not duplicated by call links');
+select is((pyr_unibague_operational_summary(pg_temp.p7id(10))->>'organizationsWithoutAdvisor')::integer,0,'Configured organization advisor resolves pending indicator');
 
 -- 2: Eligible student -> completed matching -> reviewed global proposal -> confirm.
 insert into "PYRUnibague_MatchingConfigurations"(id,name,algorithm_version,minimum_recommended_score,weights,rules,is_active) values(pg_temp.p7id(80),'P7','hybrid-v0.1',70,
@@ -57,9 +60,21 @@ select is(pyr_unibague_project_institutional(pg_temp.p7id(30))->'advisors'->0->>
 select is(pyr_unibague_project_institutional(pg_temp.p7id(30))->'organizations'->0->>'displayName','Otra institución','Ficha reads participating institutions through relations');
 select ok(jsonb_array_length(pyr_unibague_project_team(pg_temp.p7id(30))->'members')=2,'Ficha team derives from actual GroupMembers');
 select set_config('request.jwt.claim.sub',pg_temp.p7id(3)::text,true);
+select is((select count(*)::integer from "PYRUnibague_Notifications"),1,'Confirmed event produces exactly one personal notification');
+select is((select link_path from "PYRUnibague_Notifications"),'/app/student/assignment?period='||pg_temp.p7id(10)::text,'Notification navigates to real student assignment route');
+select set_config('p7.notification_id',(select id::text from "PYRUnibague_Notifications"),true);
+select ok(pyr_unibague_mark_notification_read(current_setting('p7.notification_id')::uuid),'Recipient marks confirmed notification read');
+select ok(pyr_unibague_mark_notification_read(current_setting('p7.notification_id')::uuid),'Read notification is idempotent');
+select ok((select read_at is not null from "PYRUnibague_Notifications"),'Read status is persisted');
+select throws_ok($q$insert into "PYRUnibague_Notifications"(user_id,type_code,title) values(pg_temp.p7id(4),'FORGED','Fake')$q$,'42501',null,'Student cannot manufacture another user notification');
+select throws_ok($q$select pyr_unibague_operational_summary(pg_temp.p7id(10))$q$,'42501',null,'Student cannot read operational metrics');
+select throws_ok($q$select pyr_unibague_operational_export(pg_temp.p7id(10),'assignments')$q$,'42501',null,'Student cannot export other students');
 select is(pyr_unibague_student_assignment(pg_temp.p7id(10))->>'advisor','Persona P7 5','Student sees individual advisor');
 select is(pyr_unibague_student_assignment(pg_temp.p7id(10))->'teammates'->0->>'name','Persona P7 4','Student sees only linked teammate');
 select ok(not (pyr_unibague_student_assignment(pg_temp.p7id(10)) ?| array['candidate_id','score','reason_text','student_id']),'Student projection contains no internal matching/private data');
+select is(pyr_unibague_student_assignment(pg_temp.p7id(10))->>'status','confirmed','Own assignment includes actual state');
+select set_config('request.jwt.claim.sub',pg_temp.p7id(4)::text,true);
+select ok(not pyr_unibague_mark_notification_read(current_setting('p7.notification_id')::uuid),'Other recipient cannot mark foreign message read');
 select set_config('request.jwt.claim.sub',pg_temp.p7id(8)::text,true);
 select ok(pyr_unibague_student_assignment(pg_temp.p7id(10)) is null,'Unassigned student sees no other assignment');
 
@@ -81,6 +96,7 @@ select ok((select count(*)=1 from "PYRUnibague_Assignments" where student_id=pg_
 select ok((select count(*)=1 from "PYRUnibague_AdvisorStudentAssignments" where participation_id=pg_temp.p7id(103) and advisor_id=pg_temp.p7id(5) and is_current),'Failed integration preserves current advisor');
 select ok((select count(*)=2 from "PYRUnibague_GroupMembers" where status='active'),'Failed integration rolls back membership retirement');
 reset role;
+select is((select count(*)::integer from "PYRUnibague_Notifications" where user_id in(pg_temp.p7id(3),pg_temp.p7id(4))),2,'No notifications survive failed integration rollback');
 drop trigger p7_fail_integration on "PYRUnibague_AdvisorStudentAssignments";
 set local role authenticated;
 select lives_ok($q$select pyr_unibague_reassign_assignment(pg_temp.p7id(10),null,pyr_unibague_assignment_snapshot(pg_temp.p7id(10),null)->>'revision',jsonb_build_object(
@@ -100,15 +116,35 @@ select ok((select metadata#>>'{integrations,advisor}'='missing_advisor' from "PY
 select pyr_unibague_change_student_advisor(pg_temp.p7id(108),pg_temp.p7id(5),current_date,'Manual resolution',(select id from "PYRUnibague_Assignments" where student_id=pg_temp.p7id(8) and is_active));
 select ok((select count(*)=1 from "PYRUnibague_AdvisorStudentAssignments" where participation_id=pg_temp.p7id(108) and is_current),'Existing ADMIN operation resolves missing advisor');
 
+-- F: real operational counts, safe relational export and period/keyset boundaries.
+select is((pyr_unibague_operational_summary(pg_temp.p7id(10))->>'unassignedEligible')::integer,1,'Retired student returns to unassigned eligible count');
+select is((pyr_unibague_operational_summary(pg_temp.p7id(10))->>'vacantCapacity')::integer,1,'Retire and reassign release real capacity');
+select is((pyr_unibague_operational_summary(pg_temp.p7id(10))->>'organizationsWithoutAdvisor')::integer,1,'Missing regional advisor is actionable');
+select is((pyr_unibague_operational_summary(pg_temp.p7id(10))->>'assignmentsWithoutAdvisor')::integer,0,'Manually resolved individual advisor is reflected');
+select is((pyr_unibague_operational_summary(pg_temp.p7id(10))->>'assignmentsRequiringReview')::integer,2,'Manual assignments are explicitly reviewable');
+select is(jsonb_array_length(pyr_unibague_operational_export(pg_temp.p7id(10),'assignments')),4,'Export retains assigned and retired history');
+select is(jsonb_array_length(pyr_unibague_operational_export(pg_temp.p7id(10),'positions')),2,'Export contains distinct real positions');
+select is(jsonb_array_length(pyr_unibague_operational_export(pg_temp.p7id(11),'assignments')),0,'Other period export is empty');
+select ok(not exists(select 1 from jsonb_array_elements(pyr_unibague_operational_export(pg_temp.p7id(10),'assignments')) r where r ?| array['notes','email','student_code','documents','reason_text','score']),'Operational export excludes private/unnecessary fields');
+select is(jsonb_array_length(pyr_unibague_operational_export(pg_temp.p7id(10),'positions',(pyr_unibague_operational_export(pg_temp.p7id(10),'positions')->-1->>'id')::uuid)),0,'Keyset cursor terminates without repeats');
+select throws_ok($q$select pyr_unibague_operational_export(pg_temp.p7id(10),'private_documents')$q$,'22023',null,'Unknown export kind rejected');
+select throws_ok($q$insert into "PYRUnibague_Notifications"(user_id,type_code,title) values(pg_temp.p7id(3),'FORGED','Fake')$q$,'42501',null,'Even ADMIN cannot manufacture arbitrary notifications');
+
 -- 6: Persisted roles, scoped projections and protected mutations.
 select set_config('request.jwt.claim.sub',pg_temp.p7id(3)::text,true);
 select throws_ok($q$select pyr_unibague_project_institutional(pg_temp.p7id(30))$q$,'42501',null,'Student cannot query institutional projection');
 select throws_ok($q$select pyr_unibague_assignment_snapshot(pg_temp.p7id(10),null)$q$,'42501',null,'Student cannot see admin pool');
 select throws_ok($q$update "PYRUnibague_Assignments" set is_active=false$q$,'42501',null,'Student cannot alter assignments');
 select set_config('request.jwt.claim.sub',pg_temp.p7id(7)::text,true);
+select throws_ok($q$select pyr_unibague_operational_export(pg_temp.p7id(10),'positions')$q$,'42501',null,'Organization cannot invoke admin export');
+select throws_ok($q$select pyr_unibague_advisor_project_team(pg_temp.p7id(30))$q$,'42501',null,'Organization cannot impersonate advisor team reader');
+select is((select count(*)::integer from "PYRUnibague_Notifications"),0,'Foreign organization sees no assignment notifications');
 select throws_ok($q$select pyr_unibague_project_institutional(pg_temp.p7id(30))$q$,'42501',null,'Foreign organization cannot see ficha identities');
 select ok((select count(*)=0 from "PYRUnibague_Projects" where id=pg_temp.p7id(30)),'Foreign organization project hidden by RLS');
 select set_config('request.jwt.claim.sub',pg_temp.p7id(6)::text,true);
+select is(jsonb_array_length(pyr_unibague_advisor_project_team(pg_temp.p7id(30))->'assignments'),1,'Advisor team exposes only own individually assigned student');
+select is(pyr_unibague_advisor_project_team(pg_temp.p7id(30))->'assignments'->0->>'student_id',pg_temp.p7id(3)::text,'Other advisor student is excluded from team projection');
+select throws_ok($q$select pyr_unibague_operational_summary(pg_temp.p7id(10))$q$,'42501',null,'Advisor cannot read administrative pending pool');
 select ok(jsonb_array_length(pyr_unibague_advisor_workspace(pg_temp.p7id(10))->'students')=1,'Advisor sees only its individually assigned student');
 select throws_ok($q$select pyr_unibague_student_assignment(pg_temp.p7id(10))$q$,'42501',null,'Advisor cannot impersonate student projection');
 select throws_ok($q$select pyr_unibague_assignment_snapshot(pg_temp.p7id(10),null)$q$,'42501',null,'Advisor cannot access matching/assignment pool');
@@ -116,5 +152,8 @@ select set_config('request.jwt.claim.sub',pg_temp.p7id(1)::text,true);
 select ok(not exists(select 1 from "PYRUnibague_Assignments" a join "PYRUnibague_ProjectPositions" pp on pp.id=a.project_position_id where a.is_active group by pp.id,pp.capacity having count(*)>pp.capacity),'Integrated operations preserve real position capacity');
 select ok(exists(select 1 from "PYRUnibague_AuditLogs" where entity_table='PYRUnibague_AdvisorStudentAssignments' and actor_user_id=pg_temp.p7id(1)),'Advisor integration retains ADMIN actor in audit log');
 reset role;
+select is((select count(*)::integer from "PYRUnibague_Notifications" where user_id=pg_temp.p7id(3)),3,'Reassigned student receives original, withdrawal and destination events');
+select is((select count(*)::integer from "PYRUnibague_Notifications" where user_id=pg_temp.p7id(4)),2,'Withdrawn student receives confirmed and retired events');
+select is((select count(*)::integer from "PYRUnibague_Notifications" where user_id=pg_temp.p7id(8)),1,'No-advisor confirmation still notifies its recipient');
 select finish();
 rollback;

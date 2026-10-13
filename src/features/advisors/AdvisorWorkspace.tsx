@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { AdvisorTeams } from './AdvisorTeams'
 import type { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useResource } from '../../components/forms/useResource'
@@ -37,7 +38,7 @@ function AdvisorContent({ data, section }: { data: AdvisorData; section: string 
       <h3>Habilidades</h3>{row.skills.length ? <ul>{row.skills.map(s=><li key={s.id}><strong>{s.name}</strong><p>{s.evidence_text}</p></li>)}</ul> : <p>Sin habilidades registradas.</p>}
       <h3>Intereses</h3>{row.interests.length ? <ul>{row.interests.map(i=><li key={i.id}><strong>{i.label}</strong><p>{i.description}</p></li>)}</ul> : <p>Sin intereses registrados.</p>}
     </details></Card>} />
-  return <AdvisorList rows={data.projects} rowKey={row=>row.id} searchText={row=>`${row.name} ${row.organization_name} ${row.municipality??''}`} render={row=><Card><h2>{row.name}</h2><p>{row.organization_name} · {row.municipality ?? 'Municipio sin registrar'} · {row.modality ?? 'Modalidad sin registrar'}</p><p>{row.summary ?? 'Sin resumen registrado.'}</p><details><summary>Ver descripción e interlocutores</summary><p>{row.description ?? 'Sin descripción registrada.'}</p><Contacts contacts={row.interlocutors} /></details></Card>} />
+  return <AdvisorList rows={data.projects} rowKey={row=>row.id} searchText={row=>`${row.name} ${row.organization_name} ${row.municipality??''}`} render={row=><Card><h2>{row.name}</h2><p>{row.organization_name} · {row.municipality ?? 'Municipio sin registrar'} · {row.modality ?? 'Modalidad sin registrar'}</p><p>{row.summary ?? 'Sin resumen registrado.'}</p><details><summary>Ver descripción e interlocutores</summary><p>{row.description ?? 'Sin descripción registrada.'}</p><Contacts contacts={row.interlocutors} /></details><AdvisorTeams projectId={row.id} /></Card>} />
 }
 function Contacts({ contacts }: { contacts: AdvisorData['organizations'][number]['contacts'] }) {
   return <><h3>Interlocutores</h3>{contacts.length ? <ul className="module-list">{contacts.map(row=><li key={row.id}><div><strong>{row.full_name}{row.is_primary ? ' · Principal' : ''}</strong><p>{row.position_title ?? 'Cargo sin registrar'}</p><p>{row.email ?? 'Correo sin registrar'} · {row.phone ?? 'Teléfono sin registrar'}</p></div></li>)}</ul> : <p>Sin interlocutores registrados.</p>}</>
