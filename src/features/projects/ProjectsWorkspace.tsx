@@ -15,9 +15,13 @@ import { DataTable, PagedResults, SearchField } from '../../components/forms/Pag
 import { nullable } from '../../lib/supabase/feature-helpers'
 import { changeProjectState, editableState, listProjects, projectCatalogs, projectDetail, projectMemberships, projectStateLabel, projectStates, removeProjectPart, savePosition, savePositionProgram, savePositionSkill, saveProject, saveRequirement } from './services/projects'
 import type { Position, Project, ProjectDetail } from './services/projects'
+import { InstitutionalSheet } from './InstitutionalSheet'
+import { GroupsPanel } from '../groups'
+import { parseZoneType } from './services/institutional'
+import type { InstitutionalReader } from './services/institutional'
 
 type Catalogs = Awaited<ReturnType<typeof projectCatalogs>>
-export default function ProjectsWorkspace() {
+export default function ProjectsWorkspace({ readInstitutional }: { readInstitutional?: InstitutionalReader } = {}) {
   const { session, roles } = useAuth()
   const admin = useLocation().pathname.startsWith('/app/admin') && roles.includes('ADMIN')
   const [params,setParams]=useSearchParams()
@@ -37,7 +41,7 @@ export default function ProjectsWorkspace() {
   const canManage=admin||Boolean(member?.can_manage)
   return <div className="module-stack">{!admin&&members.length>1&&<Select label="Organización activa" value={organization} onChange={event=>setParams({organization:event.target.value})}>{members.map(row=><option key={row.id} value={row.organization_id}>{row.PYRUnibague_Organizations?.legal_name??row.organization_id}</option>)}</Select>}
     {!canManage&&<Alert title="Acceso de consulta">Tu membresía no permite escribir proyectos ni plazas.</Alert>}
-    {projectId?<ProjectEditor key={projectId+organization} id={projectId} catalogs={catalogs} user={user} organization={organization} canManage={canManage} admin={admin} base={base} suffix={suffix}/>:location.pathname.endsWith('/new')?<><PageHeader title="Crear proyecto" description="Primero define el proyecto. Después añade sus plazas y el perfil requerido."/>{canManage?<GeneralForm catalogs={catalogs} user={user} organization={organization} onCreated={base} suffix={suffix}/>:<Alert title="Se requiere permiso de gestión"/>}</>:<ProjectList catalogs={catalogs} organization={admin?params.get('organization')??'':organization} canManage={canManage} base={base} suffix={suffix} admin={admin}/>}
+    {projectId?<ProjectEditor key={projectId+organization} id={projectId} readInstitutional={readInstitutional} catalogs={catalogs} user={user} organization={organization} canManage={canManage} admin={admin} base={base} suffix={suffix}/>:location.pathname.endsWith('/new')?<><PageHeader title="Crear proyecto" description="Primero define el proyecto. Después añade sus plazas y el perfil requerido."/>{canManage?<GeneralForm catalogs={catalogs} user={user} organization={organization} onCreated={base} suffix={suffix}/>:<Alert title="Se requiere permiso de gestión"/>}</>:<ProjectList catalogs={catalogs} organization={admin?params.get('organization')??'':organization} canManage={canManage} base={base} suffix={suffix} admin={admin}/>}
   </div>
 }
 function ProjectList({catalogs,organization,canManage,base,suffix,admin}:{catalogs:Catalogs;organization:string;canManage:boolean;base:string;suffix:string;admin:boolean}) {
@@ -61,31 +65,37 @@ function GeneralForm({project,catalogs,user,organization,reload,onCreated,suffix
   const [createdId,setCreatedId]=useState('')
   if(createdId&&onCreated)return <Card><Alert tone="success" title="Proyecto creado">Continúa con sus plazas y perfiles requeridos.</Alert><Link className="button button--primary" to={onCreated+'/'+createdId+suffix}>Configurar plazas</Link></Card>
   return <Card><Editor label={project?'Guardar proyecto':'Guardar y añadir plazas'} readOnly={readOnly} onSave={async form=>{
-    const id=await saveProject(project?.id??null,organization,user,{name:text(form,'name'),summary:nullable(text(form,'summary')),description:nullable(text(form,'description')),academic_period_id:text(form,'academic_period_id'),municipality_id:nullable(text(form,'municipality_id')),modality:nullable(text(form,'modality'))})
+    const id=await saveProject(project?.id??null,organization,user,{name:text(form,'name'),summary:nullable(text(form,'summary')),description:nullable(text(form,'description')),academic_period_id:text(form,'academic_period_id'),municipality_id:nullable(text(form,'municipality_id')),modality:nullable(text(form,'modality')),zone_type:parseZoneType(text(form,'zone_type'))})
     if(reload) await reload();if(onCreated)setCreatedId(id)
   }}><h2>General</h2><Input label="Nombre del proyecto" name="name" required maxLength={240} defaultValue={project?.name??''} disabled={readOnly}/><Textarea label="Resumen" name="summary" maxLength={1000} defaultValue={project?.summary??''} disabled={readOnly}/><Textarea label="Descripción del proyecto" name="description" maxLength={10000} rows={5} defaultValue={project?.description??''} disabled={readOnly}/>
-    <h2>Contexto</h2><div className="form-grid"><Select label="Periodo académico" name="academic_period_id" required defaultValue={project?.academic_period_id??catalogs.periods.find(row=>row.is_current)?.id??''} disabled={readOnly}><option value="">Selecciona periodo</option>{catalogs.periods.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</Select><Select label="Municipio del proyecto" name="municipality_id" defaultValue={project?.municipality_id??''} disabled={readOnly}><option value="">Sin registrar</option>{catalogs.municipalities.filter(row=>row.active||row.id===project?.municipality_id).map(row=><option key={row.id} value={row.id}>{row.municipality_name} · {row.department_name}</option>)}</Select><Input label="Modalidad del proyecto" name="modality" maxLength={80} defaultValue={project?.modality??''} disabled={readOnly} hint="Utiliza la denominación acordada con coordinación."/></div>
+    <h2>Contexto</h2><div className="form-grid"><Select label="Periodo académico" name="academic_period_id" required defaultValue={project?.academic_period_id??catalogs.periods.find(row=>row.is_current)?.id??''} disabled={readOnly}><option value="">Selecciona periodo</option>{catalogs.periods.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</Select><Select label="Municipio del proyecto" name="municipality_id" defaultValue={project?.municipality_id??''} disabled={readOnly}><option value="">Sin registrar</option>{catalogs.municipalities.filter(row=>row.active||row.id===project?.municipality_id).map(row=><option key={row.id} value={row.id}>{row.municipality_name} · {row.department_name}</option>)}</Select><Select label="Zona del proyecto" name="zone_type" defaultValue={project?.zone_type??''} disabled={readOnly}><option value="">Sin registrar</option><option value="rural">Rural</option><option value="urban">Urbana</option></Select><Input label="Modalidad del proyecto" name="modality" maxLength={80} defaultValue={project?.modality??''} disabled={readOnly} hint="Utiliza la denominación acordada con coordinación."/></div>
     {!catalogs.periods.length&&<Alert tone="warning" title="Falta configurar el periodo académico">Solicita a coordinación que configure los catálogos.</Alert>}
   </Editor></Card>
 }
-function ProjectEditor({id,catalogs,user,organization,canManage,admin,base,suffix}:{id:string;catalogs:Catalogs;user:string;organization:string;canManage:boolean;admin:boolean;base:string;suffix:string}) {
+function ProjectEditor({id,catalogs,user,organization,canManage,admin,base,suffix,readInstitutional}:{readInstitutional?:InstitutionalReader;id:string;catalogs:Catalogs;user:string;organization:string;canManage:boolean;admin:boolean;base:string;suffix:string}) {
   const [page,setPage]=useState(0)
   const resource=useResource(useCallback(()=>projectDetail(id,page),[id,page]))
   const [decision,setDecision]=useState('')
+  const [sheetVersion,setSheetVersion]=useState(0)
+  const onTeamsChange=useCallback(()=>setSheetVersion(version=>version+1),[])
+  const reloadProject=resource.reload
+  const refresh=useCallback(async()=>{await reloadProject();setSheetVersion(version=>version+1)},[reloadProject])
   const data=resource.data
   if(resource.loading&&!data) return <Skeleton label="Cargando proyecto y plazas"/>
-  if(resource.error) return <ErrorState title={resource.error} onRetry={()=>void resource.reload()}/>
+  if(resource.error) return <ErrorState title={resource.error} onRetry={()=>void refresh()}/>
   if(!data) return null
   if(!admin&&data.project.organization_id!==organization) return <Alert tone="error" title="El proyecto no pertenece a la organización seleccionada"/>
   const readOnly=!canManage||(!admin&&!editableState(data.project.status))
   return <><PageHeader title={data.project.name} description={`${projectStateLabel(data.project.status)} · ${data.project.PYRUnibague_Organizations?.legal_name??''}`} action={<Link className="button button--secondary" to={base+suffix}>Volver a proyectos</Link>}/>
     {data.project.status==='submitted'&&<Alert tone="warning" title="Pendiente de revisión administrativa">La solicitud está enviada. Coordinación puede aprobarla o solicitar cambios.</Alert>}
     <div className="module-actions">{!admin&&!readOnly&&<Button onClick={()=>setDecision('submitted')}>Enviar para revisión</Button>}{admin&&['approved','changes_required','closed'].map(status=><Button key={status} variant={status==='approved'?'primary':'secondary'} onClick={()=>setDecision(status)}>{projectStateLabel(status)}</Button>)}</div>
-    <ConfirmDialog open={Boolean(decision)} title={projectStateLabel(decision)} confirmLabel="Confirmar estado" onCancel={()=>setDecision('')} onConfirm={async()=>{await changeProjectState(id,decision);await resource.reload()}}>Confirma el cambio del estado del proyecto. La organización podrá editar únicamente borradores o solicitudes de cambios.</ConfirmDialog>
-    <GeneralForm key={data.project.updated_at} project={data.project} catalogs={catalogs} user={user} organization={data.project.organization_id} suffix={suffix} reload={resource.reload} readOnly={readOnly}/>
+    <ConfirmDialog open={Boolean(decision)} title={projectStateLabel(decision)} confirmLabel="Confirmar estado" onCancel={()=>setDecision('')} onConfirm={async()=>{await changeProjectState(id,decision);await refresh()}}>Confirma el cambio del estado del proyecto. La organización podrá editar únicamente borradores o solicitudes de cambios.</ConfirmDialog>
+    <InstitutionalSheet key={data.project.updated_at+sheetVersion} projectId={id} readPeople={readInstitutional}/>
+    <GeneralForm key={data.project.updated_at} project={data.project} catalogs={catalogs} user={user} organization={data.project.organization_id} suffix={suffix} reload={refresh} readOnly={readOnly}/>
     <h2>Plazas y perfil requerido</h2><p>Cada plaza define su capacidad, programas, habilidades y requisitos.</p>
-    <PagedResults loading={resource.loading} error={resource.error} count={data.count} page={page} setPage={setPage} reload={resource.reload}>{data.positions.map(position=><Card key={position.id}><h3>{position.title} · Capacidad {position.capacity}</h3><details><summary>Consultar o editar plaza y perfil requerido</summary><PositionForm key={position.updated_at} project={id} position={position} readOnly={readOnly} reload={resource.reload}/><PositionProfile position={position} data={data} catalogs={catalogs} readOnly={readOnly} reload={resource.reload}/></details>{!readOnly&&<RemovePart table="PYRUnibague_ProjectPositions" id={position.id} reload={resource.reload} label="Eliminar plaza"/>}</Card>)}</PagedResults>
-    {!readOnly&&<Card><h2>Añadir plaza</h2><PositionForm project={id} reload={resource.reload}/></Card>}
+    <PagedResults loading={resource.loading} error={resource.error} count={data.count} page={page} setPage={setPage} reload={refresh}>{data.positions.map(position=><Card key={position.id}><h3>{position.title} · Capacidad {position.capacity}</h3><details><summary>Consultar o editar plaza y perfil requerido</summary><PositionForm key={position.updated_at} project={id} position={position} readOnly={readOnly} reload={refresh}/><PositionProfile position={position} data={data} catalogs={catalogs} readOnly={readOnly} reload={refresh}/></details>{!readOnly&&<RemovePart table="PYRUnibague_ProjectPositions" id={position.id} reload={refresh} label="Eliminar plaza"/>}</Card>)}</PagedResults>
+    {!readOnly&&<Card><h2>Añadir plaza</h2><PositionForm project={id} reload={refresh}/></Card>}
+    <GroupsPanel projectId={id} canManage={canManage} onChange={onTeamsChange}/>
   </>
 }
 function PositionForm({project,position,readOnly=false,reload}:{project:string;position?:Position;readOnly?:boolean;reload:()=>Promise<void>}) {
