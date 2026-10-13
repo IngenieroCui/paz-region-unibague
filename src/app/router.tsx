@@ -12,8 +12,12 @@ const studentPage = async () => ({ Component: (await import('../features/student
 const organizationPage = async () => ({ Component: (await import('../features/organizations/OrganizationWorkspace')).default })
 const projectsPage = async () => ({ Component: (await import('../features/projects/ProjectsWorkspace')).default })
 const adminPage = async () => ({ Component: (await import('../features/admin/AdminWorkspace')).default })
+const matchingPage = async () => ({ Component: (await import('../features/matching/MatchingWorkspace')).MatchingWorkspace })
+const advisorsAdminPage = async () => ({ Component: (await import('../features/advisors/AdvisorsAdminWorkspace')).AdvisorsAdminWorkspace })
+const advisorPage = async () => ({ Component: (await import('../features/advisors/AdvisorWorkspace')).AdvisorWorkspace })
 function moduleRoutes(role: typeof roles[number]): RouteObject[] {
-  if (role === 'ADMIN') return [{ index: true, lazy: adminPage }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: item.path === 'projects' ? projectsPage : adminPage })), { path: 'students/:studentId', lazy: adminPage }, { path: 'organizations/:organizationId', lazy: adminPage }, { path: 'projects/:projectId', lazy: projectsPage }]
+  if (role === 'ADMIN') return [{ index: true, lazy: adminPage }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: item.path === 'projects' ? projectsPage : item.path === 'matching' ? matchingPage : ['advisors', 'special-cases'].includes(item.path) ? advisorsAdminPage : adminPage })), { path: 'students/:studentId', lazy: adminPage }, { path: 'organizations/:organizationId', lazy: adminPage }, { path: 'projects/:projectId', lazy: projectsPage }]
+  if (role === 'ADVISOR') return [{ index: true, lazy: advisorPage }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: advisorPage }))]
   const lazy = role === 'STUDENT' ? studentPage : organizationPage
   return [{ index: true, lazy }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: role === 'ORGANIZATION' && item.path === 'projects' ? projectsPage : lazy })), ...(role === 'ORGANIZATION' ? [{ path: 'projects/new', lazy: projectsPage }, { path: 'projects/:projectId', lazy: projectsPage }] : [])]
 }
