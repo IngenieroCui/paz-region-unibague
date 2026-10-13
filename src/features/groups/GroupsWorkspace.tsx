@@ -10,6 +10,7 @@ import { Alert, EmptyState, ErrorState } from '../../components/feedback/States'
 import { Editor } from '../../components/forms/Editor'
 import { text } from '../../components/forms/form-data'
 import { useResource } from '../../components/forms/useResource'
+import { DataTable, PagedResults } from '../../components/forms/PagedData'
 import { nullable } from '../../lib/supabase/feature-helpers'
 import { addGroupMember, availableAssignments, bogotaToday, groupAccess, readProjectTeam, retireGroupMember, saveGroup } from './services/groups'
 import type { Group, GroupMember, ProjectTeam } from './services/groups'
@@ -26,6 +27,7 @@ export function GroupsPage() {
   return <div className="module-stack"><PageHeader title={'Equipos · '+access.data.project.name}/><GroupsPanel projectId={projectId} canManage={access.data.canManage}/></div>
 }
 export function GroupsPanel({ projectId,canManage,onChange }: { projectId: string; canManage: boolean; onChange?: () => void }) {
+  const [confirmedPage,setConfirmedPage] = useState(0)
   const resource = useResource(useCallback(() => readProjectTeam(projectId),[projectId]))
   const reload = resource.reload
   const refresh = useCallback(async () => { await reload(); onChange?.() },[reload,onChange])
@@ -33,8 +35,14 @@ export function GroupsPanel({ projectId,canManage,onChange }: { projectId: strin
   if (resource.error) return <ErrorState title={resource.error} onRetry={() => void resource.reload()}/>
   if (!resource.data) return null
   const team = resource.data
+  const confirmed = team.assignments.filter(a => a.is_active && a.status === 'confirmed' && a.unassigned_at === null)
   return <section aria-label="Equipos del proyecto" className="module-stack"><h2>Equipos e integrantes</h2>
     <p>Los integrantes provienen de asignaciones confirmadas. Retirar una persona conserva su historial.</p>
+    <h3>Estudiantes confirmados en el proyecto</h3><PagedResults loading={false} error="" count={confirmed.length} page={Math.min(confirmedPage,Math.max(0,Math.ceil(confirmed.length/25)-1))} setPage={setConfirmedPage} reload={resource.reload}>
+      <DataTable caption="Estudiantes confirmados" rows={confirmed.slice(Math.min(confirmedPage,Math.max(0,Math.ceil(confirmed.length/25)-1))*25,Math.min(confirmedPage,Math.max(0,Math.ceil(confirmed.length/25)-1))*25+25)} rowKey={row => row.id} columns={[
+        { label:'Estudiante',cell:row => row.display_name ?? 'No registrado' },{ label:'Programa',cell:row => row.program_name ?? 'No registrado' },{ label:'Plaza',cell:row => row.position_title },
+      ]}/>
+    </PagedResults>
     {!team.groups.length && <EmptyState title="Sin equipos registrados">Crea un equipo para este proyecto y vincula asignaciones existentes.</EmptyState>}
     {team.groups.map(group => <Card key={group.id}><h3>{group.name}</h3><p>{group.status === 'active' ? 'Activo' : 'Cerrado'} · Inicio: {group.started_on ?? 'Sin registrar'}</p>
       {canManage && <details><summary>Editar equipo</summary><GroupForm key={group.updated_at} projectId={projectId} group={group} reload={refresh}/></details>}

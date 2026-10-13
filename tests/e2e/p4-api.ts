@@ -3,7 +3,7 @@ type Row=Record<string,unknown>
 export async function p4Api(page:Page,role:'ADMIN'|'ORGANIZATION'='ADMIN',options:{readOnly?:boolean;count?:number;emptyCatalogs?:boolean}={}){
  const now='2026-10-01T12:00:00Z',uid='04000000-0000-0000-0000-00000000000'+(role==='ADMIN'?'1':'2'),oid='44000000-0000-0000-0000-000000000001',sid='84000000-0000-0000-0000-000000000001',pid='14000000-0000-0000-0000-000000000001',projectId='54000000-0000-0000-0000-000000000001'
  const tables:Record<string,Row[]>={};const names=['UserProfiles','Roles','UserRoles','AcademicPeriods','AcademicPrograms','Municipalities','OrganizationTypes','Skills','Students','StudentExperiences','StudentSkills','StudentInterests','StudentLocationPreferences','StudentDocuments','StudentPeriodParticipations','Organizations','OrganizationMembers','OrganizationDocuments','OrganizationReviews','Projects','ProjectPositions','ProjectPositionPrograms','ProjectPositionSkills','ProjectRequirements','SystemConfigurations','FeatureFlags','AuditLogs']
- names.push('MatchingConfigurations','MatchingRuns','MatchCandidates')
+ names.push('MatchingConfigurations','MatchingRuns','MatchCandidates','OrganizationContacts','ProjectInterlocutors','ProjectParticipatingOrganizations','Groups','GroupMembers','Assignments','AssignmentEvents')
  names.forEach(name=>tables['PYRUnibague_'+name]=[])
  const table=(name:string)=>tables['PYRUnibague_'+name]!
  table('UserProfiles').push({user_id:uid,display_name:'Cuenta P4',institutional_email:'p4@example.test',created_at:now,updated_at:now},{user_id:'04000000-0000-0000-0000-000000000005',display_name:'Estudiante P4',institutional_email:'student@example.test',created_at:now,updated_at:now})
@@ -31,6 +31,9 @@ export async function p4Api(page:Page,role:'ADMIN'|'ORGANIZATION'='ADMIN',option
   const name=url.pathname.split('/').at(-1)??''
   if(fail===name){fail='';return route.fulfill({status:400,json:{code:'TEST',message:'Isolated failure'}})}
   if(url.pathname.includes('/rpc/')){
+   if(name==='pyr_unibague_project_institutional')return route.fulfill({json:{availability:'available',advisors:[],interlocutors:[],organizations:[]}})
+   if(name==='pyr_unibague_assignment_snapshot')return route.fulfill({json:{periodId:body.p_period_id,revision:'p4',run:null,students:[],positions:[],candidates:[],existing:[]}})
+   if(name==='pyr_unibague_project_team')return route.fulfill({json:{groups:[],members:[],assignments:[]}})
    if(name==='pyr_unibague_project_totals')return route.fulfill({json:(body.p_project_ids as string[]).map(id=>({project_id:id,total_capacity:table('ProjectPositions').filter(row=>row.project_id===id).reduce((sum,row)=>sum+Number(row.capacity),0)}))})
    if(name==='pyr_unibague_admin_dashboard')return route.fulfill({json:{period:table('AcademicPeriods').find(row=>row.is_current)??null,students:table('Students').length,participating:table('StudentPeriodParticipations').length,eligible:table('StudentPeriodParticipations').filter(row=>row.eligible_for_matching).length,organizations:table('Organizations').length,pendingOrganizations:table('Organizations').filter(row=>row.status==='pending_review').length,projects:table('Projects').length,pendingProjects:table('Projects').filter(row=>row.status==='submitted').length,positions:table('ProjectPositions').length,capacity:table('ProjectPositions').reduce((sum,row)=>sum+Number(row.capacity),0),programs:table('AcademicPrograms').length,municipalities:table('Municipalities').length,types:table('OrganizationTypes').length,skills:table('Skills').length}})
    if(name==='pyr_unibague_admin_students'){

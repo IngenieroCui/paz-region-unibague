@@ -90,7 +90,7 @@ function PeriodWorkspace({ periodId, runId, tab, periodLabel }: { periodId: stri
   return <div className="module-stack">
     <div className="module-actions"><Button variant="secondary" disabled={busy} onClick={() => void refresh()}>Actualizar cupos y descartar borrador</Button>{stale && <Alert tone="error" title="Propuesta desactualizada">Actualiza los datos y recalcula antes de confirmar.</Alert>}</div>
     {error && <Alert tone="error" title={error} />}
-    {success && <Alert tone="success" title={success} />}
+    {success && <Alert tone="success" title={success}><a href="/app/admin/advisors">Revisar asesor individual</a> · <a href="/app/admin/groups">Vincular equipo del proyecto</a></Alert>}
     <p>Regla conservadora provisional: proyecto aprobado y organización aprobada con verificación. Requiere validación institucional; no constituye normativa oficial.</p>
     <p>Los vínculos con asesores y equipos están pendientes de integración. La decisión confirma estudiante y plaza.</p>
     {tab === 'overview' && <Card><h2>Resumen · {periodLabel}</h2><dl className="assignment-metrics">{[
@@ -135,7 +135,15 @@ function PeriodWorkspace({ periodId, runId, tab, periodLabel }: { periodId: stri
     </Card>}
     <ConfirmDialog open={Boolean(confirmation)} title="Confirmar decisión administrativa" confirmLabel="Confirmar decisión" onCancel={() => setConfirmation(null)} onConfirm={async () => {
       if (!confirmation || stale) throw new FeatureError('Actualiza y recalcula antes de confirmar.')
-      try { await commitAssignments(confirmation.snapshot, confirmation.actions); await refresh(); setSuccess('Decisión confirmada. Cupos e historial actualizados.'); setExceptionConfirmed(false); setJustification(''); setReason('') }
+      try {
+        const response = await commitAssignments(confirmation.snapshot, confirmation.actions)
+        const missing = Array.isArray(response) && response.some(row => {
+          if (!row || typeof row !== 'object' || Array.isArray(row)) return false
+          const integrations = row.integrations
+          return integrations && typeof integrations === 'object' && !Array.isArray(integrations) && integrations.advisor === 'missing_advisor'
+        })
+        await refresh(); setSuccess('Decisión confirmada. Cupos e historial actualizados.' + (missing ? ' Falta vincular asesor individual; resuélvelo en Asesores y responsabilidades.' : '')); setExceptionConfirmed(false); setJustification(''); setReason('')
+      }
       catch (cause) { if (cause instanceof FeatureError && ['P0001', '23514', '23505', 'UNCERTAIN_COMMIT'].includes(cause.code)) setStale(true); setError(errorMessage(cause)); throw cause }
     }}>{confirmation?.description}</ConfirmDialog>
   </div>

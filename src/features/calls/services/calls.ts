@@ -1,18 +1,9 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../../lib/supabase/database.types'
 import { allPages, check, client, FeatureError } from '../../../lib/supabase/feature-helpers'
+import type { Row } from '../../../lib/supabase/feature-helpers'
 export type CallStatus = 'draft' | 'submitted' | 'changes_required' | 'open' | 'closed'
-export interface Call {
-  id: string; organization_id: string; academic_period_id: string; title: string; details: string | null
-  opens_at: string | null; closes_at: string | null; status: CallStatus; created_at: string; updated_at: string
-}
-export interface CallPosition { id: string; call_id: string; project_position_id: string; created_at: string; updated_at: string }
-type Table<T, Required extends keyof T> = { Row: { [K in keyof T]: T[K] }; Insert: Pick<T, Required> & Partial<T>; Update: Partial<T>; Relationships: [] }
-type CallsDatabase = Omit<Database, 'public'> & { public: Omit<Database['public'], 'Tables'> & { Tables: Database['public']['Tables'] & {
-  PYRUnibague_Calls: Table<Call, 'organization_id' | 'academic_period_id' | 'title'>
-  PYRUnibague_CallPositions: Table<CallPosition, 'call_id' | 'project_position_id'>
-} } }
-async function callClient() { return await client() as unknown as SupabaseClient<CallsDatabase> }
+export type Call = Row<'PYRUnibague_Calls'>
+export type CallPosition = Row<'PYRUnibague_CallPositions'>
+const callClient = client
 export const callStates: Record<CallStatus, string> = { draft: 'Borrador', submitted: 'Enviada', changes_required: 'Cambios solicitados', open: 'Abierta', closed: 'Cerrada' }
 export const callEditable = (status: CallStatus) => status === 'draft' || status === 'changes_required'
 export async function callContext(user: string, admin: boolean) {

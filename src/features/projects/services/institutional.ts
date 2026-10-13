@@ -1,27 +1,9 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { allPages, check, client, FeatureError } from '../../../lib/supabase/feature-helpers'
-import type { Database } from '../../../lib/supabase/database.types'
 import { readProjectTeam } from '../../groups'
 import type { ProjectTeam } from '../../groups'
 
 export type ZoneType = 'rural' | 'urban' | null
-type ProjectTable = Database['public']['Tables']['PYRUnibague_Projects']
-/** Temporary feature-local contract; regenerate shared types after integration of 009. */
-type ProjectDatabase = Omit<Database, 'public'> & {
-  public: Omit<Database['public'], 'Tables'> & {
-    Tables: Omit<Database['public']['Tables'], 'PYRUnibague_Projects'> & {
-      PYRUnibague_Projects: Omit<ProjectTable, 'Row' | 'Insert' | 'Update'> & {
-        Row: ProjectTable['Row'] & { zone_type: ZoneType }
-        Insert: ProjectTable['Insert'] & { zone_type?: ZoneType }
-        Update: ProjectTable['Update'] & { zone_type?: ZoneType }
-      }
-    }
-  }
-}
-export async function projectClient() {
-  // The same authenticated singleton, with only the feature-owned schema extension.
-  return await client() as unknown as SupabaseClient<ProjectDatabase>
-}
+export const projectClient = client
 export function zoneLabel(value: ZoneType | undefined) {
   return value === 'rural' ? 'Rural' : value === 'urban' ? 'Urbana' : 'Sin registrar'
 }
@@ -38,6 +20,7 @@ export interface InstitutionalRelations {
   availability: 'available' | 'not_integrated'
   interlocutors: InstitutionalPerson[]
   advisors: InstitutionalPerson[]
+  organizations?: InstitutionalPerson[]
 }
 /** Agent A supplies a reader backed by ProjectInterlocutors / AdvisorOrganizationAssignments. */
 export type InstitutionalReader = (project: {
@@ -46,6 +29,20 @@ export type InstitutionalReader = (project: {
 export const unavailableInstitutionalReader: InstitutionalReader = async () => ({
   availability: 'not_integrated', interlocutors: [], advisors: [],
 })
+export const readInstitutionalRelations: InstitutionalReader = async project => {
+  const db = await client(), response = await db.rpc('pyr_unibague_project_institutional', { p_project_id: project.id })
+  check(response.error)
+  const data = response.data
+  if (!data || typeof data !== 'object' || Array.isArray(data) || data.availability !== 'available') throw new FeatureError('Ficha institucional incompleta.')
+  const people = (value: unknown): InstitutionalPerson[] => {
+    if (!Array.isArray(value)) throw new FeatureError('Relaciones institucionales incompletas.')
+    return value.map(row => {
+      if (!row || typeof row !== 'object' || typeof row.id !== 'string' || (row.displayName !== null && typeof row.displayName !== 'string')) throw new FeatureError('Persona institucional inválida.')
+      return { id: row.id, displayName: row.displayName }
+    })
+  }
+  return { availability: 'available', interlocutors: people(data.interlocutors), advisors: people(data.advisors), organizations: people(data.organizations) }
+}
 export async function institutionalSheet(projectId: string, readPeople = unavailableInstitutionalReader) {
   const db = await projectClient()
   const result = await db.from('PYRUnibague_Projects')

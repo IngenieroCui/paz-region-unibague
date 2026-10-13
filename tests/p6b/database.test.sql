@@ -1,4 +1,4 @@
--- Execute on an isolated Supabase test database with migrations 001-007 and 009.
+-- Execute on an isolated Supabase test database with the integrated 001-011 schema.
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
@@ -28,6 +28,7 @@ insert into public."PYRUnibague_ProjectPositions"(id,project_id,title,capacity,s
 insert into public."PYRUnibague_ProjectPositionPrograms"(project_position_id,academic_program_id) values
  (pg_temp.id(40),pg_temp.id(12)),(pg_temp.id(41),pg_temp.id(13));
 insert into public."PYRUnibague_Students"(id,user_id,academic_program_id) select pg_temp.id(100+n),pg_temp.id(n),pg_temp.id(12) from generate_series(5,8) n;
+insert into public."PYRUnibague_StudentPeriodParticipations"(student_id,academic_period_id,status,eligible_for_matching) select id,pg_temp.id(10),'test',true from public."PYRUnibague_Students" where id in (pg_temp.id(105),pg_temp.id(106),pg_temp.id(107),pg_temp.id(108));
 insert into public."PYRUnibague_Assignments"(id,student_id,project_position_id,academic_period_id,status,source) values
  (pg_temp.id(50),pg_temp.id(105),pg_temp.id(40),pg_temp.id(10),'confirmed','MANUAL'),
  (pg_temp.id(51),pg_temp.id(106),pg_temp.id(42),pg_temp.id(10),'confirmed','MANUAL'),
@@ -87,9 +88,9 @@ select set_config('request.jwt.claim.sub',pg_temp.id(4)::text,true);
 select throws_ok($$insert into public."PYRUnibague_Groups"(project_id,name) values(pg_temp.id(30),'Forbidden')$$,'42501',null,'Read-only organization member cannot create groups');
 select throws_ok($$insert into public."PYRUnibague_GroupMembers"(group_id,assignment_id) values(pg_temp.id(60),pg_temp.id(50))$$,'42501',null,'Read-only member cannot add memberships');
 select set_config('request.jwt.claim.sub',pg_temp.id(1)::text,true);
-select throws_ok($$update public."PYRUnibague_Assignments" set project_position_id=pg_temp.id(41) where id=pg_temp.id(50)$$,'23514',null,'Assignment cannot reinterpret membership history');
+select throws_ok($$update public."PYRUnibague_Assignments" set project_position_id=pg_temp.id(41) where id=pg_temp.id(50)$$,'42501',null,'Integrated schema denies direct assignment mutation even to ADMIN');
 select throws_ok($$delete from public."PYRUnibague_GroupMembers" where id=pg_temp.id(90)$$,'42501',null,'Membership deletion privilege absent even for app ADMIN');
-select lives_ok($$update public."PYRUnibague_Assignments" set is_active=false,status='released',unassigned_at=now() where id=pg_temp.id(50)$$,'Releasing assignment retires current membership transactionally');
+select lives_ok($$select public.pyr_unibague_unassign_assignment(pg_temp.id(10),null,public.pyr_unibague_assignment_snapshot(pg_temp.id(10),null)->>'revision',jsonb_build_object('student_id',pg_temp.id(105),'assignment_id',pg_temp.id(50),'reason_code','OTHER','reason_text','P6B integration regression'))$$,'Releasing assignment retires current membership transactionally');
 select is((select count(*)::integer from public."PYRUnibague_GroupMembers" where assignment_id=pg_temp.id(50) and status='active'),0,'No active membership survives release');
 select is((select count(*)::integer from public."PYRUnibague_GroupMembers" where assignment_id=pg_temp.id(50)),2,'Release retains all historical memberships');
 select throws_ok($$insert into public."PYRUnibague_GroupMembers"(group_id,assignment_id) values(pg_temp.id(60),pg_temp.id(50))$$,'23514',null,'Released assignment cannot rejoin');

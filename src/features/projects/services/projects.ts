@@ -2,7 +2,7 @@ import { allPages, check, client, FeatureError } from '../../../lib/supabase/fea
 import type { Row } from '../../../lib/supabase/feature-helpers'
 import { projectClient } from './institutional'
 import type { ZoneType } from './institutional'
-export type Project = Row<'PYRUnibague_Projects'> & { zone_type?: ZoneType }
+export type Project = Row<'PYRUnibague_Projects'>
 export type Position = Row<'PYRUnibague_ProjectPositions'>
 export const projectStates: Record<string,string> = { draft: 'Borrador', submitted: 'Enviado para revisión', changes_required: 'Cambios solicitados', approved: 'Aprobado', closed: 'Cerrado' }
 export const projectStateLabel = (value: string) => projectStates[value] ?? value
@@ -54,7 +54,7 @@ export async function projectDetail(id: string, page=0) {
   return {project:project.data!,positions:positions.data??[],count:positions.count??0,programs,skills,requirements}
 }
 export type ProjectDetail = Awaited<ReturnType<typeof projectDetail>>
-export type ProjectEdit = Pick<Project,'name'|'summary'|'description'|'academic_period_id'|'municipality_id'|'modality'|'zone_type'>
+export type ProjectEdit = Pick<Project,'name'|'summary'|'description'|'academic_period_id'|'municipality_id'|'modality'> & { zone_type?: ZoneType }
 export async function saveProject(id: string|null, organization: string, user: string, fields: ProjectEdit) {
   if (!fields.name.trim() || !fields.academic_period_id) throw new FeatureError('Nombre y periodo son obligatorios.')
   const edit: ProjectEdit={name:fields.name.trim(),summary:fields.summary,description:fields.description,academic_period_id:fields.academic_period_id,municipality_id:fields.municipality_id,modality:fields.modality}

@@ -1,16 +1,10 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database, Json } from '../../../lib/supabase/database.types'
 import { check, client, FeatureError } from '../../../lib/supabase/feature-helpers'
-export interface Group { id: string; project_id: string; name: string; status: 'active' | 'closed'; started_on: string | null; created_at: string; updated_at: string }
-export interface GroupMember { id: string; group_id: string; assignment_id: string; joined_on: string | null; left_on: string | null; status: 'active' | 'inactive'; created_at: string; updated_at: string }
+import type { Row } from '../../../lib/supabase/feature-helpers'
+export type Group = Row<'PYRUnibague_Groups'>
+export type GroupMember = Row<'PYRUnibague_GroupMembers'>
 export interface TeamAssignment { id: string; student_id: string; display_name: string | null; program_name: string | null; position_title: string; is_active: boolean; status: string; unassigned_at: string | null }
 export interface ProjectTeam { groups: Group[]; members: GroupMember[]; assignments: TeamAssignment[] }
-type Table<T, Required extends keyof T> = { Row: { [K in keyof T]: T[K] }; Insert: Pick<T, Required> & Partial<T>; Update: Partial<T>; Relationships: [] }
-type GroupsDatabase = Omit<Database,'public'> & { public: Omit<Database['public'],'Tables' | 'Functions'> & {
-  Tables: Database['public']['Tables'] & { PYRUnibague_Groups: Table<Group,'project_id' | 'name'>; PYRUnibague_GroupMembers: Table<GroupMember,'group_id' | 'assignment_id'> }
-  Functions: Database['public']['Functions'] & { pyr_unibague_project_team: { Args: { p_project_id: string }; Returns: Json } }
-} }
-async function groupClient() { return await client() as unknown as SupabaseClient<GroupsDatabase> }
+const groupClient = client
 function record(value: unknown): Record<string,unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new FeatureError('Respuesta de equipos inválida.')
   return value as Record<string,unknown>

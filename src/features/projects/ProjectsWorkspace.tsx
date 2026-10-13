@@ -16,12 +16,13 @@ import { nullable } from '../../lib/supabase/feature-helpers'
 import { changeProjectState, editableState, listProjects, projectCatalogs, projectDetail, projectMemberships, projectStateLabel, projectStates, removeProjectPart, savePosition, savePositionProgram, savePositionSkill, saveProject, saveRequirement } from './services/projects'
 import type { Position, Project, ProjectDetail } from './services/projects'
 import { InstitutionalSheet } from './InstitutionalSheet'
+import { ProjectRelations } from './ProjectRelations'
 import { GroupsPanel } from '../groups'
-import { parseZoneType } from './services/institutional'
+import { parseZoneType, readInstitutionalRelations } from './services/institutional'
 import type { InstitutionalReader } from './services/institutional'
 
 type Catalogs = Awaited<ReturnType<typeof projectCatalogs>>
-export default function ProjectsWorkspace({ readInstitutional }: { readInstitutional?: InstitutionalReader } = {}) {
+export default function ProjectsWorkspace({ readInstitutional = readInstitutionalRelations }: { readInstitutional?: InstitutionalReader } = {}) {
   const { session, roles } = useAuth()
   const admin = useLocation().pathname.startsWith('/app/admin') && roles.includes('ADMIN')
   const [params,setParams]=useSearchParams()
@@ -56,6 +57,7 @@ function ProjectList({catalogs,organization,canManage,base,suffix,admin}:{catalo
     <Card><div className="form-grid"><SearchField value={list.search} onChange={list.setSearch}/><Select label="Estado" value={status} onChange={event=>filter(setStatus,event.target.value)}><option value="">Todos</option>{Object.entries(projectStates).map(([value,label])=><option key={value} value={value}>{label}</option>)}</Select><Select label="Periodo" value={period} onChange={event=>filter(setPeriod,event.target.value)}><option value="">Todos</option>{catalogs.periods.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</Select><Select label="Municipio" value={municipality} onChange={event=>filter(setMunicipality,event.target.value)}><option value="">Todos</option>{catalogs.municipalities.map(row=><option key={row.id} value={row.id}>{row.municipality_name}</option>)}</Select><Input label="Modalidad" value={modality} onChange={event=>filter(setModality,event.target.value)}/></div></Card>
     <PagedResults {...list} count={list.data?.count??0}><DataTable caption="Proyectos registrados" rows={list.data?.rows??[]} rowKey={row=>row.id} columns={[
       {label:'Nombre',cell:row=><Link to={base+'/'+row.id+suffix}>{row.name}</Link>},
+      {label:'Equipos',cell:row=><Link to={base+'/'+row.id+'/groups'+suffix}>Ver equipos</Link>},
       ...(admin?[{label:'Organización',cell:(row:Awaited<ReturnType<typeof listProjects>>['rows'][number])=>row.PYRUnibague_Organizations?.legal_name??'—'}]:[]),
       {label:'Periodo',cell:row=>row.PYRUnibague_AcademicPeriods?.name??'—'}, {label:'Municipio',cell:row=>row.PYRUnibague_Municipalities?.municipality_name??'—'},
       {label:'Modalidad',cell:row=>row.modality??'—'},{label:'Estado',cell:row=>projectStateLabel(row.status)},{label:'Plazas',cell:row=>row.PYRUnibague_ProjectPositions[0]?.count??0},{label:'Capacidad total',cell:row=>row.capacity},
@@ -91,6 +93,7 @@ function ProjectEditor({id,catalogs,user,organization,canManage,admin,base,suffi
     <div className="module-actions">{!admin&&!readOnly&&<Button onClick={()=>setDecision('submitted')}>Enviar para revisión</Button>}{admin&&['approved','changes_required','closed'].map(status=><Button key={status} variant={status==='approved'?'primary':'secondary'} onClick={()=>setDecision(status)}>{projectStateLabel(status)}</Button>)}</div>
     <ConfirmDialog open={Boolean(decision)} title={projectStateLabel(decision)} confirmLabel="Confirmar estado" onCancel={()=>setDecision('')} onConfirm={async()=>{await changeProjectState(id,decision);await refresh()}}>Confirma el cambio del estado del proyecto. La organización podrá editar únicamente borradores o solicitudes de cambios.</ConfirmDialog>
     <InstitutionalSheet key={data.project.updated_at+sheetVersion} projectId={id} readPeople={readInstitutional}/>
+    {!readOnly && <ProjectRelations projectId={id} organizationId={data.project.organization_id} admin={admin} readOnly={readOnly} onChange={refresh}/>}
     <GeneralForm key={data.project.updated_at} project={data.project} catalogs={catalogs} user={user} organization={data.project.organization_id} suffix={suffix} reload={refresh} readOnly={readOnly}/>
     <h2>Plazas y perfil requerido</h2><p>Cada plaza define su capacidad, programas, habilidades y requisitos.</p>
     <PagedResults loading={resource.loading} error={resource.error} count={data.count} page={page} setPage={setPage} reload={refresh}>{data.positions.map(position=><Card key={position.id}><h3>{position.title} · Capacidad {position.capacity}</h3><details><summary>Consultar o editar plaza y perfil requerido</summary><PositionForm key={position.updated_at} project={id} position={position} readOnly={readOnly} reload={refresh}/><PositionProfile position={position} data={data} catalogs={catalogs} readOnly={readOnly} reload={refresh}/></details>{!readOnly&&<RemovePart table="PYRUnibague_ProjectPositions" id={position.id} reload={refresh} label="Eliminar plaza"/>}</Card>)}</PagedResults>

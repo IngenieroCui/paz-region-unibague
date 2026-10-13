@@ -49,3 +49,9 @@ P3 comparte únicamente componentes de formularios/recurso, traducción de error
 ## Integración P4 · Projects + Admin
 
 ProjectsWorkspace y AdminWorkspace son módulos productivos con carga diferida, servicios separados y autorización persistida P2/P3. PagedData/usePaged proporcionan tablas, búsqueda, filtros y paginación reutilizables; una recarga conserva formularios abiertos y sus cambios. DocumentsPanel y el servicio privado P3 se reutilizan. El dashboard y la búsqueda de estudiantes usan RPC de agregación/paginación; relaciones de listas se consultan por lotes. Contrato e integración: [PROJECTS_ADMIN_P4.md](PROJECTS_ADMIN_P4.md).
+
+## Integración P6/P7
+
+El router productivo carga Matching, Assignments, Calls, Groups y Advisors bajo el shell/RBAC existente. Grupos reutiliza la lista de proyectos y el panel de equipos; no hay un segundo flujo de proyectos. El worker del optimizador se compila en producción. Confirmar/reasignar/retirar usa las RPC de 010; el helper privado sustituido por 011 vincula o cierra asesoría dentro de la misma transacción. El trigger 009 retira las membresías al cerrar la asignación. No hay escrituras frontend posteriores para completar esa transacción.
+
+La ficha consulta personas/instituciones mediante proyección autorizada y el equipo mediante GroupMembers/Assignments. ProjectRelations permite vincular contactos operativos y ADMIN gestiona colaboradores. StudentAssignment consulta una proyección propia de destino/asesor/equipo sin matching interno. Las responsabilidades de organización y estudiante mantienen historias independientes. Detalles y validación: [P6_INTEGRATION_REPORT.md](P6_INTEGRATION_REPORT.md).

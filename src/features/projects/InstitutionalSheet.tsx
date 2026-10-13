@@ -21,6 +21,7 @@ export function InstitutionalSheetView({ data }: { data: InstitutionalSheetData 
     <p className="p6b-sheet-name"><strong>{project.name}</strong></p>
     <dl className="p6b-sheet-grid">
       <div><dt>Institución participante</dt><dd>{organization?.legal_name ?? 'Sin registrar'}</dd></div>
+      <div><dt>Instituciones colaboradoras</dt><dd><People people={people.organizations ?? []}/></dd></div>
       <div><dt>Semestre</dt><dd>{project.PYRUnibague_AcademicPeriods?.code ?? 'Sin registrar'}</dd></div>
       <div><dt>Ubicación</dt><dd>{project.PYRUnibague_Municipalities ? `${project.PYRUnibague_Municipalities.municipality_name}, ${project.PYRUnibague_Municipalities.department_name}` : 'Sin registrar'}</dd></div>
       <div><dt>Zona</dt><dd>{zoneLabel(project.zone_type)}</dd></div>

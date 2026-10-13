@@ -1,18 +1,9 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database, Json } from '../../lib/supabase/database.types'
+import type { Json } from '../../lib/supabase/database.types'
 import { allPages, check, client, FeatureError } from '../../lib/supabase/feature-helpers'
 import type { AssignmentAction, AssignmentSnapshot } from './types'
 
 type CommonArgs = { p_period_id: string; p_run_id: string | null; p_revision: string }
-type AssignmentDatabase = Omit<Database, 'public'> & { public: Omit<Database['public'], 'Functions'> & { Functions: Database['public']['Functions'] & {
-  pyr_unibague_assignment_snapshot: { Args: { p_period_id: string; p_run_id: string | null }; Returns: Json }
-  pyr_unibague_confirm_assignment_batch: { Args: CommonArgs & { p_actions: Json }; Returns: Json }
-  pyr_unibague_confirm_assignment: { Args: CommonArgs & { p_action: Json }; Returns: Json }
-  pyr_unibague_reassign_assignment: { Args: CommonArgs & { p_action: Json }; Returns: Json }
-  pyr_unibague_unassign_assignment: { Args: CommonArgs & { p_action: Json }; Returns: Json }
-} } }
-/** Local extension for migration 010; the global generated/fallback types belong to the integrator. */
-async function assignmentClient() { return await client() as unknown as SupabaseClient<AssignmentDatabase> }
+const assignmentClient = client
 function assignmentError(error: { code?: string; message: string } | null) {
   if (!error) return
   if (error.code === 'P0001') throw new FeatureError('La propuesta cambió o el cupo se agotó. Actualiza y recalcula; no se confirmó ninguna fila del lote.', error.code)

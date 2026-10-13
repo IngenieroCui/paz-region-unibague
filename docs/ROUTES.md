@@ -21,9 +21,9 @@ Roles persistidos RPC: /app verifica rol real. Sin sesión → /login; con sesi�
 
 Subrutas de preview: student/profile, process, documents; organization/profile, projects, requests; admin/students, organizations, projects, assignments, settings. Son pantallas de preparación. Paths no registrados devuelven 404. /dev y fixtures no se empaquetan en producción.
 
-## Futuras
+## Evolución histórica
 
-Subrutas Admin conservan placeholders y guard real hasta P4. Student y Organization son módulos productivos P3. Matching será feature de coordinación; URL final por validar.
+Las subrutas Admin se conectaron en P4–P7. Student y Organization conservan sus módulos productivos P3. Matching y asignaciones son superficies administrativas operativas.
 
 Hosting SPA debe resolver rutas frontend hacia index.html sin reescribir API, Auth o archivos existentes. No cachear callbacks de Auth. Política de status HTTP se decide al desplegar.
 
@@ -48,7 +48,24 @@ Student: /app/student/profile, /experience, /skills (habilidades e intereses), /
 | /app/admin/users | Usuarios y roles | ADMIN persistido |
 | /app/admin/settings | Cinco catálogos, configuraciones y flags | ADMIN persistido |
 | /app/admin/audit | Auditoría read-only | ADMIN persistido |
-| /app/admin/matching | Placeholder de integración P5 | ADMIN persistido |
-| /app/admin/assignments | Placeholder P6 | ADMIN persistido |
+| /app/admin/matching | Matching P5 conectado | ADMIN persistido |
+| /app/admin/assignments | Optimizador y decisiones P6-C | ADMIN persistido |
 
-La sección histórica «Futuras» describe P3; Admin ya es operativo en P4 excepto los dos placeholders indicados. Se conserva el guard, la selección de organización y las rutas P3. Detalle: [PROJECTS_ADMIN_P4.md](PROJECTS_ADMIN_P4.md).
+Se conservan los guards, la selección de organización y las rutas P3/P4. Las rutas actuales de P6/P7 se indican a continuación.
+
+## P6/P7
+
+| Ruta | Superficie | Acceso |
+| --- | --- | --- |
+| /app/admin/calls y /:callId | Convocatorias y revisión | ADMIN |
+| /app/organization/calls y /:callId | Convocatorias y plazas existentes | ORGANIZATION, membresía RLS |
+| /app/admin/groups | Proyectos con acceso a equipos | ADMIN |
+| /app/organization/groups | Proyectos y estudiantes confirmados | ORGANIZATION, membresía RLS |
+| /app/admin/projects/:projectId/groups | Equipos del proyecto | ADMIN |
+| /app/organization/projects/:projectId/groups | Equipos del proyecto | ORGANIZATION, membresía RLS |
+| /app/admin/advisors | Personal y responsabilidades históricas | ADMIN |
+| /app/admin/special-cases | Casos mínimos y nombre ARL opcional | ADMIN |
+| /app/advisor y /organizations, /students, /projects, /profile | Workspace de asesor | ADVISOR activo, responsabilidades propias |
+| /app/student | Incluye destino confirmado, asesor y compañeros vinculados | STUDENT, proyección propia |
+
+La ficha imprimible y relaciones institucionales están en los detalles existentes de proyectos. Interlocutores de organización permanece en `/app/organization/profile`. Las rutas productivas no incluyen harnesses de prueba.

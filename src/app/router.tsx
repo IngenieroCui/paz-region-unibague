@@ -15,11 +15,15 @@ const adminPage = async () => ({ Component: (await import('../features/admin/Adm
 const matchingPage = async () => ({ Component: (await import('../features/matching/MatchingWorkspace')).MatchingWorkspace })
 const advisorsAdminPage = async () => ({ Component: (await import('../features/advisors/AdvisorsAdminWorkspace')).AdvisorsAdminWorkspace })
 const advisorPage = async () => ({ Component: (await import('../features/advisors/AdvisorWorkspace')).AdvisorWorkspace })
+const assignmentsPage = async () => ({ Component: (await import('../features/assignments/AssignmentsWorkspace')).AssignmentsWorkspace })
+const callsAdminPage = async () => ({ Component: (await import('../features/calls')).AdminCallsPage })
+const callsOrganizationPage = async () => ({ Component: (await import('../features/calls')).OrganizationCallsPage })
+const groupsPage = async () => ({ Component: (await import('../features/groups')).GroupsPage })
 function moduleRoutes(role: typeof roles[number]): RouteObject[] {
-  if (role === 'ADMIN') return [{ index: true, lazy: adminPage }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: item.path === 'projects' ? projectsPage : item.path === 'matching' ? matchingPage : ['advisors', 'special-cases'].includes(item.path) ? advisorsAdminPage : adminPage })), { path: 'students/:studentId', lazy: adminPage }, { path: 'organizations/:organizationId', lazy: adminPage }, { path: 'projects/:projectId', lazy: projectsPage }]
+  if (role === 'ADMIN') return [{ index: true, lazy: adminPage }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: ['projects','groups'].includes(item.path) ? projectsPage : item.path === 'matching' ? matchingPage : item.path === 'calls' ? callsAdminPage : item.path === 'assignments' ? assignmentsPage : ['advisors', 'special-cases'].includes(item.path) ? advisorsAdminPage : adminPage })), { path: 'students/:studentId', lazy: adminPage }, { path: 'organizations/:organizationId', lazy: adminPage }, { path: 'projects/:projectId', lazy: projectsPage }, { path: 'calls/:callId', lazy: callsAdminPage }, { path: 'projects/:projectId/groups', lazy: groupsPage }]
   if (role === 'ADVISOR') return [{ index: true, lazy: advisorPage }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: advisorPage }))]
   const lazy = role === 'STUDENT' ? studentPage : organizationPage
-  return [{ index: true, lazy }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: role === 'ORGANIZATION' && item.path === 'projects' ? projectsPage : lazy })), ...(role === 'ORGANIZATION' ? [{ path: 'projects/new', lazy: projectsPage }, { path: 'projects/:projectId', lazy: projectsPage }] : [])]
+  return [{ index: true, lazy }, ...productionNavigation[role].filter(item => item.path).map(item => ({ path: item.path, lazy: role === 'ORGANIZATION' ? ['projects','groups'].includes(item.path) ? projectsPage : item.path === 'calls' ? callsOrganizationPage : lazy : lazy })), ...(role === 'ORGANIZATION' ? [{ path: 'projects/new', lazy: projectsPage }, { path: 'projects/:projectId', lazy: projectsPage }, { path: 'calls/:callId', lazy: callsOrganizationPage }, { path: 'projects/:projectId/groups', lazy: groupsPage }] : [])]
 }
 export function createAppRoutes(preview = import.meta.env.DEV): RouteObject[] {
   return [{ element: <RouteRoot />, errorElement: <RouteError />, children: [

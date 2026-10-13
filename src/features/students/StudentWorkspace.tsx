@@ -15,6 +15,7 @@ import { Alert, EmptyState, ErrorState } from '../../components/feedback/States'
 import { ConfirmDialog, Editor } from '../../components/forms/Editor'
 import { errorMessage, FeatureError, nullable, validUrl } from '../../lib/supabase/feature-helpers'
 import { DocumentsPanel } from '../documents/DocumentsPanel'
+import { StudentAssignment } from '../assignments/StudentAssignment'
 
 export default function StudentWorkspace() {
   const { session } = useAuth()
@@ -27,7 +28,7 @@ export default function StudentWorkspace() {
   if (!data) return null
   const common = { data, reload: resource.reload }
   return <div className="module-stack">
-    {section === '' && <StudentHome data={data} />}
+    {section === '' && <><StudentHome data={data} />{data.period && data.student && <StudentAssignment key={data.student.id+data.period.id} periodId={data.period.id}/>}</>}
     {section === 'profile' && <StudentProfile {...common} userId={session.user.id} />}
     {section !== '' && section !== 'profile' && !data.student && <><PageHeader title="Completa tu perfil" /><EmptyState title="Todavía no tienes un perfil">Guarda primero tus datos básicos para activar las demás secciones.</EmptyState><Link to="/app/student/profile" className="button button--primary">Crear mi perfil</Link></>}
     {data.student && section === 'experience' && <Experiences {...common} />}

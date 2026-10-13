@@ -143,7 +143,7 @@ select pg_temp.p6decide(jsonb_build_object('kind','unassign','student_id',pg_tem
 select pg_temp.p6decide(jsonb_build_object('kind','unassign','student_id',pg_temp.p6id(21),'assignment_id',(select id from "PYRUnibague_Assignments" where student_id=pg_temp.p6id(21) and is_active),'reason_code','OTHER','reason_text','Batch success fixture'));
 select lives_ok($q$select pyr_unibague_confirm_assignment_batch(pg_temp.p6id(10),pg_temp.p6id(70),pyr_unibague_assignment_snapshot(pg_temp.p6id(10),pg_temp.p6id(70))->>'revision',jsonb_build_array(pg_temp.p6action(20,50,80),pg_temp.p6action(21,51,83)))$q$,'Valid confirmation batch commits all rows');
 select ok((select count(*)=3 from "PYRUnibague_Assignments" where is_active),'Successful batch respects existing manual occupancy');
-select ok((select bool_and(metadata#>>'{integrations,advisor}'='pending_integration' and metadata#>>'{integrations,group}'='pending_integration') from "PYRUnibague_AssignmentEvents" where event_type='ASSIGNED'),'A/B integration boundary explicitly records pending state without writing future tables');
+select ok((select bool_and(metadata#>>'{integrations,advisor}'='missing_advisor' and metadata#>>'{integrations,group}'='selection_required') from "PYRUnibague_AssignmentEvents" where event_type='ASSIGNED'),'Integrated confirmation records missing advisor and explicit group selection');
 reset role;
 select throws_ok($q$delete from "PYRUnibague_Assignments"$q$,'23514',null,'History deletion guarded even for privileged maintenance');
 select throws_ok($q$update "PYRUnibague_AssignmentEvents" set reason_text='changed'$q$,'23514',null,'Audit events cannot be rewritten');
