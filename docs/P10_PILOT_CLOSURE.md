@@ -3,8 +3,10 @@
 16 de octubre de 2026 · Alcance maestro v0.4 · Supabase `flrdqhemgbrdclgeynpk`.
 
 La aplicación P1–P9 se consolidó con correcciones verificadas, nueve cuentas P9
-rotadas y datos ficticios conectados. La publicación Git se acredita en
-[`p10/publication.json`](p10/publication.json), después de comprobar el remoto.
+rotadas y datos ficticios conectados. **Publicada en `origin/dev`**: commit de
+implementación `4add45c9ba4618c3d2d95f4bdbf0256b6c98ab6c`, confirmado por push normal,
+`git ls-remote` y fetch el 16 de octubre de 2026 a las 09:02 (America/Bogota).
+El comprobante verificable está en [`p10/publication.json`](p10/publication.json).
 El frontend sigue siendo un piloto local controlado, sin publicación web pública.
 
 ## Correcciones e integración
@@ -136,6 +138,7 @@ Worktree: `C:\Users\SENA\Documents\Codex\2026-10-16\c-users-sena-documents-pyr20
 Repositorio: `https://github.com/jnaveros40/paz_region_unibague`.
 El comprobante de publicación registra SHA enviado, SHA leído del remoto y ascendencia de
 `780a04c`/P7/P8/P9. La revisión final exacta se obtiene con `git rev-parse origin/dev` tras fetch.
+El commit posterior únicamente incorpora este comprobante y no cambia el código probado.
 No se publica en `main`, no se fuerza el push ni se reescribe historial.
 
 Pendientes institucionales: buzones realmente controlados y reemplazo de cuentas ficticias;
