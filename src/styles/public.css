@@ -120,3 +120,17 @@
   .auth-panel > h1 { font-size: 1.6rem; }
 }
 .demo-notice { grid-column: 1 / -1; font-size: .75rem; color: var(--muted); }
+.access-selection { max-width: 1040px; margin: 2rem auto 4rem; padding: 1.5rem; display: grid; gap: 1.25rem; }
+.access-selection > .institutional-mark, .registration-panel > .institutional-mark { justify-self: start; }
+.access-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.access-option { background: var(--surface); border: 1px solid var(--border-strong); border-top: 5px solid var(--gold); border-radius: var(--radius-md); padding: 2rem; display: flex; flex-direction: column; gap: 1rem; color: var(--foreground); text-decoration: none; }
+.access-option > svg { color: var(--brand-blue); }
+.access-option > p { color: var(--muted); }
+.access-option > span { display: flex; align-items: center; gap: .5rem; margin-top: auto; color: var(--brand-blue); font-weight: 600; }
+.access-option:hover { border-color: var(--brand-blue); box-shadow: var(--shadow-sm); }
+.auth-alternative { font-size: 1.1rem; }
+.registration-panel { max-width: 760px; margin: 1.5rem auto 3rem; padding: 1.5rem; display: grid; gap: 1.25rem; }
+.registration-steps { display: flex; flex-wrap: wrap; gap: .7rem 2rem; padding-left: 1.25rem; color: var(--muted); }
+.registration-panel fieldset { min-width: 0; border: 1px solid var(--border-strong); padding: 1.25rem; border-radius: var(--radius-md); display: grid; gap: 1rem; }
+.registration-panel legend { padding: .25rem; font-weight: 600; }
+@media (max-width: 640px) { .access-options { grid-template-columns: 1fr; } .access-option { padding: 1.5rem; } .registration-panel, .access-selection { padding: 1.25rem; margin-top: .5rem; } }

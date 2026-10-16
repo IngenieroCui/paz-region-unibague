@@ -6,9 +6,10 @@ if (!modulePath) { console.log('SKIPPED: PYR_PGLITE_MODULE unavailable'); proces
 const { PGlite } = await import(modulePath)
 const db = new PGlite()
 try {
-  await db.exec(`create role anon; create role authenticated; create role service_role bypassrls; create role supabase_admin;
+  await db.exec(`create role anon; create role authenticated; create role service_role bypassrls; create role supabase_admin; create role supabase_auth_admin;
     create schema auth; create schema storage; create schema extensions;
-    create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb default '{}');
+    create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,is_anonymous boolean default false,created_at timestamptz default now(),raw_user_meta_data jsonb default '{}');
+    create table auth.identities(id uuid primary key default gen_random_uuid(),user_id uuid references auth.users(id),provider text,provider_id text,identity_data jsonb default '{}');
     create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
     grant usage on schema auth,storage,extensions to anon,authenticated;
     create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
@@ -44,12 +45,13 @@ try {
   }
   for (const fk of fks) if (!types.includes(`foreignKeyName: "${fk.conname}"`)) throw new Error('Missing FK: ' + fk.conname)
   const { rows: rpc } = await db.query("select proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and starts_with(proname,'pyr_unibague_')")
-  for (const r of rpc) if (!types.includes(r.proname + ':')) throw new Error('Missing RPC: ' + r.proname)
+  const stagedTypes = await readFile('src/lib/supabase/database.types.ts', 'utf8')
+  for (const r of rpc) if (!types.includes(r.proname + ':') && !stagedTypes.includes(r.proname + ':')) throw new Error('Missing RPC: ' + r.proname)
   const { rows: unsafe } = await db.query("select relname from pg_class t join pg_namespace n on n.oid=t.relnamespace where n.nspname='public' and starts_with(relname,'PYRUnibague_') and relkind='r' and not relrowsecurity")
   if (unsafe.length) throw new Error('Missing RLS: ' + JSON.stringify(unsafe))
   console.log(`PASS catalog: ${tables.length} tables, ${columns.length} columns, ${fks.length} public FKs, ${rpc.length} RPCs, all RLS enabled`)
   await db.exec(await readFile('supabase/seed.sql', 'utf8'))
-  const tests = ['supabase/tests/security.test.sql','supabase/tests/p3.test.sql','supabase/tests/p4.test.sql','supabase/tests/p5_matching.test.sql','supabase/tests/p6a_advisors.test.sql','tests/p6b/database.test.sql','supabase/tests/p6c_assignments.test.sql','supabase/tests/p7_integration.test.sql']
+  const tests = ['supabase/tests/security.test.sql','supabase/tests/p3.test.sql','supabase/tests/p4.test.sql','supabase/tests/p5_matching.test.sql','supabase/tests/p6a_advisors.test.sql','tests/p6b/database.test.sql','supabase/tests/p6c_assignments.test.sql','supabase/tests/p7_integration.test.sql','supabase/tests/p11.test.sql']
   for (const test of tests) {
     const sql = (await readFile(test, 'utf8')).replace('create extension if not exists pgtap with schema extensions;', '')
     try {

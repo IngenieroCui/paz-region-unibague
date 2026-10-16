@@ -39,7 +39,7 @@ test('Groups link confirmed students, preserve retirement history and refresh pr
   await plaza.locator('summary').first().click()
   await plaza.getByLabel('Capacidad',{ exact:true }).fill('3')
   await plaza.getByRole('button',{ name:'Guardar plaza',exact:true }).click()
-  await expect(page.locator('.p6b-sheet').getByText(/Capacidad ofertada: 3\./)).toBeVisible()
+  await expect(page.locator('.p6b-sheet').getByText(/Capacidad ofertada activa: 3\. Capacidad total registrada: 3\./)).toBeVisible()
   await page.getByLabel('Nombre del equipo').fill('Equipo de software')
   await page.getByRole('button',{ name:'Crear equipo',exact:true }).click()
   await page.getByLabel('Asignación confirmada').selectOption('assignment')

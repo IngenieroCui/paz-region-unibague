@@ -19,7 +19,7 @@ async function api(page: Page, roles: string[], failLogin = false) {
   })
 }
 async function login(page: Page) {
-  await page.goto('/login')
+  await page.goto('/login/institucional')
   await page.getByLabel('Correo electrónico').fill('test@example.test')
   await page.getByLabel('Contraseña', { exact: true }).fill('password123')
   await page.getByRole('button', { name: 'Ingresar', exact: true }).click()

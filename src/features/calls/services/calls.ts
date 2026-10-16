@@ -10,7 +10,7 @@ export async function callContext(user: string, admin: boolean) {
   const db = await callClient()
   const [periods, organizations, memberships] = await Promise.all([
     allPages((a,b) => db.from('PYRUnibague_AcademicPeriods').select('*').order('starts_on', { ascending: false }).order('id').range(a,b)),
-    allPages((a,b) => db.from('PYRUnibague_Organizations').select('id, legal_name').order('legal_name').order('id').range(a,b)),
+    allPages((a,b) => db.from('PYRUnibague_Organizations').select('id, legal_name, status, verified_at').order('legal_name').order('id').range(a,b)),
     admin ? Promise.resolve([]) : allPages((a,b) => db.from('PYRUnibague_OrganizationMembers').select('organization_id, can_manage').eq('user_id', user).eq('status','active').order('id').range(a,b)),
   ])
   return { periods, organizations, memberships }

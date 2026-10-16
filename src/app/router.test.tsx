@@ -13,7 +13,9 @@ describe('Routes and public surfaces', () => {
     mount('/')
     expect(await screen.findByRole('heading', { name: /El conocimiento/ })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('link', { name: /Ingresar a la plataforma/ }))
-    expect(await screen.findByRole('heading', { name: 'Bienvenido a tu espacio' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Elige tu acceso' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('link', { name: /Acceso universitario/ }))
+    expect(await screen.findByRole('heading', { name: 'Acceso comunidad universitaria' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Ingresar' })).toBeDisabled()
     expect(screen.getByLabelText('Contraseña')).toBeDisabled()
   })
@@ -29,7 +31,7 @@ describe('Routes and public surfaces', () => {
   it('ignores legacy localStorage authentication', async () => {
     localStorage.setItem('unibague_user', '{"role":"ADMIN"}')
     mount('/app/admin')
-    expect(await screen.findByRole('heading', { name: 'Bienvenido a tu espacio' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Elige tu acceso' })).toBeInTheDocument()
     localStorage.removeItem('unibague_user')
   })
   it('opens each development experience without creating a session', async () => {

@@ -5,6 +5,7 @@ export async function p6bApi(page: Page, role: 'ADMIN' | 'ORGANIZATION' = 'ORGAN
   const api = await p4Api(page,role,{ readOnly })
   const table = (name: string) => api.tables['PYRUnibague_'+name] ??= []
   const now = '2026-10-13T15:00:00Z'
+  Object.assign(table('Organizations')[0]!, { status: 'approved', verified_at: now })
   table('Projects')[0]!.zone_type = 'rural'
   const secondProject = '54000000-0000-0000-0000-000000000002'
   table('Projects').push({ ...table('Projects')[0],id:secondProject,name:'Proyecto Mecánica P6B',zone_type:'urban' })

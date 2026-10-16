@@ -41,6 +41,11 @@ export type Database = Omit<Generated, 'public'> & {
       PYRUnibague_Groups: Table<Tables['PYRUnibague_Groups'], { status: 'active' | 'closed' }>
       PYRUnibague_GroupMembers: Table<Tables['PYRUnibague_GroupMembers'], { status: 'active' | 'inactive' }>
     }
-    Functions: { [N in keyof Functions]: Rpc<N> }
+    // P11 is staged locally; regenerate official types only after authorized remote migration.
+    Functions: { [N in keyof Functions]: Rpc<N> } & {
+      pyr_unibague_external_registration_ready: { Args: Record<PropertyKey, never>; Returns: boolean }
+      pyr_unibague_start_external_onboarding: { Args: Record<PropertyKey, never>; Returns: undefined }
+      pyr_unibague_submit_organization: { Args: { p_organization_id: string }; Returns: undefined }
+    }
   }
 }

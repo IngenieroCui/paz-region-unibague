@@ -75,4 +75,4 @@ export async function advisorApi(page:Page,roles:string[]=['ADMIN'],options:{rea
  })
  return {table,calls,failNext:(name:string)=>{failing=name}}
 }
-export async function login(page:Page){await page.goto('/login');await page.getByLabel('Correo electrónico').fill('test@example.test');await page.getByLabel('Contraseña',{exact:true}).fill('password123');await page.getByRole('button',{name:'Ingresar',exact:true}).click()}
+export async function login(page:Page){await page.goto('/login/institucional');await page.getByLabel('Correo electrónico').fill('test@example.test');await page.getByLabel('Contraseña',{exact:true}).fill('password123');await page.getByRole('button',{name:'Ingresar',exact:true}).click()}

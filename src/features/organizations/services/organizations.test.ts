@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockFeatureClient } from '../../../test/feature-client'
-import { editableOrganization, loadOrganizations, organizationCompleteness, registerOrganization, saveOrganization, statusLabel } from './organizations'
+import { editableOrganization, loadOrganizations, organizationCompleteness, registerOrganization, saveOrganization, statusLabel, submitOrganization, organizationSubmissionAvailable } from './organizations'
 import type { Organization, OrganizationEdit } from './organizations'
 const clientMock = vi.hoisted(() => ({ get: vi.fn() }))
 vi.mock('../../../lib/supabase/client', () => ({ getSupabase: clientMock.get }))
@@ -8,6 +8,15 @@ let mock: ReturnType<typeof mockFeatureClient>
 const fields: OrganizationEdit = { legal_name: 'Entidad', display_name: null, tax_id: null, description: null, website: null, municipality_id: null, organization_type_id: null }
 beforeEach(() => { mock = mockFeatureClient(); clientMock.get.mockResolvedValue(mock.db) })
 describe('Organization workflows', () => {
+  it('submits only through the protected workflow RPC', async () => {
+    await submitOrganization('a')
+    expect(mock.rpc).toHaveBeenCalledWith('pyr_unibague_submit_organization', { p_organization_id: 'a' }); expect(mock.calls).toHaveLength(0)
+    mock.enqueue(null, { code: '23514', message: 'incomplete' }); await expect(submitOrganization('a')).rejects.toThrow('contacto principal')
+  })
+  it('detects a staged migration independently from disabled account signup', async () => {
+    mock.enqueue(false); expect(await organizationSubmissionAvailable()).toBe(true)
+    mock.enqueue(null,{ code: 'PGRST202', message: 'missing' }); expect(await organizationSubmissionAvailable()).toBe(false)
+  })
   it('resolves onboarding when there is no active membership', async () => {
     mock.enqueue([]); mock.enqueue([]); mock.enqueue([]); mock.enqueue([])
     const data = await loadOrganizations('u'); expect(data.organization).toBeNull(); expect(data.canManage).toBe(false)

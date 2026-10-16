@@ -2,6 +2,8 @@
 
 Plataforma de gestión del programa **Paz y Región de la Universidad de Ibagué**.
 
+**P11:** acceso universitario y externo separados; Google y registro público de la interfaz permanecen desactivados por decisión del usuario, a la espera de TI/SMTP. La migración P11 está preparada y probada localmente, sin aplicar al proyecto remoto actual `unxiuzkhxlzneywtnuvf`. Ver [estado, seguridad y activación](docs/P11_DUAL_AUTH_ORGANIZATIONS.md).
+
 **Integración funcional P7 · alcance v0.4.** Un árbol con estudiantes, organizaciones, asesores, proyectos/plazas, convocatorias, matching, optimizador, asignaciones y equipos. 45 tablas, migraciones 001–012, Auth/RBAC/RLS, auditoría y Storage privado. Incluye pendientes por periodo, exportaciones CSV y notificaciones personales. La certificación contra Supabase real sigue pendiente; ver [entrega operativa](docs/P7_OPERATIONAL_HANDOFF.md).
 
 ## Requisitos e instalación
@@ -27,7 +29,7 @@ La aplicación **inicia sin credenciales**: landing y previews no dependen de Su
 
 No hay valores reales en el repositorio. Todo VITE_* llega al navegador: nunca colocar service_role, secret keys ni secretos de Edge Functions. Se rechazan claves privilegiadas reconocibles; esa validación no sustituye la revisión de secretos. Revocar cualquier clave privada publicada accidentalmente.
 
-La configuración válida activa login y recuperación reales de Supabase. Guards resuelven roles persistidos por RPC y fallan cerrados ante errores. Signup público deshabilitado. Ver [puesta en marcha](docs/SUPABASE_SETUP.md) para migraciones, primer ADMIN, redirects y regeneración de tipos.
+La configuración válida activa login y solicitudes de recuperación de Supabase. Guards resuelven roles persistidos por RPC y fallan cerrados ante errores. La interfaz mantiene cerrado el registro público; esto no modifica la configuración remota de Auth. La entrega de correo requiere SMTP autorizado. Ver [puesta en marcha](docs/SUPABASE_SETUP.md) y el informe P11 para el proyecto actual.
 
 ## Comandos
 

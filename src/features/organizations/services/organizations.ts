@@ -2,7 +2,7 @@ import { allPages, check, client, FeatureError, validUrl } from '../../../lib/su
 import type { Row } from '../../../lib/supabase/feature-helpers'
 export type Organization = Row<'PYRUnibague_Organizations'>
 export type OrganizationEdit = Pick<Organization, 'organization_type_id' | 'legal_name' | 'display_name' | 'tax_id' | 'description' | 'website' | 'municipality_id'>
-export const reviewLabels: Record<string, string> = { pending_review: 'Pendiente de revisión', pending: 'Pendiente', changes_requested: 'Cambios solicitados', approved: 'Aprobado', rejected: 'Rechazado' }
+export const reviewLabels: Record<string, string> = { submitted: 'Solicitud enviada', pending_review: 'Pendiente de revisión', pending: 'Pendiente', changes_required: 'Cambios solicitados', changes_requested: 'Cambios solicitados', approved: 'Aprobado', rejected: 'Rechazado' }
 export function statusLabel(status: string) { return reviewLabels[status] ?? status }
 export function organizationCompleteness(org: Organization) {
   const sections = [{ label: 'Nombre legal', complete: Boolean(org.legal_name.trim()) }, { label: 'Tipo', complete: Boolean(org.organization_type_id) }, { label: 'Descripción', complete: Boolean(org.description?.trim()) }, { label: 'Municipio', complete: Boolean(org.municipality_id) }]
@@ -33,6 +33,18 @@ export async function loadOrganizations(userId: string, selectedId?: string) {
   return { organizations: available, organization, canManage, types: types.data ?? [], municipalities: municipalities.data ?? [], documents: documents.data ?? [], reviews: reviews.data ?? [] }
 }
 export type OrganizationData = Awaited<ReturnType<typeof loadOrganizations>>
+export async function organizationSubmissionAvailable() {
+  const db = await client()
+  const { data, error } = await db.rpc('pyr_unibague_external_registration_ready')
+  // Presence of the migration, independently of the intentionally disabled signup gate.
+  return !error && typeof data === 'boolean'
+}
+export async function submitOrganization(id: string) {
+  const db = await client()
+  const { error } = await db.rpc('pyr_unibague_submit_organization', { p_organization_id: id })
+  if (error?.code === '23514') throw new FeatureError('Completa tipo, municipio, descripción y contacto principal antes de enviar la solicitud.')
+  check(error)
+}
 export async function registerOrganization(fields: OrganizationEdit) {
   const edit = editableOrganization(fields); const db = await client()
   const result = await db.rpc('pyr_unibague_register_organization', { p_legal_name: edit.legal_name, p_display_name: edit.display_name, p_tax_id: edit.tax_id, p_description: edit.description, p_website: edit.website, p_organization_type_id: edit.organization_type_id, p_municipality_id: edit.municipality_id })

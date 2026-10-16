@@ -1,0 +1,18 @@
+{
+  "checked_at": "2026-10-16T16:03:07.001Z",
+  "project": "unxiuzkhxlzneywtnuvf",
+  "environment_files": [
+    ".env.local"
+  ],
+  "http_status": 200,
+  "google_enabled": false,
+  "email_enabled": true,
+  "signup_disabled": false,
+  "mailer_autoconfirm": true,
+  "frontend_google_enabled": false,
+  "frontend_registration_enabled": false,
+  "administrative_connection": "NOT CHECKED by this public-only preflight",
+  "smtp": "NOT VERIFIED; user requested no new accounts until University provides configuration",
+  "hosted_mutations": 0,
+  "accounts_created": 0
+}

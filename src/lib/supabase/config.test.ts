@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { readSupabaseConfiguration } from './config'
 describe('Supabase public configuration', () => {
+  it('rejects an anon JWT belonging to a different hosted project', () => {
+    const token = 'header.' + btoa(JSON.stringify({ role: 'anon', ref: 'another-project' })) + '.signature'
+    expect(readSupabaseConfiguration('https://unxiuzkhxlzneywtnuvf.supabase.co', token).status).toBe('invalid')
+  })
   it('allows the UI to start without credentials', () => {
     expect(readSupabaseConfiguration().status).toBe('missing')
   })

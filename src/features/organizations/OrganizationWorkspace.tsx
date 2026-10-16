@@ -1,23 +1,33 @@
 import { text } from '../../components/forms/form-data'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/auth-context'
 import { useOrganization } from './hooks/useOrganization'
-import { organizationCompleteness, registerOrganization, saveOrganization, statusLabel } from './services/organizations'
+import { organizationCompleteness, registerOrganization, saveOrganization, statusLabel, submitOrganization } from './services/organizations'
 import type { OrganizationData } from './services/organizations'
 import { PageHeader } from '../../components/layout/Headers'
 import { Card } from '../../components/ui/Card'
 import { Input, Select, Textarea } from '../../components/ui/Fields'
 import { Progress, Skeleton } from '../../components/ui/Progress'
 import { Alert, EmptyState, ErrorState } from '../../components/feedback/States'
-import { Editor } from '../../components/forms/Editor'
+import { Editor, ConfirmDialog } from '../../components/forms/Editor'
+import { Button } from '../../components/ui/Button'
 import { FeatureError, nullable, validUrl } from '../../lib/supabase/feature-helpers'
 import { DocumentsPanel } from '../documents/DocumentsPanel'
 import { OrganizationContacts } from './OrganizationContacts'
+import { DocumentRequirements } from './DocumentRequirements'
+import { organizationSubmissionAvailable } from './services/organizations'
 
 export default function OrganizationWorkspace() {
   const { session } = useAuth()
   const [params, setParams] = useSearchParams()
+  const [submitting, setSubmitting] = useState(false)
+  const [submissionReady, setSubmissionReady] = useState(false)
+  useEffect(() => {
+    let active = true
+    void organizationSubmissionAvailable().then(value => { if (active) setSubmissionReady(value) }).catch(() => {})
+    return () => { active = false }
+  }, [])
   const resource = useOrganization(session?.user.id ?? '', params.get('organization') ?? undefined)
   const section = useLocation().pathname.split('/')[3] ?? ''
   if (!session) return null
@@ -28,12 +38,14 @@ export default function OrganizationWorkspace() {
   if (!data.organization) return <div className="module-stack"><PageHeader eyebrow="Organización" title="Registra tu organización" description="Crea el perfil inicial. La revisión y verificación corresponden a la Universidad." /><OrganizationProfile data={data} reload={resource.reload} /></div>
   const org = data.organization
   return <div className="module-stack">
+    {data.canManage && ['pending_review','changes_required','changes_requested'].includes(org.status) && <><Alert title="Solicitud de organización">Completa el perfil, el contacto principal y la documentación que coordinación te indique. Podrás consultar y corregir la información durante la revisión.</Alert>{!submissionReady && <p role="status">El envío de solicitudes está pendiente de activar en el servidor. Puedes completar y guardar el perfil con tu cuenta autorizada.</p>}<Button disabled={!submissionReady} onClick={() => setSubmitting(true)}>{org.status === 'pending_review' ? 'Solicitar revisión' : 'Reenviar solicitud corregida'}</Button></>}
+    <ConfirmDialog open={submitting} title="Solicitar revisión de organización" confirmLabel="Enviar a coordinación" onCancel={() => setSubmitting(false)} onConfirm={async () => { await submitOrganization(org.id); await resource.reload() }}>La aprobación corresponde a ADMIN. Se conservarán las decisiones y observaciones anteriores.</ConfirmDialog>
     {data.organizations.length > 1 && <Select label="Organización activa" value={org.id} onChange={event => setParams({ organization: event.target.value })}>{data.organizations.map(row => <option key={row.id} value={row.id}>{row.display_name ?? row.legal_name}</option>)}</Select>}
     {!data.canManage && <Alert title="Acceso de consulta">Tu membresía permite consultar el perfil y sus revisiones. La edición y los documentos requieren permiso de gestión.</Alert>}
     {!section && <OrganizationHome data={data} />}
     {section === 'profile' && <><PageHeader title="Perfil de organización" description="Mantén actualizada la información de tu organización." /><OrganizationProfile key={org.id} data={data} reload={resource.reload} /><OrganizationContacts key={'contacts-'+org.id} organizationId={org.id} canManage={data.canManage} /><AdministrativeInfo data={data} /></>}
-    {section === 'documents' && <><PageHeader title="Documentación" description="Gestiona documentos privados con categorías libres. No hay requisitos documentales oficiales definidos." /><DocumentsPanel key={org.id} scope="organization" ownerId={org.id} userId={session.user.id} documents={data.documents} canManage={data.canManage} reload={resource.reload} /></>}
-    {section === 'reviews' && <><PageHeader title="Revisión y estado" description="Consulta las decisiones de coordinación. Esta información es de solo lectura." /><AdministrativeInfo data={data} /><ReviewTimeline data={data} /></>}
+    {section === 'documents' && <><PageHeader title="Documentación" description="Gestiona documentos privados por categoría, pendientes de evaluación institucional." /><DocumentRequirements /><DocumentsPanel key={org.id} scope="organization" ownerId={org.id} userId={session.user.id} documents={data.documents} canManage={data.canManage} reload={resource.reload} /></>}
+    {section === 'reviews' && <><PageHeader title="Revisión y estado" description="Consulta las decisiones de coordinación y reenvía la solicitud después de corregirla." /><AdministrativeInfo data={data} /><ReviewTimeline data={data} /></>}
   </div>
 }
 function OrganizationHome({ data }: { data: OrganizationData }) {

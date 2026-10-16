@@ -1,6 +1,7 @@
 import { getSupabase } from '../../../lib/supabase/client'
 import { roles, rolePaths } from '../../../config/app'
 import type { Role } from '../../../config/app'
+import { institutionalEmail } from './access'
 async function client() {
   const value = await getSupabase()
   if (!value) throw new Error('Auth unavailable')
@@ -59,6 +60,14 @@ export function completeCallback(search: string): Promise<boolean> {
     try {
       const { data, error } = await api.auth.exchangeCodeForSession(code, flowId ? { flowId } : undefined)
       if (error || !data.session) throw new Error('Invalid callback')
+      if (!recovery && params.get('flow') === 'institutional') {
+        const result = await api.auth.getUser()
+        const user = result.data.user
+        const verified = user?.identities?.some(identity => identity.provider === 'google' && identity.identity_data?.email_verified === true && String(identity.identity_data?.email).toLowerCase() === user.email?.toLowerCase())
+        if (result.error || !user?.email || !user.email_confirmed_at || !institutionalEmail(user.email) || user.email.toLowerCase().startsWith('pyrprueba.') || !verified) {
+          await api.auth.signOut(); throw new Error('Invalid institutional identity')
+        }
+      }
       return recovery
     } finally { subscription.unsubscribe() }
   })()
