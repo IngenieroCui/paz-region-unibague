@@ -1,0 +1,23 @@
+[
+  {
+    "label": "Matching desde navegador, CORS localhost autorizado, Edge y candidatos reales",
+    "status": "PASS",
+    "run_id": "1f6f1f56-8c04-4bfd-8ea0-06caba15e86b"
+  },
+  {
+    "label": "Confirmación de propuesta E3 desde UI y persistencia real",
+    "status": "PASS"
+  },
+  {
+    "label": "Reasignación manual real desde UI conserva historial",
+    "status": "PASS"
+  },
+  {
+    "label": "Desasignación real desde UI, E3 queda sin destino vigente",
+    "status": "PASS"
+  },
+  {
+    "label": "Eventos reales de asignación, reasignación y desasignación persistidos",
+    "status": "PASS"
+  }
+]

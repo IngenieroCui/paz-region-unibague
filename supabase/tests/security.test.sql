@@ -30,8 +30,9 @@ insert into "PYRUnibague_Projects" (id,organization_id,academic_period_id,name,s
 ('40000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','Test','draft');
 insert into "PYRUnibague_ProjectPositions" (id,project_id,title,capacity,status) values
 ('50000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000001','Test',2,'test');
-insert into "PYRUnibague_MatchingConfigurations" (id,name,algorithm_version) values ('60000000-0000-0000-0000-000000000001','Test','test');
-insert into "PYRUnibague_MatchingRuns" (id,academic_period_id,matching_configuration_id,status) values ('70000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','60000000-0000-0000-0000-000000000001','test');
+insert into "PYRUnibague_MatchingConfigurations" (id,name,algorithm_version,minimum_recommended_score,weights,rules,is_active) values ('60000000-0000-0000-0000-000000000001','Test','hybrid-v0.1',70,'{"academic":25,"skills":20,"experience":10,"interests":10,"location":10,"preference":10,"semantic":15}','{"requiredSkillsAreHardConstraint":true,"semanticEnabled":false}',true);
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000005',true);
+insert into "PYRUnibague_MatchingRuns" (id,academic_period_id,matching_configuration_id,status) values ('70000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','60000000-0000-0000-0000-000000000001','running');
 insert into "PYRUnibague_MatchCandidates" (matching_run_id,student_id,project_position_id,is_eligible,total_score) values ('70000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000001',true,90);
 insert into "PYRUnibague_Assignments" (academic_period_id,student_id,project_position_id,status,source) values ('20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000001','test','MANUAL');
 insert into "PYRUnibague_Notifications" (id,user_id,type_code,title) values
@@ -102,12 +103,12 @@ select lives_ok($$update "PYRUnibague_ProjectPositions" set description='Manager
 select lives_ok($$insert into "PYRUnibague_OrganizationDocuments" (id,organization_id,category_code,file_name,bucket_id,object_path,status,uploaded_by) values ('90000000-0000-0000-0000-000000000004','30000000-0000-0000-0000-000000000001','test','own.pdf','pyrunibague-organization-documents','30000000-0000-0000-0000-000000000001/90000000-0000-0000-0000-000000000004/own.pdf','test',auth.uid())$$,'Manager creates own document metadata');
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000005',true);
 
-select is((select count(*)::integer from "PYRUnibague_Students"),2,'Admin reads Students');
-select is((select count(*)::integer from "PYRUnibague_MatchCandidates"),1,'Admin reads matching');
+select is((select count(*)::integer from "PYRUnibague_Students" where user_id in ('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002')),2,'Admin reads Students');
+select is((select count(*)::integer from "PYRUnibague_MatchCandidates" where matching_run_id='70000000-0000-0000-0000-000000000001'),1,'Admin reads matching');
 select ok((select count(*)>0 from "PYRUnibague_AuditLogs"),'Admin reads audit');
 select ok(not exists(select 1 from "PYRUnibague_AuditLogs" where context <> '{}'::jsonb),'Audit excludes snapshots and request credentials');
 select is((select legal_name from "PYRUnibague_Organizations" where id='30000000-0000-0000-0000-000000000002'),'Test B','Other org unchanged');
-select is((select count(*)::integer from storage.objects),4,'Admin Storage access');
+select is((select count(*)::integer from storage.objects where split_part(name,'/',1) in ('10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000002')),4,'Admin Storage access');
 update "PYRUnibague_StudentPeriodParticipations" set eligible_for_matching=true;
 select ok((select eligible_for_matching from "PYRUnibague_StudentPeriodParticipations" limit 1),'Admin manages eligibility');
 select ok(pg_temp.denied($$insert into "PYRUnibague_AuditLogs" (action,entity_table) values ('forged','x')$$),'Admin clients cannot insert audit');

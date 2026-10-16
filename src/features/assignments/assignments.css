@@ -1,0 +1,11 @@
+.assignments-workspace { min-width: 0; }
+.assignment-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4, 1rem); }
+.assignment-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1rem; }
+.assignment-metrics dd { margin: .3rem 0; font-size: 1.6rem; font-weight: 700; }
+.assignment-snapshot { max-height: 16rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.assignments-workspace .module-actions { flex-wrap: wrap; }
+.assignments-workspace .p4-table { max-width: 100%; }
+.assignments-workspace td { overflow-wrap: anywhere; }
+.assignments-workspace select { max-width: 100%; }
+.assignments-workspace #assignment-manual { scroll-margin-top: 2rem; }
+@media (max-width: 640px) { .assignment-filters { grid-template-columns: minmax(0, 1fr); } .assignments-workspace .card { min-width: 0; } }

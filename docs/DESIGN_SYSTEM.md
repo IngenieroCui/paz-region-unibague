@@ -2,7 +2,7 @@
 
 ## Identidad
 
-Tema claro sin dark mode automático. Monograma tipográfico pr del producto; no pretende sustituir el logo oficial. Los PNG institucionales existentes se conservan en Auth/PWA; validar manual oficial al recibirlo. Sin publicidad personal ni referencias de plantilla.
+Tema claro con identidad Unibagué, basado en el manual 2016 y la guía `IDENTIDAD_VISUAL_UNIBAGUE_PYR.md`. Logo blanco original del sitio oficial, conservado íntegro sobre azul. El nombre del programa se presenta como texto, pendiente del conjunto gráfico oficial aprobado. Los iconos institucionales existentes se conservan en PWA/favicon. Procedencia en `public/brand/README.md`.
 
 ## Tokens
 
@@ -10,19 +10,19 @@ Fuente única: src/styles/tokens.css. No repetir colores en componentes.
 
 | Token | Valor | Uso |
 | --- | --- | --- |
-| navy | #0D192B | Texto fuerte, acciones, sidebar |
-| gold | #FFD200 | Acentos pequeños, no texto claro sobre blanco |
-| blue | #0B5ED7 | Enlaces, foco y progreso |
-| background / surface | #F7F8FA / #FFFFFF | Lienzo y cards |
-| cream | #F5F3EA | Ilustración conceptual |
-| foreground / muted | #182638 / #566476 | Texto |
-| border / border-strong | #DEE3E9 / #A2ADB9 | Separadores/campos |
+| navy / blue / brand-blue | #003D7C | Texto fuerte, acciones, sidebar, enlaces, foco y progreso |
+| gold / brand-gold | #FFCC00 | Acentos pequeños, con texto azul si se usa como superficie |
+| brand-blue-dark / brand-blue-light | #002C58 / #EAF2F9 | Hover y superficies informativas de interfaz |
+| background / surface | #F7F9FC / #FFFFFF | Lienzo y cards |
+| cream | #F5F8FC | Ilustración conceptual |
+| foreground / muted | #172B43 / #526679 | Texto |
+| border / border-strong | #D8E2EC / #7B8FA3 | Separadores/campos |
 | success | #176143 sobre #EAF6EF | Confirmación |
 | warning | #805300 sobre #FFF4D7 | Atención |
 | error | #AF293A sobre #FFF0F2 | Error |
-| info | #245AA0 sobre #EDF4FF | Información |
+| info | #003D7C sobre #EAF2F9 | Información |
 
-Spacing 4–64 px, radios 6/12/18 px y pill, sombras sm/md discretas. Segoe UI/Arial, Georgia editorial y Consolas técnico; sin fuentes externas. Transiciones 140/220 ms, foco visible 3 px y z-index centralizados. Reduced motion desactiva movimiento significativo.
+Spacing 4–64 px, radios 6/14/18 px y pill, sombras sm/md discretas. Roboto 400/500/600/700 hospedada localmente, licencia OFL incluida; Consolas para contenido técnico. Transiciones 140/220 ms, foco visible 3 px y z-index centralizados. Reduced motion desactiva movimiento significativo. Los colores semánticos son extensiones de interfaz, no paleta oficial. Enlaces dentro de párrafos subrayados; bordes de campos con contraste de al menos 3:1.
 
 ## Componentes
 

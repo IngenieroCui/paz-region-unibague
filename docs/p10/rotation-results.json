@@ -1,0 +1,70 @@
+{
+  "accounts": [
+    {
+      "user_id": "6407bfc1-3c2e-42a1-acb9-900a22d3c201",
+      "role": "STUDENT",
+      "rotated": true,
+      "login": true,
+      "global_signout": true
+    },
+    {
+      "user_id": "2f9ea050-8343-48ec-af31-dea5ed6cce51",
+      "role": "STUDENT",
+      "rotated": true,
+      "login": true,
+      "global_signout": true
+    },
+    {
+      "user_id": "97977b5b-0fe8-44b6-b410-e89cde91ca62",
+      "role": "STUDENT",
+      "rotated": true,
+      "login": true,
+      "global_signout": true
+    },
+    {
+      "user_id": "1c0fa87b-9ea2-467c-a5d9-ab57265fc563",
+      "role": "STUDENT",
+      "rotated": true,
+      "login": true,
+      "global_signout": true
+    },
+    {
+      "user_id": "5387d4dc-24a3-4345-a365-ffcbc0740baf",
+      "role": "ADMIN",
+      "rotated": true,
+      "login": true,
+      "global_signout": true
+    },
+    {
+      "user_id": "2ab1f908-67d9-4b4a-85f0-bba7cb97a7ed",
+      "role": "ADVISOR",
+      "rotated": true,
+      "login": true,
+      "global_signout": true
+    },
+    {
+      "user_id": "08aae3aa-9c39-42f7-85ca-cbd255b5a756",
+      "role": "ADVISOR",
+      "rotated": true,
+      "login": true,
+      "global_signout": true
+    },
+    {
+      "user_id": "409f5da2-fccd-453c-b580-3bd5683e0529",
+      "role": "ORGANIZATION",
+      "rotated": true,
+      "login": true,
+      "global_signout": true
+    },
+    {
+      "user_id": "54379aff-0d7f-4886-a523-ef1fb9cd4682",
+      "role": "ORGANIZATION",
+      "rotated": true,
+      "login": true,
+      "global_signout": true
+    }
+  ],
+  "unrelated_users_unchanged": true,
+  "unrelated_user_count": 9,
+  "note": "Revocados refresh tokens; los JWT ya emitidos pueden durar hasta su expiración."
+}

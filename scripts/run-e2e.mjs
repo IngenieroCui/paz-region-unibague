@@ -5,6 +5,7 @@ import { resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 
 const ownedServers = []
+const offset = Number(process.env.PYR_E2E_PORT_OFFSET || 0)
 const env = { ...process.env }
 delete env.NO_COLOR
 
@@ -33,9 +34,9 @@ async function ensureServer(port, preview = false, serverEnv = env) {
 
 try {
   await access('dist/index.html')
-  await ensureServer(5173)
-  await ensureServer(4173, true)
-  await ensureServer(5174, false, { ...env, VITE_SUPABASE_URL: 'https://pyr-e2e.example.test', VITE_SUPABASE_ANON_KEY: 'sb_publishable_e2e_fixture' })
+  await ensureServer(5173 + offset)
+  await ensureServer(4173 + offset, true)
+  await ensureServer(5174 + offset, false, { ...env, VITE_SUPABASE_URL: 'https://pyr-e2e.example.test', VITE_SUPABASE_ANON_KEY: 'sb_publishable_e2e_fixture' })
   const runner = spawn(process.execPath, [resolve('node_modules/playwright/cli.js'), 'test', ...process.argv.slice(2)],
     { stdio: 'inherit', env })
   const [code] = await once(runner, 'exit')

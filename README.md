@@ -2,7 +2,7 @@
 
 Plataforma de gestión del programa **Paz y Región de la Universidad de Ibagué**.
 
-**Core Schema v0 + módulos P3 Student/Organization.** Foundation existente + Supabase real: 33 tablas, migraciones, Auth/RBAC/RLS, auditoría y Storage privado. Student/Organization ya implementados; Projects/Admin y Matching continúan sobre el mismo contrato.
+**Integración funcional P7 · alcance v0.4.** Un árbol con estudiantes, organizaciones, asesores, proyectos/plazas, convocatorias, matching, optimizador, asignaciones y equipos. 45 tablas, migraciones 001–012, Auth/RBAC/RLS, auditoría y Storage privado. Incluye pendientes por periodo, exportaciones CSV y notificaciones personales. La certificación contra Supabase real sigue pendiente; ver [entrega operativa](docs/P7_OPERATIONAL_HANDOFF.md).
 
 ## Requisitos e instalación
 
@@ -54,7 +54,7 @@ Solo npm run dev ofrece:
 
 La landing contiene accesos de desarrollo y la topbar permite cambiar rol visual. Las rutas y fixtures quedan fuera del grafo de producción; npm run preview devuelve 404 para ellas. No se crean usuarios ni sesiones. Subrutas de módulos muestran preparación, sin formularios reales.
 
-Públicas: /, /login, /forgot-password, /auth/callback, /unauthorized y 404. /reset-password requiere sesión de recuperación; /select-role resuelve acceso multirrol. /app/student y /app/organization tienen guards/RBAC reales, perfiles/CRUD/documentos y onboarding P3. /app/admin conserva placeholders.
+Públicas: /, /login, /forgot-password, /auth/callback, /unauthorized y 404. /reset-password requiere sesión de recuperación; /select-role resuelve acceso multirrol. /app/student y /app/organization tienen guards/RBAC reales, perfiles/CRUD/documentos y onboarding P3. /app/admin conecta las superficies administrativas reales; /app/advisor consulta responsabilidades propias. /app/student/assignment permite seleccionar periodo y /app/admin/operations reúne pendientes y CSV. Cada espacio ofrece /notifications.
 
 ## Estructura
 

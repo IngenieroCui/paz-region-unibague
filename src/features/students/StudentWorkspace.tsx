@@ -15,6 +15,8 @@ import { Alert, EmptyState, ErrorState } from '../../components/feedback/States'
 import { ConfirmDialog, Editor } from '../../components/forms/Editor'
 import { errorMessage, FeatureError, nullable, validUrl } from '../../lib/supabase/feature-helpers'
 import { DocumentsPanel } from '../documents/DocumentsPanel'
+import { StudentAssignment } from '../assignments/StudentAssignment'
+import { participationLabel } from './services/students'
 
 export default function StudentWorkspace() {
   const { session } = useAuth()
@@ -27,7 +29,7 @@ export default function StudentWorkspace() {
   if (!data) return null
   const common = { data, reload: resource.reload }
   return <div className="module-stack">
-    {section === '' && <StudentHome data={data} />}
+    {section === '' && <><StudentHome data={data} />{data.period && data.student && <StudentAssignment key={data.student.id+data.period.id} periodId={data.period.id}/>}</>}
     {section === 'profile' && <StudentProfile {...common} userId={session.user.id} />}
     {section !== '' && section !== 'profile' && !data.student && <><PageHeader title="Completa tu perfil" /><EmptyState title="Todavía no tienes un perfil">Guarda primero tus datos básicos para activar las demás secciones.</EmptyState><Link to="/app/student/profile" className="button button--primary">Crear mi perfil</Link></>}
     {data.student && section === 'experience' && <Experiences {...common} />}
@@ -41,9 +43,9 @@ function StudentHome({ data }: { data: StudentData }) {
   const program = data.programs.find(row => row.id === data.student?.academic_program_id)
   return <><PageHeader eyebrow="Estudiante" title="Tu espacio" description={data.profile?.display_name ? `Hola, ${data.profile.display_name}.` : 'Construye tu perfil para Paz y Región.'} />
     <div className="dashboard-grid"><Card><h2>Mi perfil</h2><p>{program?.name ?? 'Programa sin registrar'} · {data.student?.current_semester ? `Semestre ${data.student.current_semester}` : 'Semestre sin registrar'}</p><Progress value={completion.percent} label="Completitud del perfil" /><p className="workspace-note">Este indicador orienta tu preparación. La elegibilidad para matching la determina administración.</p><Link className="button button--secondary" to="/app/student/profile">{data.student ? 'Editar mi perfil' : 'Crear mi perfil'}</Link></Card>
-    <Card><h2>Participación actual</h2>{!data.period ? <EmptyState title="Sin periodo actual">La Universidad debe configurar un periodo vigente.</EmptyState> : <><h3>{data.period.name}</h3>{data.participation ? <><p>Estado: {data.participation.status}</p><p>Elegibilidad administrativa: {data.participation.eligible_for_matching ? 'Habilitada' : 'No habilitada'}</p></> : <p>No tienes participación registrada en este periodo. Consulta con coordinación.</p>}</>}</Card></div>
+    <Card><h2>Participación actual</h2>{!data.period ? <EmptyState title="Sin periodo actual">La Universidad debe configurar un periodo vigente.</EmptyState> : <><h3>{data.period.name}</h3>{data.participation ? <><p>Estado: {participationLabel(data.participation.status)}</p><p>Elegibilidad administrativa: {data.participation.eligible_for_matching ? 'Habilitada' : 'No habilitada'}</p></> : <p>No tienes participación registrada en este periodo. Consulta con coordinación.</p>}</>}</Card></div>
     <Card><h2>Próximos pasos</h2><ul className="module-list">{completion.sections.map(item => <li key={item.label}><div><h3>{item.label}</h3><p>{item.complete ? 'Completo' : 'Por completar'}</p></div><Link className="button button--ghost" to={'/app/student/' + item.path}>Revisar</Link></li>)}</ul><p className="workspace-note">La experiencia y los enlaces son opcionales. No cambian tu elegibilidad.</p></Card>
-    <Card><h2>Documentos</h2><p>{data.documents.length ? `${data.documents.length} documento(s) guardado(s).` : 'Aún no has subido documentos.'}</p><Link className="button button--secondary" to="/app/student/documents">Ver documentos</Link></Card>
+    <Card><h2>Documentos</h2><p>{data.documents.length ? `${data.documents.length} ${data.documents.length === 1 ? 'documento guardado' : 'documentos guardados'}.` : 'Aún no has subido documentos.'}</p><Link className="button button--secondary" to="/app/student/documents">Ver documentos</Link></Card>
   </>
 }
 function StudentProfile({ data, userId, reload }: { data: StudentData; userId: string; reload: () => Promise<void> }) {

@@ -27,19 +27,19 @@ begin
  return 'ok: '||message;
 end $$;
 `)
-for (const file of (await readdir(root+'/supabase/migrations')).filter(file => file <= '202610010006_projects_admin_p4.sql').sort()) {
+for (const file of (await readdir(root+'/supabase/migrations')).filter(file => /(?:20261001000[1-6]_|_p8_00[1-6]_)/.test(file)).sort()) {
   console.log('Applying', file)
   try { await db.exec(await readFile(root+'/supabase/migrations/'+file,'utf8')) }
   catch(error) { console.error(error.message); console.error(error.query); throw error }
 }
 await db.exec(await readFile(root+'/supabase/seed.sql','utf8'))
-const types = (await readFile(root+'/src/lib/supabase/database.types.ts','utf8')).replaceAll('\r\n','\n')
+const types = (await readFile(root+'/src/lib/supabase/database.generated.ts','utf8')).replaceAll('\r\n','\n')
 const columns = await db.query("select table_name, column_name, udt_name, is_nullable from information_schema.columns where table_schema='public' and table_name like 'PYRUnibague_%'")
 for (const column of columns.rows) {
   const body = types.split(column.table_name+': {')[1]?.split('Row: {')[1]?.split('    }')[0]
   const tsType = column.udt_name==='jsonb' ? 'Json' : column.udt_name==='_text' ? 'string[]' : column.udt_name==='bool' ? 'boolean' : ['int4','int8','numeric'].includes(column.udt_name) ? 'number' : 'string'
   const expected = `      ${column.column_name}: ${tsType}${column.is_nullable==='YES' ? ' | null' : ''}`
-  if (!body?.split('\n').includes(expected)) throw new Error('Type fallback mismatch: '+column.table_name+'.'+column.column_name)
+  if (!body?.split('\n').some(line => line.trim() === expected.trim())) throw new Error('Type fallback mismatch: '+column.table_name+'.'+column.column_name)
 }
 const fks = await db.query("select conname from pg_constraint c join pg_namespace n on n.oid=c.connamespace where n.nspname='public' and conname like 'pyr_fk_%'")
 for (const fk of fks.rows) if (!types.includes(`foreignKeyName: "${fk.conname}"`)) throw new Error('FK type mismatch: '+fk.conname)

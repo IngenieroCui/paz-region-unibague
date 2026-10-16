@@ -12,7 +12,7 @@ const Status = lazy(() => import('../public/StatusPage'))
 export function PreviewRoutes() {
   return <Suspense fallback={<LoadingState />}><Routes>
     {roles.map(role => <Route key={role} path={rolePaths[role]} element={<AppShell role={role} preview />}>
-      <Route index element={role === 'STUDENT' ? <Student /> : role === 'ORGANIZATION' ? <Organization /> : <Admin />} />
+      <Route index element={role === 'STUDENT' ? <Student /> : role === 'ORGANIZATION' ? <Organization /> : role === 'ADMIN' ? <Admin /> : <Feature role={role} />} />
       {navigation[role].filter(item => item.path).map(item => <Route key={item.path} path={item.path} element={<Feature role={role} />} />)}
     </Route>)}
     <Route path="*" element={<Status />} />

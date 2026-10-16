@@ -1,6 +1,6 @@
 # Core Schema v0
 
-Contrato base de P3/P4/P5. Implementado en cuatro migraciones P2 y una migración aditiva P3 ordenadas en `supabase/migrations/`. No modificar migraciones aplicadas. Todas las tablas propias están en public y usan quoted identifiers literales.
+Contrato integrado v0.4: migraciones 001–012, 45 tablas con prefijo literal `PYRUnibague_`. Las secciones P2–P5 describen su evolución; el estado vigente de P6/P7 se detalla al final. No modificar migraciones aplicadas. Todas las tablas propias están en public y usan quoted identifiers literales.
 
 ## Tabla → propósito → propietario funcional
 
@@ -88,15 +88,15 @@ Students.student_code, academic_program_id y current_semester son campos editabl
 ## API de seguridad
 RPC públicas: pyr_unibague_has_role(role_code), pyr_unibague_current_roles(), pyr_unibague_is_student_owner(student_id), pyr_unibague_is_org_member(organization_id), pyr_unibague_can_manage_org(organization_id), pyr_unibague_mark_notification_read(notification_id). EXECUTE solo authenticated, search_path vacío, referencias calificadas. Helpers técnicos/trigger functions en schema pyr_unibague_private (fuera de schemas de PostgREST).
 
-ADMIN gestiona datos operativos. AuditLogs solo lectura ADMIN, escritura únicamente por trigger técnico; Notifications sin UPDATE genérico, RPC idempotente solo propia. Matching admin-only. Assignments lectura propia/organización propietaria, writes ADMIN; sin RPC definitiva ni comprobación de capacidad aún (P6). Ver AUTH_RBAC y RLS_MATRIX.
+ADMIN gestiona datos operativos. AuditLogs solo lectura ADMIN, escritura únicamente por trigger técnico; Notifications sin INSERT/UPDATE/DELETE cliente, lectura y RPC de marcado solo propias desde 012. Matching admin-only. Assignments lectura propia/organización propietaria, writes ADMIN; sin RPC definitiva ni comprobación de capacidad aún (P6). Ver AUTH_RBAC y RLS_MATRIX.
 
 ## Storage
 Dos buckets privados: pyrunibague-student-documents, pyrunibague-organization-documents. Path exacto: `<student_id|organization_id>/<document_id>/<filename>`, UUID canónico en los dos primeros segmentos y nombre sin carpetas. Metadata valida bucket/path/id/nombre y uploader. Primero reservar document_id y usarlo en upload y metadata; no asumir una transacción atómica entre Storage y PostgreSQL. signed URLs de 60 s en lib/supabase/storage.ts; deben tratarse como enlaces temporales de acceso, sin persistirlas ni cachearlas. ADMIN accede; Student solo propio; Organization solo managers de su entidad.
 
 ## Semilla y evolución
-Solo STUDENT, ORGANIZATION, ADMIN. Sin usuarios, credenciales, periodos, programas, municipios, tipos, proyectos ni matching activo ficticio. Fixtures SQL viven exclusivamente dentro de una transacción de pruebas revertida.
+Roles de sistema STUDENT, ORGANIZATION, ADMIN y ADVISOR (008). Sin usuarios, credenciales, periodos, programas, municipios, tipos, proyectos ni matching activo ficticio. Fixtures SQL viven exclusivamente dentro de una transacción de pruebas revertida.
 
-P3/P4/P5 amplían servicios y UI sobre este contrato. Cualquier cambio imprescindible usa nueva migración coordinada y regenera tipos; no renombrar ni rediseñar tablas unilateralmente. Matching/assignments mantienen relaciones normales; la validación transaccional entre periodo/plaza/candidato y la capacidad será implementada con la RPC de P6 antes de habilitar asignaciones a usuarios normales. No hay datos médicos, embeddings ni pgvector.
+P3–P7 amplían servicios y UI sobre este contrato. Cualquier cambio imprescindible usa nueva migración coordinada y sincroniza tipos; no renombrar ni rediseñar tablas unilateralmente. Las RPC de 010 validan periodo/plaza/candidato/capacidad y 011 integra asesorías. No hay datos médicos, embeddings ni pgvector.
 
 ## Extensión P3
 
@@ -105,3 +105,15 @@ Registro atómico mediante pyr_unibague_register_organization; no INSERT directo
 ## Extensión P4 · Projects + Admin
 
 La migración aditiva `202610010006_projects_admin_p4.sql` no altera las 33 tablas ni migraciones previas. Añade RPC `pyr_unibague_review_organization`, `pyr_unibague_set_current_academic_period`, `pyr_unibague_admin_dashboard`, `pyr_unibague_admin_students` y `pyr_unibague_project_totals`, más triggers de estados/plazas, último ADMIN y roles del sistema inmutables. RPC de revisión y periodo son transaccionales SECURITY DEFINER con search_path vacío y ADMIN persistido; agregados/búsqueda son SECURITY INVOKER bajo RLS. EXECUTE público/anon revocado. Los tipos siguen siendo fallback manual. Firmas, invariantes y límites: [PROJECTS_ADMIN_P4.md](PROJECTS_ADMIN_P4.md).
+
+## Contrato final P6/P7
+
+008 incorpora ocho tablas de personal/contactos/asesorías/relaciones; 009 incorpora Calls, CallPositions, Groups y GroupMembers; 010 usa Assignments/AssignmentEvents existentes. 011 no agrega tablas ni columnas: conecta el helper transaccional A/C, agrega proyecciones institucional/estudiantil y permite al guard privado de padres 009 ver dependencias ocultas por RLS. Las migraciones 001–010 permanecen idénticas a sus commits de origen.
+
+El catálogo combinado tiene 45 tablas, 381 columnas, 60 FK entre tablas públicas y 26 RPC públicas. Los tipos son fallback sincronizado desde el catálogo PostgreSQL WASM, no generación oficial Supabase. Servicios A/B/C consumen el mismo Database; se eliminaron extensiones locales del cliente. `tests/sql/run-integrated-wasm.mjs` comprueba tablas, columnas, FK, RPC y RLS y permite reconstruir el fallback con `--write-types`; regenerar oficialmente al disponer de Supabase.
+
+Capacidad pertenece únicamente a ProjectPositions. CallPositions no duplica cupos. El lock de periodo/posición y la revisión del snapshot protegen confirmaciones; los índices parciales impiden duplicar estudiantes/responsabilidades/membresías vigentes. La comprobación real entre conexiones sigue pendiente. Política de cierre: retiro finaliza la responsabilidad individual vigente y membresías; reasignación conserva ambas historias y crea el vínculo al asesor actual del nuevo destino, o registra `missing_advisor`. Cambiar asesor de organización no propaga cambios a estudiantes. Confirmar sin asesor de organización conserva un asesor manual previo si existe, o deja pendiente explícito sin invalidar el cupo.
+
+## Cierre operativo 012
+
+pyr_unibague_operational_summary(uuid) y pyr_unibague_operational_export(uuid,text,uuid) requieren ADMIN persistido; export pagina por UUID (500 filas). pyr_unibague_advisor_project_team(uuid) exige ADVISOR activo y filtra integrantes por asesoría individual. El trigger privado de AssignmentEvents notifica únicamente al estudiante destinatario dentro de la transacción original. Notifications queda con lectura propia y sin INSERT/DELETE cliente, incluso ADMIN. student_assignment añade estado, municipio y programa de compañeros. 29 RPC públicas verificadas contra el catálogo suplementario; el fallback TypeScript no es generación oficial Supabase.

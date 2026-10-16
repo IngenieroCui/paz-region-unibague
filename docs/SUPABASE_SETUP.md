@@ -14,7 +14,7 @@ supabase db lint --local --level warning
 supabase test db
 supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts
 ~~~
-db reset aplica las cinco migraciones (P2+P3) en orden y seed.sql (roles idempotentes). No editar migraciones aplicadas. Puerto API local 54321, BD 54322, Studio 54323, bandeja de correos 54324. Usar URL/clave pública mostradas por supabase status para .env.local. Requisitos: Docker disponible, puertos libres y descarga de imágenes. Si db lint señala policies/plpgsql inválidos, corregir antes de aplicar remotamente mediante nueva migración si la anterior ya fue aplicada.
+db reset aplica las doce migraciones (001–012) en orden y seed.sql (roles idempotentes). No editar migraciones aplicadas. Puerto API local 54321, BD 54322, Studio 54323, bandeja de correos 54324. Usar URL/clave pública mostradas por supabase status para .env.local. Requisitos: Docker disponible, puertos libres y descarga de imágenes. Si db lint señala policies/plpgsql inválidos, corregir antes de aplicar remotamente mediante nueva migración si la anterior ya fue aplicada.
 
 Para proyecto hospedado, con acceso CLI autorizado:
 ~~~sh
@@ -33,7 +33,7 @@ select '<UUID-del-usuario>'::uuid, id, null
 from public."PYRUnibague_Roles" where code = 'ADMIN'
 on conflict (user_id, role_id) do nothing;
 ~~~
-No existe contraseña default, usuario semilla ni RPC pública de elevación. El trigger crea UserProfiles al alta; usuarios previos son backfilled por migración. Primer actor SQL queda null en auditoría. Después, ADMIN autenticado puede gestionar UserRoles mediante políticas autorizadas; no implementar aún la UI administrativa completa.
+No existe contraseña default, usuario semilla ni RPC pública de elevación. El trigger crea UserProfiles al alta; usuarios previos son backfilled por migración. Primer actor SQL queda null en auditoría. Después, ADMIN autenticado puede gestionar UserRoles mediante políticas autorizadas; la UI administrativa existente permite administrar roles persistidos.
 
 ## Storage
 Migraciones crean dos buckets privados, con policies por propietario/manager/ADMIN. Verificar en Dashboard que public=false para ambos. Nombres exactos y paths en DATABASE_CONTRACT. Servicios firmarán URLs de 60 segundos después de comprobar RLS; no usar getPublicUrl ni cachear objetos privados. El módulo documental debe coordinar upload, metadata y limpieza de objetos huérfanos usando API Storage, sin borrar archivos directamente mediante SQL.
@@ -42,10 +42,14 @@ Migraciones crean dos buckets privados, con policies por propietario/manager/ADM
 Ejecutar typecheck/lint/unit/build/E2E; migrar y generar tipos contra esquema aprobado. Aplicar redirects HTTPS exactos y signup deshabilitado, probar login/recovery/logout con cuentas reales y probar RLS antes de habilitar módulos. Hosting SPA resuelve rutas a index.html, excluyendo assets/API; SW excluye auth/callback y reset-password de navegación offline. No hay despliegue ni proyecto remoto configurado en esta entrega.
 
 ## Evidencia y límites de este entorno
-Docker, supabase y psql no aparecen instalados en PATH ni Docker Desktop en Program Files. No se pudo iniciar Supabase local ni aplicar migraciones a una instancia Supabase, ejecutar lint DB/pruebas RLS allí o generar tipos oficialmente. database.types.ts es fallback estricto sincronizado con las 33 tablas/RPC del esquema, sin any. No se afirma que sea CLI-generated. Las pruebas SQL están preparadas, no certificadas contra Supabase runtime. La validación suplementaria PostgreSQL WASM usa stubs de auth/storage y no sustituye esas comprobaciones.
+Docker, supabase y psql no aparecen instalados en PATH ni Docker Desktop en Program Files. No se pudo iniciar Supabase local ni aplicar migraciones a una instancia Supabase, ejecutar lint DB/pruebas RLS allí o generar tipos oficialmente. database.types.ts es fallback estricto sincronizado con las 45 tablas y 29 RPC del esquema integrado, sin any. No se afirma que sea CLI-generated. Las pruebas SQL están preparadas, no certificadas contra Supabase runtime. La validación suplementaria PostgreSQL WASM usa stubs de auth/storage y no sustituye esas comprobaciones.
 
 Documentación oficial usada: [PKCE](https://supabase.com/docs/guides/auth/sessions/pkce-flow), [eventos Auth](https://supabase.com/docs/reference/javascript/auth-onauthstatechange), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Storage policies](https://supabase.com/docs/guides/storage/security/access-control).
 
 ## Activación P3
 
 Aplicar 202610010005_student_organization_p3.sql después de P2, ejecutar supabase test db (incluye p3.test.sql) y regenerar tipos oficialmente. Configurar VITE_SUPABASE_URL y clave pública, cargar catálogos/periodo reales y provisionar usuarios/roles con el proceso administrativo P2. Comprobar registro como Organization, lectura read-only de reviews, separación A/B y carga/firma/descarga/eliminación en ambos buckets privados. La RPC no acepta ni establece verificación. No se ha aplicado a un proyecto remoto en esta entrega.
+
+## Verificación P7
+
+Para una instancia LOCAL desechable: scripts/validate-supabase-local.ps1 -ResetDisposableLocal. No ejecutar sobre datos locales útiles. El script requiere Docker/CLI, aplica 001–012 y pgTAP, lint y genera tipos oficiales en work/ para revisar. La CLI y este script no pudieron ejecutarse en esta entrega. Auth/Storage/PostgREST y concurrencia real continúan pendientes; contratos, fixtures aislados y comandos exactos en P7_OPERATIONAL_HANDOFF.md. No efectuar db push sobre producción sin validación y autorización.
