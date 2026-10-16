@@ -1,0 +1,74 @@
+{
+  "migrations": [
+    {
+      "version": "20261013200313",
+      "name": "p8_001_core"
+    },
+    {
+      "version": "20261013200324",
+      "name": "p8_002_domain"
+    },
+    {
+      "version": "20261013200328",
+      "name": "p8_003_security"
+    },
+    {
+      "version": "20261013200331",
+      "name": "p8_004_reference"
+    },
+    {
+      "version": "20261013200503",
+      "name": "p8_005_student_organization_p3"
+    },
+    {
+      "version": "20261013200506",
+      "name": "p8_006_projects_admin_p4"
+    },
+    {
+      "version": "20261013200509",
+      "name": "p8_007_matching_p5"
+    },
+    {
+      "version": "20261013200513",
+      "name": "p8_008_advisors_contacts_p6a"
+    },
+    {
+      "version": "20261013200517",
+      "name": "p8_009_calls_projects_groups_p6b"
+    },
+    {
+      "version": "20261013200522",
+      "name": "p8_010_assignments_p6c"
+    },
+    {
+      "version": "20261013200525",
+      "name": "p8_011_p6_integration"
+    },
+    {
+      "version": "20261013200530",
+      "name": "p8_012_p7_operations"
+    },
+    {
+      "version": "20261013202641",
+      "name": "p8_rls_initplan"
+    },
+    {
+      "version": "20261013203922",
+      "name": "p8_validate_matching_constraint"
+    }
+  ],
+  "advisors": [
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "level": "WARN",
+      "count": 22,
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "level": "WARN",
+      "count": 1,
+      "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+    }
+  ]
+}

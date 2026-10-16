@@ -15,6 +15,7 @@ export default function LandingPage() {
       <div className="hero-actions"><Link className="button button--primary" to="/login">Ingresar a la plataforma <ArrowRight size={18} aria-hidden="true" /></Link>
         <a className="text-link" href="#comunidad">Conoce el espacio <ArrowDown size={17} aria-hidden="true" /></a></div>
       <p className="hero-footnote">Formación académica. Conexión regional. Propósito compartido.</p></div>
+    {appConfig.demo && <p className="demo-notice">Demostración controlada · Datos TEST</p>}
     <div className="territory-art" aria-hidden="true"><div className="art-caption"><MapPin size={16} /> UNA REGIÓN, MUCHAS CONEXIONES</div>
       <svg className="territory-lines" viewBox="0 0 520 530" fill="none">
         <path className="contour" d="M-30 340C80 60 180 80 310 150S550 300 550 50M-25 370C85 90 170 105 300 175S550 325 575 75M-20 400C90 120 160 130 290 200S550 350 600 100M-15 430C95 150 150 155 280 225S550 375 625 125M-10 460C100 180 140 180 270 250S550 400 650 150M-5 490C105 210 130 205 260 275S550 425 675 175M0 520C110 240 120 230 250 300S550 450 700 200" />
@@ -26,7 +27,7 @@ export default function LandingPage() {
       <div className="art-label art-label--students"><GraduationCap size={24} /><span>Talento<span>Estudiantes</span></span></div>
       <div className="art-label art-label--organizations"><Building2 size={24} /><span>Territorio<span>Organizaciones</span></span></div>
       <div className="art-label art-label--university"><Landmark size={24} /><span>Conocimiento<span>Universidad</span></span></div>
-      <div className="art-center">Paz <span>&</span> Región<small>CONSTRUIR DESDE EL ENCUENTRO</small></div>
+      <div className="art-center">Paz y Región<small>CONSTRUIR DESDE EL ENCUENTRO</small></div>
       <div className="art-bottom"><span>VÍNCULOS QUE TRANSFORMAN</span><span>PyR / Unibagué</span></div></div>
   </section>
   <section className="community-section" id="comunidad"><div className="community-heading"><p className="eyebrow">UN PROPÓSITO COMPARTIDO</p>

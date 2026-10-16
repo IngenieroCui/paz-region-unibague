@@ -43,6 +43,7 @@ export async function p3Api(page: Page, role: 'STUDENT' | 'ORGANIZATION', option
     if (url.pathname.endsWith('/logout')) return route.fulfill({ json: {} })
     if (url.pathname.includes('/rpc/')) {
       const name = url.pathname.split('/').at(-1)
+      if (name === 'pyr_unibague_student_assignment') return route.fulfill({ json: null })
       if (name === 'pyr_unibague_register_organization') {
         const fields = Object.fromEntries(Object.entries(body).map(([key, value]) => [key.replace(/^p_/, ''), value]))
         table('Organizations').push({ ...fields, id: oid, status: 'pending_review', verified_at: null, verified_by: null, created_by: uid, created_at: now, updated_at: now })

@@ -29,3 +29,6 @@ minimum_password_length = 8
 [auth.email]
 enable_signup = false
 enable_confirmations = true
+
+[functions.matching-run]
+verify_jwt = true

@@ -29,3 +29,8 @@ dist-ssr
 coverage
 playwright-report
 test-results
+/work/
+*.local.json
+**/admin.env
+
+/supabase/.temp/

@@ -53,7 +53,7 @@ export async function organizationCatalogs() {const db=await client();return all
 export async function listOrganizations(page:number,search:string,filters:{status:string;type:string;municipality:string;verified:string}) {
   const db=await client();let query=db.from('PYRUnibague_Organizations').select('*, PYRUnibague_OrganizationTypes(name), PYRUnibague_Municipalities(municipality_name), PYRUnibague_OrganizationDocuments(count)',{count:'exact'}).order('legal_name').order('id')
   const safe=search.replace(/[%_*(),.\\]/g,' ').trim();if(safe)query=query.or(`legal_name.ilike.%${safe}%,display_name.ilike.%${safe}%`)
-  if(filters.status==='pending')query=query.in('status',['pending_review','submitted'])
+  if(filters.status==='pending')query=query.in('status',['pending','pending_review','submitted'])
   else if(filters.status)query=query.eq('status',filters.status)
   if(filters.type)query=query.eq('organization_type_id',filters.type)
   if(filters.municipality)query=query.eq('municipality_id',filters.municipality)

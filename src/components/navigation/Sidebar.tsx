@@ -3,13 +3,13 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { Brand, Identity } from '../layout/Brand'
 import { navigation, productionNavigation } from '../../config/navigation'
-import { roleLabels } from '../../config/app'
+import { appConfig, roleLabels } from '../../config/app'
 import type { Role } from '../../config/app'
 export function Sidebar({ role, basePath, onNavigate, preview = false }: { role: Role; basePath: string; onNavigate?: () => void; preview?: boolean }) {
   const auth = useAuth()
   const location = useLocation()
   const orgSearch = !preview && role === 'ORGANIZATION' ? location.search : ''
-  return <div className="sidebar-content"><Brand /><div className="sidebar-context"><span className="eyebrow">ESPACIO DE TRABAJO</span><strong>{roleLabels[role]}</strong></div>
+  return <div className="sidebar-content"><Brand /><div className="sidebar-context"><span className="eyebrow">ESPACIO DE TRABAJO</span><strong>{roleLabels[role]}</strong>{appConfig.demo && <small>Demostración controlada · Datos TEST</small>}</div>
     <nav aria-label="Navegación del espacio">{(preview ? navigation : productionNavigation)[role].map(item => <NavLink key={item.path} end to={basePath + (item.path ? '/' + item.path : '') + orgSearch}
       onClick={onNavigate} className={({ isActive }) => 'sidebar-link' + (isActive ? ' is-active' : '')}>
       <item.icon size={19} aria-hidden="true" />{item.label}</NavLink>)}</nav>
