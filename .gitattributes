@@ -2,4 +2,7 @@
 *.png binary
 *.ico binary
 *.gz binary
+*.pdf binary
+*.zip binary
+*.ttf binary
 README.md text diff

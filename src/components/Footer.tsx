@@ -2,6 +2,8 @@
 
 import './Footer.css';
 
+const copyrightYear = new Date().getFullYear();
+
 const Footer = () => {
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent('Me gustaría que me ayudaras con la creación de mi app web');
@@ -157,7 +159,7 @@ const Footer = () => {
           {/* Derecha - Derechos reservados */}
           <div className="footer-section footer-rights">
             <p className="footer-copyright">
-              © {new Date().getFullYear()} Todos los derechos reservados
+              © {copyrightYear} Todos los derechos reservados
             </p>
             <p className="footer-entity">
               Universidad de Ibagué - Paz y Región

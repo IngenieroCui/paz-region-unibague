@@ -9,12 +9,19 @@ import { projectStateLabel } from './services/projects'
 import { TeamMembersView } from '../groups'
 import './institutional-sheet.css'
 
+function positionStateLabel(status: string) {
+  const labels: Record<string, string> = { active: 'Activa', open: 'Abierta', draft: 'Borrador', approved: 'Aprobada', closed: 'Cerrada', inactive: 'Inactiva', paused: 'Pausada' }
+  return labels[status] ?? status
+}
 function People({ people }: { people: InstitutionalPerson[] }) {
   return people.length ? <ul>{people.map(person => <li key={person.id}>{person.displayName ?? 'Nombre no disponible'}</li>)}</ul> : <>Sin registrar</>
 }
 export function InstitutionalSheetView({ data }: { data: InstitutionalSheetData }) {
   const { project, positions, programs, people } = data
   const organization = project.PYRUnibague_Organizations
+  const activeCapacity = positions.filter(position => position.is_active).reduce((sum, position) => sum + position.capacity, 0)
+  const totalCapacity = positions.reduce((sum, position) => sum + position.capacity, 0)
+  const retiredGroups = data.team?.groups.filter(group => data.team?.members.some(member => member.group_id === group.id && member.status === 'inactive')) ?? []
   return <section className="p6b-sheet card" aria-label="Ficha institucional del proyecto">
     <div className="p6b-sheet-heading"><div><img className="sheet-institution" src="/logos/web/icon-192.png" width="96" height="96" alt="Universidad de Ibagué" /><p>PAZ Y REGIÓN · UNIVERSIDAD DE IBAGUÉ</p><h2>Ficha institucional del proyecto</h2></div>
       <Button variant="secondary" onClick={() => window.print()}>Imprimir ficha</Button></div>
@@ -31,12 +38,13 @@ export function InstitutionalSheetView({ data }: { data: InstitutionalSheetData 
       <div><dt>Asesor regional</dt><dd><People people={people.advisors}/></dd></div>
     </dl>
     {people.availability === 'not_integrated' && <p>Asesor e interlocutor pendientes de integración institucional.</p>}
-    <h3>Plazas</h3><p>Capacidad ofertada: {positions.reduce((sum, position) => sum + position.capacity, 0)}. Cada plaza aporta su capacidad una sola vez; sus programas son compatibles.</p>
+    <h3>Plazas</h3><p>Capacidad ofertada activa: {activeCapacity}. Capacidad total registrada: {totalCapacity}. Cada plaza aporta su capacidad una sola vez; sus programas son compatibles.</p>
     {positions.length ? <ul className="p6b-sheet-positions">{positions.map(position => <li key={position.id}>
-      <strong>{position.title}</strong><p>{position.capacity} cupos · {position.status} · {position.is_active ? 'Activa' : 'Inactiva'}</p>
+      <strong>{position.title}</strong><p>{position.capacity} {position.capacity === 1 ? 'cupo' : 'cupos'} · {positionStateLabel(position.status)} · {position.is_active ? 'Activa' : 'Inactiva'}</p>
       <p>Programas compatibles: {programs.filter(link => link.project_position_id === position.id).map(link => link.PYRUnibague_AcademicPrograms?.name ?? 'Sin registrar').join(', ') || 'Sin registrar'}</p>
     </li>)}</ul> : <p>Sin plazas registradas.</p>}
-    <h3>Equipos Paz y Región</h3>{data.team?.groups.length ? data.team.groups.map(group => <div key={group.id}><h4>{group.name} · {group.status === 'active' ? 'Activo' : 'Cerrado'}</h4><p>Inicio: {group.started_on ?? 'Sin registrar'}</p><TeamMembersView team={data.team!} groupId={group.id}/></div>) : <p>Sin equipos registrados.</p>}
+    <h3>Equipos Paz y Región</h3>{data.team?.groups.length ? data.team.groups.map(group => <section key={group.id} aria-label={'Integrantes vigentes de ' + group.name}><h4>{group.name} · {group.status === 'active' ? 'Activo' : 'Cerrado'}</h4><p>Inicio: {group.started_on ?? 'Sin registrar'}</p><TeamMembersView team={data.team!} groupId={group.id} statusFilter="active"/></section>) : <p>Sin equipos registrados.</p>}
+    {retiredGroups.length > 0 && <section aria-label="Historial de integrantes retirados"><h3>Historial de integrantes retirados</h3><p>Los siguientes registros son históricos y no forman parte del equipo vigente.</p>{retiredGroups.map(group => <div key={group.id}><h4>{group.name}</h4><TeamMembersView team={data.team!} groupId={group.id} statusFilter="inactive"/></div>)}</section>}
     <h3>Historial operativo</h3><dl className="p6b-sheet-grid">
       <div><dt>Registro</dt><dd>{new Date(project.created_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })}</dd></div>
       <div><dt>Última actualización</dt><dd>{new Date(project.updated_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })}</dd></div>

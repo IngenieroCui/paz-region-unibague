@@ -1,0 +1,42 @@
+[
+  {
+    "path": "supabase/tests/security.test.sql",
+    "assertions": 67,
+    "failures": []
+  },
+  {
+    "path": "supabase/tests/p3.test.sql",
+    "assertions": 36,
+    "failures": []
+  },
+  {
+    "path": "supabase/tests/p4.test.sql",
+    "assertions": 61,
+    "failures": []
+  },
+  {
+    "path": "supabase/tests/p5_matching.test.sql",
+    "assertions": 27,
+    "failures": []
+  },
+  {
+    "path": "supabase/tests/p6a_advisors.test.sql",
+    "assertions": 85,
+    "failures": []
+  },
+  {
+    "path": "tests/p6b/database.test.sql",
+    "assertions": 53,
+    "failures": []
+  },
+  {
+    "path": "supabase/tests/p6c_assignments.test.sql",
+    "assertions": 68,
+    "failures": []
+  },
+  {
+    "path": "supabase/tests/p7_integration.test.sql",
+    "assertions": 77,
+    "failures": []
+  }
+]

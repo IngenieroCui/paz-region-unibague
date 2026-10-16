@@ -2,6 +2,10 @@ import { allPages, check, client, FeatureError } from '../../../lib/supabase/fea
 import type { Row, Insert, Update } from '../../../lib/supabase/feature-helpers'
 
 export type Student = Row<'PYRUnibague_Students'>
+export function participationLabel(status: string) {
+  const labels: Record<string, string> = { active: 'Activa', inactive: 'Inactiva', registered: 'Registrada', reviewed: 'Revisada', pending: 'Pendiente', completed: 'Completada', withdrawn: 'Retirada', test: 'Prueba' }
+  return labels[status] ?? status
+}
 export type StudentEdit = Pick<Student, 'student_code' | 'academic_program_id' | 'current_semester' | 'bio' | 'desired_work_description' | 'origin_municipality_id' | 'current_municipality_id' | 'profile_links'>
 export type ExperienceEdit = Pick<Row<'PYRUnibague_StudentExperiences'>, 'title' | 'organization_name' | 'description' | 'started_on' | 'ended_on' | 'is_current'>
 export async function loadStudent(userId: string) {

@@ -46,15 +46,16 @@ export function GroupsPanel({ projectId,canManage,onChange }: { projectId: strin
     {!team.groups.length && <EmptyState title="Sin equipos registrados">Crea un equipo para este proyecto y vincula asignaciones existentes.</EmptyState>}
     {team.groups.map(group => <Card key={group.id}><h3>{group.name}</h3><p>{group.status === 'active' ? 'Activo' : 'Cerrado'} · Inicio: {group.started_on ?? 'Sin registrar'}</p>
       {canManage && <details><summary>Editar equipo</summary><GroupForm key={group.updated_at} projectId={projectId} group={group} reload={refresh}/></details>}
-      <h4>Integrantes</h4><TeamMembersView team={team} groupId={group.id}/>
+      <h4>Integrantes vigentes</h4><TeamMembersView team={team} groupId={group.id} statusFilter="active"/>
+      {team.members.some(member => member.group_id === group.id && member.status === 'inactive') && <section aria-label={'Historial de ' + group.name}><h4>Integrantes retirados</h4><TeamMembersView team={team} groupId={group.id} statusFilter="inactive"/></section>}
       {canManage && team.members.filter(member => member.group_id === group.id && member.status === 'active').map(member => <RetireMember key={member.id} member={member} team={team} reload={refresh}/>)}
       {canManage && group.status === 'active' && <MemberForm group={group} team={team} reload={refresh}/>}
     </Card>)}
     {canManage && <Card><h3>Crear equipo</h3><GroupForm projectId={projectId} reload={refresh}/></Card>}
   </section>
 }
-export function TeamMembersView({ team,groupId }: { team: ProjectTeam; groupId: string }) {
-  const members = team.members.filter(member => member.group_id === groupId)
+export function TeamMembersView({ team,groupId,statusFilter }: { team: ProjectTeam; groupId: string; statusFilter?: 'active' | 'inactive' }) {
+  const members = team.members.filter(member => member.group_id === groupId && (!statusFilter || member.status === statusFilter))
   if (!members.length) return <p>Sin integrantes.</p>
   return <ul className="module-list">{members.map(member => {
     const assignment = team.assignments.find(assignment => assignment.id === member.assignment_id)

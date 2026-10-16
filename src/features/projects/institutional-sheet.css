@@ -17,13 +17,15 @@
   body:has(.p6b-sheet) .module-stack > :not(.p6b-sheet):not(:has(.p6b-sheet)) { display: none !important; }
   body:has(.p6b-sheet) :is(.app-shell, .shell-body, main, .module-stack) { display: block; width: 100%; max-width: none; margin: 0; padding: 0; }
   .p6b-sheet { box-shadow: none; border: none; border-radius: 0; padding: 0; color: #000; background: #fff; font-size: 10pt; line-height: 1.4; }
-  .p6b-sheet p { font-size: inherit; margin-block: .45rem; }
+  .p6b-sheet p { font-size: inherit; margin-block: .3rem; }
   .p6b-sheet h2 { font-size: 16pt; margin: 0; }
-  .p6b-sheet h3 { font-size: 11pt; margin-block: .8rem .4rem; }
+  .p6b-sheet h3 { font-size: 11pt; margin-block: .6rem .3rem; }
+  .p6b-sheet h4 { font-size: 10pt; margin-block: .6rem .3rem; break-after: avoid; }
   .p6b-sheet-heading > div { grid-template-columns: 72px minmax(0, 1fr); }
   .sheet-institution { width: 72px; height: 72px; }
-  .p6b-sheet-grid { gap: .6rem 1.2rem; }
-  .p6b-sheet .module-list li { padding-block: .45rem; }
+  .p6b-sheet-grid { gap: .45rem 1.2rem; }
+  .p6b-sheet-positions li { padding-block: .25rem; }
+  .p6b-sheet .module-list li { padding-block: .3rem; }
   .p6b-sheet button { display: none; }
   .p6b-sheet h3 { break-after: avoid; }
   .p6b-sheet-grid > div { break-inside: avoid; }

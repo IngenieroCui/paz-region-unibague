@@ -22,7 +22,8 @@
 .sidebar-note a { display: flex; align-items: center; gap: .5rem; min-height: 44px; font-size: .7rem; color: var(--on-dark); }
 .sidebar-bottom .identity { padding: 1rem .4rem; border-top: 1px solid var(--dark-border); }
 .sidebar-bottom .identity small { color: var(--muted-on-dark); font-size: .62rem; }
-.sidebar-bottom .identity strong { font-size: .7rem; }
+.sidebar-bottom .identity > span:last-child { min-width: 0; flex: 1; }
+.sidebar-bottom .identity strong { font-size: .7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sidebar-back { display: flex; align-items: center; gap: .5rem; min-height: 44px; margin-left: .4rem; color: var(--muted-on-dark); font-size: .7rem; }
 .shell-body { margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); display: flex; flex-direction: column; min-width: 0; }
 .topbar { border-top: 4px solid var(--gold); min-height: 78px; padding: 1rem 2.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--surface); border-bottom: 1px solid var(--border); }

@@ -1,0 +1,58 @@
+[
+  {
+    "label": "Estudiante 1: perfil, participación, asignación, equipo y documentos privados",
+    "status": "PASS"
+  },
+  {
+    "label": "Estudiante 2: perfil, participación, asignación, equipo y documentos privados",
+    "status": "PASS"
+  },
+  {
+    "label": "Estudiante 3: perfil, participación, asignación, equipo y documentos privados",
+    "status": "PASS"
+  },
+  {
+    "label": "Estudiante 4: perfil, participación, asignación, equipo y documentos privados",
+    "status": "PASS"
+  },
+  {
+    "label": "Organización 1: titularidad, interlocutores, proyectos, convocatoria, equipos y aislamiento",
+    "status": "PASS"
+  },
+  {
+    "label": "Organización 2: titularidad, interlocutores, proyectos, convocatoria, equipos y aislamiento",
+    "status": "PASS"
+  },
+  {
+    "label": "Asesor 1: organizaciones y estudiantes independientes",
+    "status": "PASS"
+  },
+  {
+    "label": "Asesor 2: organizaciones y estudiantes independientes",
+    "status": "PASS"
+  },
+  {
+    "label": "Cambiar asesor organizacional conserva asesor individual e historial",
+    "status": "PASS"
+  },
+  {
+    "label": "Notificaciones personales aisladas",
+    "status": "PASS"
+  },
+  {
+    "label": "Confirmación administrativa denegada a las ocho cuentas no ADMIN",
+    "status": "PASS"
+  },
+  {
+    "label": "Matching estructurado y optimización global sobre candidatos persistidos",
+    "status": "PASS"
+  },
+  {
+    "label": "ADMIN: pendientes, exportaciones y auditoría reales",
+    "status": "PASS"
+  },
+  {
+    "label": "Esquema intacto: 45 tablas con RLS, 14 migraciones, dos buckets privados; anonimato denegado",
+    "status": "PASS"
+  }
+]

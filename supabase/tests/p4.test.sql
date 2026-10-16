@@ -7,7 +7,8 @@ select set_config('p4.baseline_capacity',(select coalesce(sum(capacity),0)::text
 -- savepoint below. Their persisted roles are restored before the test continues.
 create temp table p4_other_test_admins as select ur.user_id from "PYRUnibague_UserRoles" ur
  join "PYRUnibague_Roles" r on r.id=ur.role_id join auth.users u on u.id=ur.user_id
- where r.code='ADMIN' and u.email like '%@example.test';
+ where r.code='ADMIN' and (u.email like '%@example.test'
+  or (u.id='5387d4dc-24a3-4345-a365-ffcbc0740baf' and u.raw_user_meta_data->>'pyr_test_account'='true'));
 grant select on pg_temp.p4_other_test_admins to authenticated;
 insert into auth.users(id,email) values
  ('04000000-0000-0000-0000-000000000001','p4-admin@example.test'),

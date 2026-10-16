@@ -1,0 +1,533 @@
+[
+  {
+    "scope": "STUDENT",
+    "index": 1,
+    "route": "/app/student",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 1,
+    "route": "/app/student/assignment",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 1,
+    "route": "/app/student/profile",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 1,
+    "route": "/app/student/experience",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 1,
+    "route": "/app/student/skills",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 1,
+    "route": "/app/student/preferences",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 1,
+    "route": "/app/student/documents",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 1,
+    "route": "/app/student/notifications",
+    "status": "PASS"
+  },
+  {
+    "account": "6407bfc1-3c2e-42a1-acb9-900a22d3c201",
+    "role": "STUDENT",
+    "status": "PASS",
+    "login": true,
+    "reload": true,
+    "guards": true,
+    "logout": true
+  },
+  {
+    "scope": "STUDENT",
+    "index": 2,
+    "route": "/app/student",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 2,
+    "route": "/app/student/assignment",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 2,
+    "route": "/app/student/profile",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 2,
+    "route": "/app/student/experience",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 2,
+    "route": "/app/student/skills",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 2,
+    "route": "/app/student/preferences",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 2,
+    "route": "/app/student/documents",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 2,
+    "route": "/app/student/notifications",
+    "status": "PASS"
+  },
+  {
+    "account": "2f9ea050-8343-48ec-af31-dea5ed6cce51",
+    "role": "STUDENT",
+    "status": "PASS",
+    "login": true,
+    "reload": true,
+    "guards": true,
+    "logout": true
+  },
+  {
+    "scope": "STUDENT",
+    "index": 3,
+    "route": "/app/student",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 3,
+    "route": "/app/student/assignment",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 3,
+    "route": "/app/student/profile",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 3,
+    "route": "/app/student/experience",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 3,
+    "route": "/app/student/skills",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 3,
+    "route": "/app/student/preferences",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 3,
+    "route": "/app/student/documents",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 3,
+    "route": "/app/student/notifications",
+    "status": "PASS"
+  },
+  {
+    "account": "97977b5b-0fe8-44b6-b410-e89cde91ca62",
+    "role": "STUDENT",
+    "status": "PASS",
+    "login": true,
+    "reload": true,
+    "guards": true,
+    "logout": true
+  },
+  {
+    "scope": "STUDENT",
+    "index": 4,
+    "route": "/app/student",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 4,
+    "route": "/app/student/assignment",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 4,
+    "route": "/app/student/profile",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 4,
+    "route": "/app/student/experience",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 4,
+    "route": "/app/student/skills",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 4,
+    "route": "/app/student/preferences",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 4,
+    "route": "/app/student/documents",
+    "status": "PASS"
+  },
+  {
+    "scope": "STUDENT",
+    "index": 4,
+    "route": "/app/student/notifications",
+    "status": "PASS"
+  },
+  {
+    "account": "1c0fa87b-9ea2-467c-a5d9-ab57265fc563",
+    "role": "STUDENT",
+    "status": "PASS",
+    "login": true,
+    "reload": true,
+    "guards": true,
+    "logout": true
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/operations",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/students",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/organizations",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/projects",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/calls",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/groups",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/advisors",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/special-cases",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/users",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/matching",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/assignments",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/settings",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/audit",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADMIN",
+    "index": 1,
+    "route": "/app/admin/notifications",
+    "status": "PASS"
+  },
+  {
+    "account": "5387d4dc-24a3-4345-a365-ffcbc0740baf",
+    "role": "ADMIN",
+    "status": "PASS",
+    "login": true,
+    "reload": true,
+    "guards": true,
+    "logout": true
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 1,
+    "route": "/app/advisor",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 1,
+    "route": "/app/advisor/organizations",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 1,
+    "route": "/app/advisor/students",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 1,
+    "route": "/app/advisor/projects",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 1,
+    "route": "/app/advisor/profile",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 1,
+    "route": "/app/advisor/notifications",
+    "status": "PASS"
+  },
+  {
+    "account": "2ab1f908-67d9-4b4a-85f0-bba7cb97a7ed",
+    "role": "ADVISOR",
+    "status": "PASS",
+    "login": true,
+    "reload": true,
+    "guards": true,
+    "logout": true
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 2,
+    "route": "/app/advisor",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 2,
+    "route": "/app/advisor/organizations",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 2,
+    "route": "/app/advisor/students",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 2,
+    "route": "/app/advisor/projects",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 2,
+    "route": "/app/advisor/profile",
+    "status": "PASS"
+  },
+  {
+    "scope": "ADVISOR",
+    "index": 2,
+    "route": "/app/advisor/notifications",
+    "status": "PASS"
+  },
+  {
+    "account": "08aae3aa-9c39-42f7-85ca-cbd255b5a756",
+    "role": "ADVISOR",
+    "status": "PASS",
+    "login": true,
+    "reload": true,
+    "guards": true,
+    "logout": true
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 1,
+    "route": "/app/organization",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 1,
+    "route": "/app/organization/profile",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 1,
+    "route": "/app/organization/projects",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 1,
+    "route": "/app/organization/calls",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 1,
+    "route": "/app/organization/groups",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 1,
+    "route": "/app/organization/documents",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 1,
+    "route": "/app/organization/reviews",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 1,
+    "route": "/app/organization/notifications",
+    "status": "PASS"
+  },
+  {
+    "account": "409f5da2-fccd-453c-b580-3bd5683e0529",
+    "role": "ORGANIZATION",
+    "status": "PASS",
+    "login": true,
+    "reload": true,
+    "guards": true,
+    "logout": true
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 2,
+    "route": "/app/organization",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 2,
+    "route": "/app/organization/profile",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 2,
+    "route": "/app/organization/projects",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 2,
+    "route": "/app/organization/calls",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 2,
+    "route": "/app/organization/groups",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 2,
+    "route": "/app/organization/documents",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 2,
+    "route": "/app/organization/reviews",
+    "status": "PASS"
+  },
+  {
+    "scope": "ORGANIZATION",
+    "index": 2,
+    "route": "/app/organization/notifications",
+    "status": "PASS"
+  },
+  {
+    "account": "54379aff-0d7f-4886-a523-ef1fb9cd4682",
+    "role": "ORGANIZATION",
+    "status": "PASS",
+    "login": true,
+    "reload": true,
+    "guards": true,
+    "logout": true
+  }
+]

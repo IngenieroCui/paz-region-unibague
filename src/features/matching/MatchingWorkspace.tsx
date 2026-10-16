@@ -11,6 +11,10 @@ import { useMatchingResource } from './useMatchingResource'
 import { ConfigurationEditor } from './ConfigurationEditor'
 import { MatchingResults } from './MatchingResults'
 import './matching.css'
+function runStateLabel(status: string) {
+  const labels: Record<string, string> = { running: 'En curso', completed: 'Completada', failed: 'Fallida', pending: 'Pendiente' }
+  return labels[status] ?? status
+}
 export function MatchingWorkspace() {
   const metadata = useMatchingResource(loadMatchingMetadata)
   const [periodOverride, setPeriod] = useState<string | null>(null)
@@ -52,7 +56,7 @@ export function MatchingWorkspace() {
       }}>Periodo: {data.periods.find(p => p.id === period)?.name}. Configuración: {config?.name}. Esta operación calcula candidatos y conserva una nueva ejecución; no crea asignaciones.</ConfirmDialog>
     </Card>}
     {(tab === 'results' || tab === 'overview' || tab === 'run') && period && <Card><h2>Historial de ejecuciones</h2><Button variant="secondary" onClick={runs.reload}>Actualizar historial</Button>
-      {runs.data && <><ul className="module-list">{runs.data.rows.map(r => <li key={r.id}><div><p>{new Date(r.created_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })} · {r.status}</p><p>{data.configurations.find(c => c.id === r.matching_configuration_id)?.name ?? r.matching_configuration_id}</p></div><Button variant="secondary" aria-pressed={selected?.id === r.id} onClick={() => { setSelected(r.id); setTab('results') }}>Ver ejecución</Button></li>)}</ul>
+      {runs.data && <><ul className="module-list">{runs.data.rows.map(r => <li key={r.id}><div><p>{new Date(r.created_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })} · {runStateLabel(r.status)}</p><p>{data.configurations.find(c => c.id === r.matching_configuration_id)?.name ?? r.matching_configuration_id}</p></div><Button variant="secondary" aria-pressed={selected?.id === r.id} onClick={() => { setSelected(r.id); setTab('results') }}>Ver ejecución</Button></li>)}</ul>
       <div className="module-actions"><Button variant="secondary" disabled={!runPage} onClick={() => { setRunPage(runPage - 1); setSelected('') }}>Historial anterior</Button><Button variant="secondary" disabled={(runPage + 1) * PAGE_SIZE >= runs.data.count} onClick={() => { setRunPage(runPage + 1); setSelected('') }}>Historial siguiente</Button></div></>}
     </Card>}
     {tab === 'results' && (selected ? <><Card><RunSummary run={selected} /></Card><MatchingResults key={selected.id} run={selected} /></> : <EmptyState title="Sin ejecución seleccionada">Ejecuta matching o selecciona un resultado del historial.</EmptyState>)}
@@ -60,7 +64,8 @@ export function MatchingWorkspace() {
 }
 function RunSummary({ run }: { run: RunRow }) {
   const summary = jsonObject(run.summary)
-  return <><h3>{String(summary.algorithm_version ?? 'Versión no registrada')} · {run.status}</h3><dl className="matching-metrics">{[['student_count', 'Estudiantes'], ['position_count', 'Plazas'], ['pair_count', 'Parejas'], ['eligible_pairs', 'Sin bloqueos'], ['blocked_pairs', 'Bloqueadas'], ['recommended_pairs', 'Recomendadas'], ['below_threshold_pairs', 'Debajo del umbral']].map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{String(summary[key!] ?? '—')}</dd></div>)}</dl><p>Modo semántico: {String(summary.semantic_mode ?? 'no registrado')}</p>
-    {Array.isArray(summary.warnings) && summary.warnings.length > 0 && <p>Avisos: {summary.warnings.map(String).join(', ')}</p>}{summary.error && <Alert tone="error" title={`Error técnico: ${String(summary.error)}`} />}</>
+  const warningLabels: Record<string, string> = { SEMANTIC_DISABLED: 'Análisis semántico desactivado', SEMANTIC_SETTINGS_MISSING: 'Proveedor semántico pendiente de configurar', SEMANTIC_TEXTS_EMPTY: 'Sin textos para análisis semántico', SEMANTIC_TEXT_TOO_LONG: 'Texto demasiado largo para análisis semántico', SEMANTIC_PROVIDER_FAILED: 'Proveedor semántico no disponible; se usaron datos estructurados' }
+  return <><h3>{String(summary.algorithm_version ?? 'Versión no registrada')} · {runStateLabel(run.status)}</h3><dl className="matching-metrics">{[['student_count', 'Estudiantes'], ['position_count', 'Plazas'], ['pair_count', 'Parejas'], ['eligible_pairs', 'Sin bloqueos'], ['blocked_pairs', 'Bloqueadas'], ['recommended_pairs', 'Recomendadas'], ['below_threshold_pairs', 'Debajo del umbral']].map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{String(summary[key!] ?? '—')}</dd></div>)}</dl><p>Modo semántico: {summary.semantic_mode === 'structured_only' ? 'Solo datos estructurados' : summary.semantic_mode === 'embeddings' ? 'Vectores semánticos' : String(summary.semantic_mode ?? 'no registrado')}</p>
+    {Array.isArray(summary.warnings) && summary.warnings.length > 0 && <p>Avisos: {summary.warnings.map(value => warningLabels[String(value)] ?? String(value)).join(', ')}</p>}{summary.error && <Alert tone="error" title={`Error técnico: ${String(summary.error)}`} />}</>
 }
 export default MatchingWorkspace

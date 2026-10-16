@@ -10,5 +10,5 @@ export function Brand() {
 }
 export function Identity({ name, detail }: { name: string; detail: string }) {
   return <div className="identity"><span className="avatar" aria-hidden="true">{name.slice(0, 1)}</span>
-    <span><strong>{name}</strong><small>{detail}</small></span></div>
+    <span><strong title={name}>{name}</strong><small>{detail}</small></span></div>
 }

@@ -33,6 +33,8 @@ export async function signOut() {
   if (error) throw new Error('Sign out failed')
 }
 export async function recoverPassword(email: string) {
+  // Estas nueve direcciones ficticias nunca acreditaron control del buzón.
+  if (/^pyrprueba\.(?:estudiante[2-4]?@estudiantesunibague\.edu\.co|(?:administrador|asesor2?|entidad2?)@unibague\.edu\.co)$/i.test(email.trim())) throw new Error('Las cuentas TEST requieren administración local de credenciales.')
   const { error } = await (await client()).auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin + '/auth/callback' })
   if (error) throw new Error('Recovery failed')
 }

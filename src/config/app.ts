@@ -1,6 +1,7 @@
 export const appConfig = {
   name: 'Paz y Región', institution: 'Universidad de Ibagué',
   description: 'Plataforma de gestión del programa Paz y Región.',
+  demo: import.meta.env.VITE_PYR_DEMO === 'true',
   features: { rolePreview: import.meta.env.DEV, auth: true },
 } as const
 export const roles = ['STUDENT', 'ORGANIZATION', 'ADMIN', 'ADVISOR'] as const

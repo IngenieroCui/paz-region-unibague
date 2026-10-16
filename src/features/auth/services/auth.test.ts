@@ -11,6 +11,12 @@ it('uses official Auth calls and an origin-bound callback', async () => {
   expect(mocks.resetPasswordForEmail).toHaveBeenCalledWith('me@example.org', { redirectTo: window.location.origin + '/auth/callback' })
   expect(mocks.updateUser).toHaveBeenCalledWith({ password: 'newpassword' })
 })
+it('never sends recovery email to the nine fictitious institutional identities', async () => {
+  const accounts = ['estudiante','estudiante2','estudiante3','estudiante4'].map(name => `${name}@estudiantesunibague.edu.co`)
+  accounts.push(...['administrador','asesor','asesor2','entidad','entidad2'].map(name => `${name}@unibague.edu.co`))
+  for (const account of accounts) await expect(recoverPassword(' PYRPRUEBA.' + account.toUpperCase() + ' ')).rejects.toThrow('TEST')
+  expect(mocks.resetPasswordForEmail).not.toHaveBeenCalled()
+})
 it('exchanges a PKCE code once, derives recovery from the SDK event, ignores next', async () => {
   mocks.exchangeCodeForSession.mockImplementation(async () => { mocks.listener?.('PASSWORD_RECOVERY'); return { data: { session: {} }, error: null } })
   await expect(completeCallback('?code=recovery-code&next=//evil.example')).resolves.toBe(true)

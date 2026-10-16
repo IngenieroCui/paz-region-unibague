@@ -119,3 +119,4 @@
   .auth-panel { padding: 1.5rem; border-radius: 0 0 var(--radius-md) var(--radius-md); }
   .auth-panel > h1 { font-size: 1.6rem; }
 }
+.demo-notice { grid-column: 1 / -1; font-size: .75rem; color: var(--muted); }
