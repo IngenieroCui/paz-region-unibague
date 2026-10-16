@@ -1,0 +1,51 @@
+[
+  {
+    "name": "base",
+    "code": 0,
+    "summary": [
+      "30 passed (2.1m)"
+    ]
+  },
+  {
+    "name": "p4",
+    "code": 0,
+    "summary": [
+      "15 passed (1.5m)"
+    ]
+  },
+  {
+    "name": "p5",
+    "code": 0,
+    "summary": [
+      "2 passed (4.8s)"
+    ]
+  },
+  {
+    "name": "p6a",
+    "code": 0,
+    "summary": [
+      "11 passed (56.8s)"
+    ]
+  },
+  {
+    "name": "p6b",
+    "code": 0,
+    "summary": [
+      "7 passed (20.0s)"
+    ]
+  },
+  {
+    "name": "p6c",
+    "code": 0,
+    "summary": [
+      "5 passed (10.8s)"
+    ]
+  },
+  {
+    "name": "p7",
+    "code": 0,
+    "summary": [
+      "15 passed (40.8s)"
+    ]
+  }
+]

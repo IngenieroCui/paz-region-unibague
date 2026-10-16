@@ -1,9 +1,14 @@
+@font-face { font-family: 'Roboto'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/roboto-400.ttf') format('truetype'); }
+@font-face { font-family: 'Roboto'; font-style: normal; font-weight: 500; font-display: swap; src: url('/fonts/roboto-500.ttf') format('truetype'); }
+@font-face { font-family: 'Roboto'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/roboto-600.ttf') format('truetype'); }
+@font-face { font-family: 'Roboto'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/roboto-700.ttf') format('truetype'); }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 2rem; }
 body { margin: 0; background: var(--background); color: var(--foreground); font: var(--text-base)/1.6 var(--font-sans); -webkit-font-smoothing: antialiased; }
 #root { min-height: 100svh; }
 a { color: var(--blue); text-decoration: none; }
 a:hover { text-decoration: underline; }
+p a:not(.button) { text-decoration: underline; text-underline-offset: .2em; }
 button, input, textarea, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
@@ -11,7 +16,7 @@ button:disabled { cursor: not-allowed; }
 img, svg { max-width: 100%; }
 svg { flex-shrink: 0; }
 h1, h2, h3, p { margin: 0; }
-h1, h2, h3 { color: var(--navy); line-height: 1.25; }
+h1, h2, h3 { font-weight: 600; overflow-wrap: anywhere; color: var(--navy); line-height: 1.25; }
 h1 { font-size: clamp(1.75rem, 3vw, 2.3rem); letter-spacing: -.04em; }
 h2 { font-size: 1.25rem; letter-spacing: -.025em; }
 h3 { font-size: 1rem; }

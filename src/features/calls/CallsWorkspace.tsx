@@ -34,7 +34,7 @@ export default function CallsWorkspace({ admin = false }: { admin?: boolean }) {
   const manage = admin || !!data.memberships.find(member => member.organization_id === organization)?.can_manage
   const base = admin ? '/app/admin/calls' : '/app/organization/calls'
   const suffix = organization ? '?organization=' + organization : ''
-  if (!admin && !organization) return <EmptyState title="Sin organización disponible">Registra una organización para gestionar convocatorias.</EmptyState>
+  if (!admin && !organization) return <div className="module-stack"><PageHeader title="Convocatorias" description="Publica y consulta las plazas de tu organización." /><EmptyState title="Sin organización disponible">Registra una organización para gestionar convocatorias. <Link to="/app/organization/profile">Registrar organización</Link></EmptyState></div>
   return <div className="module-stack">
     <Select label={admin ? 'Filtrar organización' : 'Organización activa'} value={organization} onChange={event => { const next = new URLSearchParams(params); if(event.target.value) next.set('organization',event.target.value); else next.delete('organization'); setParams(next) }}>
       {admin && <option value="">Todas las organizaciones</option>}

@@ -26,7 +26,7 @@ export default function LandingPage() {
       <div className="art-label art-label--students"><GraduationCap size={24} /><span>Talento<span>Estudiantes</span></span></div>
       <div className="art-label art-label--organizations"><Building2 size={24} /><span>Territorio<span>Organizaciones</span></span></div>
       <div className="art-label art-label--university"><Landmark size={24} /><span>Conocimiento<span>Universidad</span></span></div>
-      <div className="art-center">Paz <span>&</span> Región<small>CONSTRUIR DESDE EL ENCUENTRO</small></div>
+      <div className="art-center">Paz y Región<small>CONSTRUIR DESDE EL ENCUENTRO</small></div>
       <div className="art-bottom"><span>VÍNCULOS QUE TRANSFORMAN</span><span>PyR / Unibagué</span></div></div>
   </section>
   <section className="community-section" id="comunidad"><div className="community-heading"><p className="eyebrow">UN PROPÓSITO COMPARTIDO</p>

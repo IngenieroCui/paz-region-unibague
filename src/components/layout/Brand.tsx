@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom'
 import { appConfig } from '../../config/app'
+export function InstitutionalMark() {
+  return <span className="institutional-mark"><img src="/brand/unibague-original.png" width="168" height="40" alt="Unibagué" /></span>
+}
 export function Brand() {
   return <Link className="brand" to="/" aria-label={appConfig.name + ' · Inicio'}>
-    <span className="brand-monogram" aria-hidden="true">p<span>r</span></span>
+    <InstitutionalMark />
     <span><strong>{appConfig.name}</strong><small>{appConfig.institution}</small></span></Link>
 }
 export function Identity({ name, detail }: { name: string; detail: string }) {

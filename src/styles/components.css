@@ -1,7 +1,7 @@
-.button { display: inline-flex; justify-content: center; align-items: center; gap: var(--space-2); min-height: 44px; padding: .75rem 1.25rem; border: 1px solid transparent; border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: 600; line-height: 1.3; transition: background var(--duration-fast) var(--ease); text-align: center; }
+.button { display: inline-flex; justify-content: center; align-items: center; gap: var(--space-2); min-height: 44px; padding: .75rem 1.25rem; border: 1px solid transparent; border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: 600; line-height: 1.3; transition: background var(--duration-fast) var(--ease), box-shadow var(--duration-fast) var(--ease); text-align: center; }
 .button:hover { text-decoration: none; }
 .button--primary { background: var(--navy); color: var(--on-dark); }
-.button--primary:hover { background: var(--info); }
+.button--primary:hover { background: var(--brand-blue-dark); }
 .button--secondary { background: var(--surface); color: var(--navy); border-color: var(--border-strong); }
 .button--secondary:hover, .button--ghost:hover { background: var(--surface-soft); }
 .button--ghost { background: transparent; color: var(--foreground); }
@@ -59,8 +59,15 @@ progress::-moz-progress-bar { background: var(--blue); }
 .brand:hover { text-decoration: none; }
 .brand strong { display: block; font-size: 1.125rem; line-height: 1.3; letter-spacing: -.035em; }
 .brand small { display: block; font-size: .66rem; line-height: 1.5; margin-top: .2rem; }
-.brand-monogram { display: flex; align-items: center; justify-content: center; width: 42px; height: 44px; background: var(--navy); color: var(--on-dark); font: italic 1.8rem var(--font-editorial); border-radius: 3px; letter-spacing: -.15em; padding-right: .25rem; flex-shrink: 0; }
-.brand-monogram span { color: var(--gold); }
+.institutional-mark { display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 1rem; background: var(--brand-blue); border-radius: var(--radius-sm); }
+.institutional-mark img { display: block; width: 126px; height: auto; max-width: none; }
+.brand { gap: 1rem; }
+.brand small { font-size: .72rem; color: var(--muted); }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--blue); }
+.page-header { padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+.page-header h1::after { content: ''; display: block; width: 40px; height: 4px; margin-top: 1rem; background: var(--gold); border-radius: var(--radius-full); }
+.metric-card { border-top: 3px solid var(--brand-blue); }
+.empty-state { background: var(--background); border-radius: var(--radius-md); border: 1px dashed var(--border-strong); }
 .identity { display: flex; gap: .7rem; align-items: center; }
 .identity strong, .identity small { display: block; font-size: var(--text-xs); line-height: 1.5; }
 .identity small { color: var(--muted); }

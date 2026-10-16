@@ -16,7 +16,7 @@ export function InstitutionalSheetView({ data }: { data: InstitutionalSheetData 
   const { project, positions, programs, people } = data
   const organization = project.PYRUnibague_Organizations
   return <section className="p6b-sheet card" aria-label="Ficha institucional del proyecto">
-    <div className="p6b-sheet-heading"><div><p>PAZ Y REGIÓN · UNIVERSIDAD DE IBAGUÉ</p><h2>Ficha institucional del proyecto</h2></div>
+    <div className="p6b-sheet-heading"><div><img className="sheet-institution" src="/logos/web/icon-192.png" width="96" height="96" alt="Universidad de Ibagué" /><p>PAZ Y REGIÓN · UNIVERSIDAD DE IBAGUÉ</p><h2>Ficha institucional del proyecto</h2></div>
       <Button variant="secondary" onClick={() => window.print()}>Imprimir ficha</Button></div>
     <p className="p6b-sheet-name"><strong>{project.name}</strong></p>
     <dl className="p6b-sheet-grid">

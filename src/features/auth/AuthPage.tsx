@@ -4,6 +4,7 @@ import { ArrowLeft, LockKeyhole } from 'lucide-react'
 import { Alert } from '../../components/feedback/States'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Fields'
+import { InstitutionalMark } from '../../components/layout/Brand'
 import { appConfig } from '../../config/app'
 import { supabaseConfiguration } from '../../lib/supabase/config'
 import { useAuth } from './auth-context'
@@ -33,7 +34,7 @@ export default function AuthPage({ recovery = false }: { recovery?: boolean }) {
   }
   return <section className="auth-layout"><div className="auth-story"><p className="eyebrow">{appConfig.name}</p>
     <h2>Tu próximo paso<br />empieza aquí.</h2><p>Un espacio común para la comunidad que participa en Paz y Región.</p>
-    <div className="auth-institution"><img src="/logos/web/icon-192.png" width="96" height="96" alt="Universidad de Ibagué" /><span>Universidad de Ibagué<br /><small>Conexión con el territorio</small></span></div>
+    <div className="auth-institution"><InstitutionalMark /><span>Universidad de Ibagué<br /><small>Conexión con el territorio</small></span></div>
   </div><div className="auth-panel"><Link className="text-link" to="/"><ArrowLeft size={17} aria-hidden="true" /> Volver al inicio</Link>
     <span className="icon-tile"><LockKeyhole size={22} aria-hidden="true" /></span>
     <h1>{recovery ? 'Recupera tu acceso' : 'Bienvenido a tu espacio'}</h1>

@@ -35,7 +35,7 @@ export default function ProjectsWorkspace({ readInstitutional = readInstitutiona
   if (!resource.data || !session) return null
   const {catalogs,members}=resource.data
   const member=members.find(row=>row.organization_id===params.get('organization'))??members.find(row=>row.can_manage)??members[0]
-  if (!admin&&!member) return <EmptyState title="Registra tu organización">Completa el perfil desde <Link to="/app/organization/profile">Organización</Link> antes de crear proyectos.</EmptyState>
+  if (!admin&&!member) return <div className="module-stack"><PageHeader title={location.pathname.endsWith('/groups') ? 'Equipos y estudiantes' : 'Proyectos y plazas'} description="Consulta los proyectos y equipos de tu organización." /><EmptyState title="Registra tu organización">Completa el perfil desde <Link to="/app/organization/profile">Organización</Link> antes de crear proyectos.</EmptyState></div>
   const base=admin?'/app/admin/projects':'/app/organization/projects'
   const suffix=admin?'':'?organization='+member?.organization_id
   const organization=member?.organization_id??''
