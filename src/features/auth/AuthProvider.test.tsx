@@ -12,6 +12,26 @@ vi.mock('../../lib/supabase/client', () => ({ getSupabase: async () => ({ rpc: m
 const session = { user: { id: 'one', user_metadata: { role: 'ADMIN', roles: ['ADMIN'] } } } as unknown as Session
 function Probe() { const auth = useAuth(); return <output>{auth.status}:{auth.roles.join(',')}:{String(auth.recovery)}</output> }
 beforeEach(() => { vi.clearAllMocks(); mocks.getSession.mockResolvedValue({ data: { session }, error: null }); mocks.rpc.mockResolvedValue({ data: ['STUDENT'], error: null }) })
+it('deduplicates identical SIGNED_IN events while retaining role revocation on refresh', async () => {
+  const same={...session,access_token:'isolated-token'} as Session
+  mocks.getSession.mockResolvedValue({data:{session:same},error:null})
+  render(<AuthProvider><Probe /></AuthProvider>);await screen.findByText('authenticated:STUDENT:false')
+  act(()=>{mocks.listener?.('INITIAL_SESSION',same);mocks.listener?.('SIGNED_IN',same);mocks.listener?.('SIGNED_IN',same)})
+  expect(mocks.rpc).toHaveBeenCalledTimes(1)
+  mocks.rpc.mockResolvedValue({data:[],error:null})
+  act(()=>mocks.listener?.('TOKEN_REFRESHED',same))
+  await screen.findByText('authenticated::false');expect(mocks.rpc).toHaveBeenCalledTimes(2)
+})
+it('rechecks persisted roles on a later focus even with the same token', async () => {
+  const same={...session,access_token:'isolated-focus-token'} as Session
+  mocks.getSession.mockResolvedValue({data:{session:same},error:null})
+  const clock=vi.spyOn(Date,'now').mockReturnValue(100000)
+  render(<AuthProvider><Probe /></AuthProvider>);await screen.findByText('authenticated:STUDENT:false')
+  clock.mockReturnValue(130001);mocks.rpc.mockResolvedValue({data:[],error:null})
+  act(()=>mocks.listener?.('SIGNED_IN',same))
+  await screen.findByText('authenticated::false');expect(mocks.rpc).toHaveBeenCalledTimes(2)
+  clock.mockRestore()
+})
 it('loads trusted roles only via RPC, refreshes them and clears them on logout', async () => {
   const view = render(<AuthProvider><Probe /></AuthProvider>)
   expect(await screen.findByText('authenticated:STUDENT:false')).toBeInTheDocument()

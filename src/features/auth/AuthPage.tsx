@@ -60,7 +60,7 @@ export default function AuthPage({ recovery = false, audience = 'institutional' 
       {!recovery && <Link className="text-link recovery-link" to="/forgot-password">¿Olvidaste tu contraseña?</Link>}
       <Button type="submit" loading={pending || (!recovery && configured && auth.status === 'loading')} disabled={!configured}>{recovery ? 'Enviar instrucciones' : 'Ingresar'}</Button>
     </form>
-    {!recovery && audience === 'organization' && <Link className="button button--secondary" to="/registro/organizacion">Registrar mi organización</Link>}
+    {!recovery && audience === 'organization' && <><Link className="button button--secondary" to="/registro/organizacion">Registrar mi organización</Link><details className="profile-disclosure"><summary>Estado de solicitud, documentos y revisión institucional</summary><p>Si ya tienes una cuenta autorizada, ingresa para consultar el estado de tu organización, aportar documentos y leer las observaciones de coordinación. La revisión institucional se consulta dentro de tu espacio.</p><p>El registro público permanece pendiente de autorización institucional. Consultar esta página o ingresar no aprueba una organización ni concede roles adicionales.</p></details></>}
     {recovery && <Link className="text-link" to="/login">Volver a ingresar</Link>}
     <p className="auth-note">Si necesitas ayuda, contacta a la coordinación de Paz y Región por los canales institucionales.</p>
   </div></section>

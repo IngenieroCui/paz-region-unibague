@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { parseEnv } from 'node:util'
 const git=(...args)=>execFileSync('git',args,{maxBuffer:32*1024*1024})
 const privateValues=[]
-for(const path of ['.env','.env.local']) {
+for(const path of ['.env','.env.local','work/admin.env']) {
   try { for(const [name,value] of Object.entries(parseEnv(await readFile(path,'utf8')))) if(/SECRET|PASSWORD|TOKEN|SERVICE_ROLE/.test(name)&&value.length>12)privateValues.push(value) }
   catch(error){if(error.code!=='ENOENT')throw error}
 }

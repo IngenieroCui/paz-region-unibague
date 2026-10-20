@@ -7,7 +7,7 @@ export const url = `https://${ref}.supabase.co`
 export const options = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
 export async function environment() {
   const files = []
-  for (const path of ['.env', '.env.local']) {
+  for (const path of ['.env', '.env.local', 'work/admin.env']) {
     try { files.push(parseEnv(await readFile(path, 'utf8'))) }
     catch (error) { if (error.code !== 'ENOENT') throw error }
   }
@@ -30,8 +30,8 @@ function guardedFetch(input, init) {
 }
 export async function adminClient({ testInventory = false } = {}) {
   const values = await environment()
-  const key = values.VITE_SUPABASE_SECRET_KEY || values.SUPABASE_SERVICE_ROLE_KEY
-  if (!key) throw Error('Falta VITE_SUPABASE_SECRET_KEY en .env; Auth Admin no requiere PAT.')
+  const key = values.SUPABASE_SECRET_KEY
+  if (!key) throw Error('Falta SUPABASE_SECRET_KEY en work/admin.env; Auth Admin no requiere PAT.')
   if (!key.startsWith('sb_secret_')) {
     const claims = JSON.parse(Buffer.from(key.split('.')[1] ?? '', 'base64url'))
     if (claims.role !== 'service_role' || claims.ref !== ref) throw Error('Clave administrativa incompatible.')

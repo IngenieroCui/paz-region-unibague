@@ -16,7 +16,7 @@ async function scan(dir) {
     if (item.isDirectory()) await scan(path)
     else {
       const bytes = await readFile(path);files++
-      for (const key of ['VITE_SUPABASE_SECRET_KEY','SUPABASE_SERVICE_ROLE_KEY']) if (values[key]) assert.ok(!bytes.includes(Buffer.from(values[key])), 'Private key in build')
+      for (const key of ['SUPABASE_SECRET_KEY','VITE_SUPABASE_SECRET_KEY','SUPABASE_SERVICE_ROLE_KEY']) if (values[key]) assert.ok(!bytes.includes(Buffer.from(values[key])), 'Private key in build')
       assert.ok(!/sb_secret_[A-Za-z0-9_-]{15,}/.test(bytes.toString()), 'Secret key in build')
     }
   }

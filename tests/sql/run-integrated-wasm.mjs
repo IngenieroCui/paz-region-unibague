@@ -51,7 +51,7 @@ try {
   if (unsafe.length) throw new Error('Missing RLS: ' + JSON.stringify(unsafe))
   console.log(`PASS catalog: ${tables.length} tables, ${columns.length} columns, ${fks.length} public FKs, ${rpc.length} RPCs, all RLS enabled`)
   await db.exec(await readFile('supabase/seed.sql', 'utf8'))
-  const tests = ['supabase/tests/security.test.sql','supabase/tests/p3.test.sql','supabase/tests/p4.test.sql','supabase/tests/p5_matching.test.sql','supabase/tests/p6a_advisors.test.sql','tests/p6b/database.test.sql','supabase/tests/p6c_assignments.test.sql','supabase/tests/p7_integration.test.sql','supabase/tests/p11.test.sql']
+  const tests = ['supabase/tests/security.test.sql','supabase/tests/p3.test.sql','supabase/tests/p4.test.sql','supabase/tests/p5_matching.test.sql','supabase/tests/p6a_advisors.test.sql','tests/p6b/database.test.sql','supabase/tests/p6c_assignments.test.sql','supabase/tests/p7_integration.test.sql','supabase/tests/p11.test.sql','supabase/tests/p11_1.test.sql']
   for (const test of tests) {
     const sql = (await readFile(test, 'utf8')).replace('create extension if not exists pgtap with schema extensions;', '')
     try {

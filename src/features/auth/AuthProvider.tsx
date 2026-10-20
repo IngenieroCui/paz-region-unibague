@@ -6,6 +6,7 @@ import { supabaseConfiguration } from '../../lib/supabase/config'
 import { currentRoles } from './services/auth'
 import { AuthContext } from './auth-context'
 import type { AuthState } from './auth-context'
+import { clearCatalogCache } from '../../lib/supabase/catalog-cache'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     status: supabaseConfiguration.status === 'ready' ? 'loading' : 'unconfigured', session: null, roles: [], recovery: false,
@@ -16,22 +17,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let receivedEvent = false
     let recovery = false
     let recoveryUser: string | null = null
+    let lastUser: string | undefined
+    let lastToken: string | undefined
+    let lastVerificationStarted = 0
     let unsubscribe = () => {}
     const timers = new Set<ReturnType<typeof setTimeout>>()
-    function resolve(session: Session | null, isRecovery = false) {
+    function resolve(session: Session | null, isRecovery = false, event?: string) {
+      // Supabase can re-emit SIGNED_IN on tab focus for the very same token.
+      // TOKEN_REFRESHED and USER_UPDATED still verify persisted roles every time.
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.access_token && lastToken === session.access_token && lastUser === session.user.id && Date.now()-lastVerificationStarted < 30_000) return
+      if (lastUser !== session?.user.id || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') clearCatalogCache()
+      lastUser = session?.user.id
+      lastToken = session?.access_token
+      lastVerificationStarted = Date.now()
       const request = ++version
       recovery = Boolean(session) && (isRecovery || (recovery && recoveryUser === session?.user.id))
       recoveryUser = session?.user.id ?? null
       if (!active) return
       if (!session) { setState({ status: 'anonymous', session: null, roles: [], recovery: false }); return }
-      setState({ status: 'loading', session, roles: [], recovery })
+      setState(previous => previous.status === 'authenticated' && previous.session?.user.id === session.user.id
+        ? { ...previous, session, recovery }
+        : { status: 'loading', session, roles: [], recovery })
       // Supabase calls listeners under its Auth lock; defer RPC until that lock is released.
       const timer = setTimeout(() => {
         timers.delete(timer)
         void currentRoles().then(roles => {
           if (active && request === version) setState({ status: 'authenticated', session, roles, recovery })
         }).catch(() => {
-          if (active && request === version) setState({ status: 'error', session, roles: [], recovery })
+          if (active && request === version) { lastToken = undefined; setState({ status: 'error', session, roles: [], recovery }) }
         })
       }, 0)
       timers.add(timer)
@@ -42,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!active || !client) return
         const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
           receivedEvent = true
-          resolve(session, event === 'PASSWORD_RECOVERY')
+          resolve(session, event === 'PASSWORD_RECOVERY', event)
         })
         unsubscribe = () => subscription.unsubscribe()
         const { data, error } = await client.auth.getSession()
