@@ -84,8 +84,10 @@ async function apply(ctx, m, preflight) {
     programs.push(existing[0] ?? await ensure(a, 'AcademicPrograms', code, { code }, { name: `${name} (TEST — catálogo ficticio)`, faculty_name: 'TEST · Facultad ficticia', active: true }))
   }
   const municipalities = await rows(a, 'Municipalities', { active: true })
-  const municipality = municipalities[0] ?? await ensure(a, 'Municipalities', 'municipality', { country_code: 'CO', department_code: 'TEST-PYR', municipality_code: 'TEST-PYR' }, { department_name: 'TEST · Departamento ficticio', municipality_name: 'TEST · Municipio ficticio' })
-  const alternate = municipalities.find(x => x.id !== municipality.id) ?? await ensure(a, 'Municipalities', 'municipality2', { country_code: 'CO', department_code: 'TEST-PYR', municipality_code: 'TEST-PYR-2' }, { department_name: 'TEST · Departamento ficticio', municipality_name: 'TEST · Municipio alternativo ficticio' })
+  const rememberedMunicipalities = m.references?.municipalities
+  if (rememberedMunicipalities) assert.ok(rememberedMunicipalities.every(id => municipalities.some(x => x.id === id)), 'Catálogo territorial de referencia cambió; revisar antes de reemplazarlo')
+  const municipality = (rememberedMunicipalities ? municipalities.find(x => x.id === rememberedMunicipalities[0]) : municipalities.find(x => x.municipality_code === 'TEST-P11') ?? municipalities[0]) ?? await ensure(a, 'Municipalities', 'municipality', { country_code: 'CO', department_code: 'TEST-PYR', municipality_code: 'TEST-PYR' }, { department_name: 'TEST · Departamento ficticio', municipality_name: 'TEST · Municipio ficticio' })
+  const alternate = (rememberedMunicipalities ? municipalities.find(x => x.id === rememberedMunicipalities[1]) : municipalities.find(x => x.id !== municipality.id)) ?? await ensure(a, 'Municipalities', 'municipality2', { country_code: 'CO', department_code: 'TEST-PYR', municipality_code: 'TEST-PYR-2' }, { department_name: 'TEST · Departamento ficticio', municipality_name: 'TEST · Municipio alternativo ficticio' })
   const skillNames = ['Programación comunitaria', 'Comunicación comunitaria', 'Análisis territorial']
   const skills = []
   for (const name of skillNames) skills.push(await ensure(a, 'Skills', 'skill-' + name, { name: prefix + name }, { category: 'TEST · Piloto interdisciplinario' }))
