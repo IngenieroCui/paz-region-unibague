@@ -82,7 +82,12 @@ try {
       const bucket = 'pyrunibague-organization-documents', path = `${id}/${docId}/TEST-CV.pdf`
       const bytes = await readFile('tests/fixtures/TEST-CV.pdf')
       const existing = await first.storage.from(bucket).list(id+'/'+docId)
-      if (!existing.data?.some(d=>d.name==='TEST-CV.pdf')) check(await first.storage.from(bucket).upload(path, bytes, {contentType:'application/pdf',upsert:false}), 'Upload privado')
+      if (!existing.data?.some(d=>d.name==='TEST-CV.pdf')) {
+        const upload=await first.storage.from(bucket).upload(path, bytes, {contentType:'application/pdf',upsert:false})
+        // Re-running the fixed TEST path may find an existing object despite a
+        // restricted listing. Signed URL + HTTP read below still verify ownership.
+        if (upload.error?.code !== 'KeyAlreadyExists') check(upload, 'Upload privado')
+      }
       if (!(await rows(first,'OrganizationDocuments',{organization_id:id,object_path:path})).length) check(await table(first,'OrganizationDocuments').insert({id:docId,organization_id:id,category_code:'TEST-P11',file_name:'TEST-CV.pdf',bucket_id:bucket,object_path:path,status:'uploaded',uploaded_by:orgs[0].account.user_id}), 'Metadata TEST')
       const own = check(await first.storage.from(bucket).createSignedUrl(path, 60), 'URL propia')
       assert.equal((await fetch(own.signedUrl)).status,200)

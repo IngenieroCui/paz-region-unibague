@@ -1,0 +1,98 @@
+{
+  "checked_at": "2026-10-20T14:35:09.011Z",
+  "project": "unxiuzkhxlzneywtnuvf",
+  "mode": "real Supabase Auth/Data/Storage",
+  "results": [
+    {
+      "label": "Auth, perfil y rol STUDENT pyrprueba.estudiante@estudiantesunibague.edu.co",
+      "status": "PASS"
+    },
+    {
+      "label": "Auth, perfil y rol STUDENT pyrprueba.estudiante2@estudiantesunibague.edu.co",
+      "status": "PASS"
+    },
+    {
+      "label": "Auth, perfil y rol STUDENT pyrprueba.estudiante3@estudiantesunibague.edu.co",
+      "status": "PASS"
+    },
+    {
+      "label": "Auth, perfil y rol STUDENT pyrprueba.estudiante4@estudiantesunibague.edu.co",
+      "status": "PASS"
+    },
+    {
+      "label": "Auth, perfil y rol ADVISOR pyrprueba.asesor@unibague.edu.co",
+      "status": "PASS"
+    },
+    {
+      "label": "Auth, perfil y rol ADVISOR pyrprueba.asesor2@unibague.edu.co",
+      "status": "PASS"
+    },
+    {
+      "label": "Auth, perfil y rol ORGANIZATION pyrprueba.entidad@unibague.edu.co",
+      "status": "PASS"
+    },
+    {
+      "label": "Auth, perfil y rol ORGANIZATION pyrprueba.entidad2@unibague.edu.co",
+      "status": "PASS"
+    },
+    {
+      "label": "Auth, perfil y rol ADMIN pyrprueba.administrador@unibague.edu.co",
+      "status": "PASS"
+    },
+    {
+      "label": "Anónimo sin datos privados",
+      "status": "PASS"
+    },
+    {
+      "label": "Solicitud TEST 1, membresía y contacto persistidos",
+      "status": "PASS"
+    },
+    {
+      "label": "Solicitud TEST 2, membresía y contacto persistidos",
+      "status": "PASS"
+    },
+    {
+      "label": "RLS entre organizaciones, contactos, revisiones y escrituras",
+      "status": "PASS"
+    },
+    {
+      "label": "Documento privado TEST: acceso propio, ADMIN y denegación cruzada",
+      "status": "PASS"
+    },
+    {
+      "label": "Envío P11 hospedado",
+      "status": "SKIPPED",
+      "reason": "RPC ausente; requiere aplicar migración SQL, no disponible mediante Secret API Key."
+    },
+    {
+      "label": "Revisión ADMIN existente: correcciones, aprobación, rechazo e historial",
+      "status": "PASS"
+    },
+    {
+      "label": "STUDENT y ADVISOR no administran organizaciones ni roles",
+      "status": "PASS"
+    },
+    {
+      "label": "Usuario TEST sin rol y metadata sin privilegios",
+      "status": "PASS"
+    },
+    {
+      "label": "Logout invalida el refresh token TEST",
+      "status": "PASS"
+    },
+    {
+      "label": "Correo, recuperación por buzón y Google reales",
+      "status": "SKIPPED",
+      "reason": "SMTP/CAPTCHA/OAuth no configurados; no se envían correos a direcciones ficticias."
+    },
+    {
+      "label": "RLS/pgTAP/Advisors y migraciones hospedados",
+      "status": "SKIPPED",
+      "reason": "Conector SQL sin permiso; no hay conexión PostgreSQL autorizada. Se prueba RLS vía Data API y SQL aislado por separado."
+    },
+    {
+      "label": "Perfiles ajenos sin modificaciones",
+      "status": "PASS"
+    }
+  ]
+}

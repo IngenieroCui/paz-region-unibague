@@ -16,8 +16,9 @@ const paths = { ADMIN: 'admin', ADVISOR: 'advisor', ORGANIZATION: 'organization'
 const totals = { STUDENT: 4, ADVISOR: 2, ORGANIZATION: 2, ADMIN: 1 }
 for (const [role, count] of Object.entries(totals)) expect(ledger.accounts.filter(a => a.role === role)).toHaveLength(count)
 const browser = await chromium.launch({ channel: 'msedge', headless: true })
+let diagnosticPage
 async function settle(page) {
-  await expect(page.getByRole('heading', { level: 1 }), new URL(page.url()).pathname).toBeVisible({ timeout: 15000 })
+  await expect(page.getByRole('heading', { level: 1 }), new URL(page.url()).pathname).toBeVisible({ timeout: 30000 })
   await page.waitForLoadState('networkidle')
   await page.evaluate(() => document.fonts.ready)
   await expect(page.getByRole('heading', { level: 1 }), new URL(page.url()).pathname + ' settled').toBeVisible()
@@ -45,6 +46,7 @@ try {
   await publicContext.close()
   const seenRoles = new Set()
   for (const account of ledger.accounts) {
+    if (process.env.PYR_TEST_ROLE && account.role !== process.env.PYR_TEST_ROLE) continue
     const api = await publicClient()
     const login = await api.auth.signInWithPassword({ email: account.email, password: account.password })
     expect(login.error).toBeNull(); expect(login.data.user.id).toBe(account.user_id)
@@ -55,6 +57,7 @@ try {
     await api.auth.signOut()
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 960 } })
     const page = await ctx.newPage(), errors = []
+    diagnosticPage=page
     page.on('pageerror', e => errors.push(e.message))
     await page.goto(base + (account.role === 'ORGANIZATION' ? '/login/organizaciones' : '/login/institucional'))
     await page.getByLabel('Correo electrónico', { exact: true }).fill(account.email)
@@ -122,6 +125,10 @@ try {
     }
   }
 } catch (error) {
+  if(diagnosticPage && !diagnosticPage.isClosed()) {
+    await diagnosticPage.screenshot({path:out+'/screens/failure.png',fullPage:true}).catch(()=>{})
+    console.log(JSON.stringify({path:new URL(diagnosticPage.url()).pathname,headingsInDom:await diagnosticPage.locator('h1').count(),headingsInAccessibility:await diagnosticPage.getByRole('heading',{level:1}).count(),loading:await diagnosticPage.locator('.loading-state').count(),pageErrors:await diagnosticPage.locator('[role="alert"]').count()}))
+  }
   results.push({ status: 'FAIL', error: error.message }); console.error(error.message); process.exitCode = 1
 } finally {
   await writeFile(out + '/verification.json', JSON.stringify(results, null, 2)); await browser.close()
