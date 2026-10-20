@@ -102,7 +102,9 @@ Las suites SQL WASM tienen Auth/Storage simulados y una sola sesión; no sustitu
 
 ## Git y reproducción
 
-Los commits de implementación y la comprobación final de push se registran al cerrar la entrega. El informe de verificación Git y el paquete se producen después de confirmar HEAD; no se incluyen secretos ni el TAR previo. `main` permanece intacta.
+Commits de implementación: `4fdf502` (seguridad, Auth y migración) y `c4d0535` (UX, consultas y fuentes). Evidencias y procedimiento: `22df396`. Integración por fast-forward en el repositorio original y push normal a `origin/dev` **verificados** en `22df39686211d0015547a3ad9bf83665ea168233`, coincidente con `git ls-remote`. El escaneo previo examinó 455 rutas y 439 blobs sin hallazgos. La rama local `main` conserva `b7502feb52150592a90aef65cbbb10b5382c7a8e`.
+
+Un commit posterior cierra únicamente esta constancia documental. Su SHA final se contrasta de nuevo con `origin/dev` y se entrega en `git-verification.json`, junto al paquete seguro generado desde ese HEAD limpio. El TAR privado previo sigue fuera de Git. La comprobación posterior al push aún encuentra 404 en la ruta hospedada institucional: no se declara desplegado P11.1 en esa URL.
 
 ```text
 npm run typecheck
