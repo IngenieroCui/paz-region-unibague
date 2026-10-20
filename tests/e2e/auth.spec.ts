@@ -28,7 +28,7 @@ test('single role login, clean production workspace, denied admin, logout', asyn
   await api(page, ['STUDENT'])
   await login(page)
   await expect(page).toHaveURL(/\/app\/student$/)
-  await expect(page.getByRole('heading', { name: 'Tu espacio', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Tu espacio en Paz y Región', exact: true })).toBeVisible()
   await expect(page.getByText('Vista de desarrollo')).toHaveCount(0)
   await page.setViewportSize({ width: 320, height: 900 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)

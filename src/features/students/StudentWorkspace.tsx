@@ -5,7 +5,7 @@ import { useAuth } from '../auth/auth-context'
 import { useStudent } from './hooks/useStudent'
 import { studentCompleteness } from './services/completeness'
 import { deleteStudentChild, orderInterests, saveExperience, saveInterest, saveSkill, saveStudent, setPreferences } from './services/students'
-import type { StudentData } from './services/students'
+import type { StudentData, StudentSection } from './services/students'
 import { PageHeader } from '../../components/layout/Headers'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -20,15 +20,16 @@ import { participationLabel } from './services/students'
 
 export default function StudentWorkspace() {
   const { session } = useAuth()
-  const resource = useStudent(session?.user.id ?? '')
   const section = useLocation().pathname.split('/')[3] ?? ''
+  const resource = useStudent(session?.user.id ?? '', (section || 'home') as StudentSection)
   if (!session) return null
   if (resource.loading && !resource.data) return <><PageHeader title="Tu espacio" /><Skeleton label="Cargando perfil" /><Skeleton label="Cargando participación" /></>
-  if (resource.error) return <><PageHeader title="Tu espacio" /><ErrorState title={resource.error} onRetry={() => void resource.reload()} /></>
+  if (resource.error && !resource.data) return <><PageHeader title="Tu espacio" /><ErrorState title={resource.error} onRetry={() => void resource.reload()} /></>
   const data = resource.data
   if (!data) return null
   const common = { data, reload: resource.reload }
   return <div className="module-stack">
+    {resource.error && <Alert tone="error" title="No pudimos actualizar la información">{resource.error}<Button variant="secondary" onClick={() => void resource.reload()}>Reintentar actualización</Button></Alert>}
     {section === '' && <><StudentHome data={data} />{data.period && data.student && <StudentAssignment key={data.student.id+data.period.id} periodId={data.period.id}/>}</>}
     {section === 'profile' && <StudentProfile {...common} userId={session.user.id} />}
     {section !== '' && section !== 'profile' && !data.student && <><PageHeader title="Completa tu perfil" /><EmptyState title="Todavía no tienes un perfil">Guarda primero tus datos básicos para activar las demás secciones.</EmptyState><Link to="/app/student/profile" className="button button--primary">Crear mi perfil</Link></>}
@@ -38,14 +39,19 @@ export default function StudentWorkspace() {
     {data.student && section === 'documents' && <><PageHeader title="Documentos" description="Gestiona tu CV y documentos privados." /><DocumentsPanel scope="student" ownerId={data.student.id} userId={session.user.id} documents={data.documents} reload={resource.reload} /></>}
   </div>
 }
-function StudentHome({ data }: { data: StudentData }) {
+export function StudentHome({ data }: { data: StudentData }) {
   const completion = studentCompleteness(data)
   const program = data.programs.find(row => row.id === data.student?.academic_program_id)
-  return <><PageHeader eyebrow="Estudiante" title="Tu espacio" description={data.profile?.display_name ? `Hola, ${data.profile.display_name}.` : 'Construye tu perfil para Paz y Región.'} />
-    <div className="dashboard-grid"><Card><h2>Mi perfil</h2><p>{program?.name ?? 'Programa sin registrar'} · {data.student?.current_semester ? `Semestre ${data.student.current_semester}` : 'Semestre sin registrar'}</p><Progress value={completion.percent} label="Completitud del perfil" /><p className="workspace-note">Este indicador orienta tu preparación. La elegibilidad para matching la determina administración.</p><Link className="button button--secondary" to="/app/student/profile">{data.student ? 'Editar mi perfil' : 'Crear mi perfil'}</Link></Card>
-    <Card><h2>Participación actual</h2>{!data.period ? <EmptyState title="Sin periodo actual">La Universidad debe configurar un periodo vigente.</EmptyState> : <><h3>{data.period.name}</h3>{data.participation ? <><p>Estado: {participationLabel(data.participation.status)}</p><p>Elegibilidad administrativa: {data.participation.eligible_for_matching ? 'Habilitada' : 'No habilitada'}</p></> : <p>No tienes participación registrada en este periodo. Consulta con coordinación.</p>}</>}</Card></div>
-    <Card><h2>Próximos pasos</h2><ul className="module-list">{completion.sections.map(item => <li key={item.label}><div><h3>{item.label}</h3><p>{item.complete ? 'Completo' : 'Por completar'}</p></div><Link className="button button--ghost" to={'/app/student/' + item.path}>Revisar</Link></li>)}</ul><p className="workspace-note">La experiencia y los enlaces son opcionales. No cambian tu elegibilidad.</p></Card>
-    <Card><h2>Documentos</h2><p>{data.documents.length ? `${data.documents.length} ${data.documents.length === 1 ? 'documento guardado' : 'documentos guardados'}.` : 'Aún no has subido documentos.'}</p><Link className="button button--secondary" to="/app/student/documents">Ver documentos</Link></Card>
+  const pending = completion.sections.filter(item => !item.complete)
+  const next = pending[0]
+  const history = (data.participations ?? []).filter(row => row.academic_period_id !== data.period?.id)
+  return <><PageHeader eyebrow="Estudiante · Paz y Región" title={data.profile?.display_name ? `Hola, ${data.profile.display_name}` : 'Tu espacio en Paz y Región'} description={`${program?.name ?? 'Programa sin registrar'} · ${data.student?.current_semester ? `Semestre ${data.student.current_semester}` : 'Semestre sin registrar'}`} />
+    <div className="student-overview"><Card className="student-profile-summary"><span className="eyebrow">Tu preparación</span><h2>Mi perfil</h2><Progress value={completion.percent} label="Completitud del perfil" /><p>{next ? `Puedes continuar con: ${next.label.toLocaleLowerCase('es')}.` : 'Tu información de preparación está completa. Puedes actualizarla cuando lo necesites.'}</p><Link className="button button--primary" to={data.student && next ? '/app/student/'+next.path : '/app/student/profile'}>{data.student ? 'Continuar mi perfil' : 'Crear mi perfil'}</Link><p className="workspace-note">Avance orientativo. La elegibilidad para matching la determina administración; estos datos no son una lista de requisitos institucionales.</p></Card>
+    <Card className="student-experience-summary"><span className="eyebrow">Tu recorrido académico</span><h2>Mi experiencia en Paz y Región</h2>{!data.period ? <div className="student-period-empty"><h3>Sin periodo actual</h3><p>Coordinación aún no ha configurado un periodo vigente. Puedes preparar tu perfil y consultar tu historial mientras tanto.</p><p className="workspace-note">Si esperabas participar este semestre, consulta a coordinación por los canales institucionales.</p></div> : <><h3>{data.period.name}</h3>{data.participation ? <dl className="module-details"><dt>Participación actual</dt><dd>{participationLabel(data.participation.status)}</dd><dt>Elegibilidad administrativa</dt><dd>{data.participation.eligible_for_matching ? 'Habilitada' : 'No habilitada'}</dd></dl> : <p>No tienes participación registrada en este periodo. Consulta con coordinación.</p>}<Link className="text-link" to="/app/student/assignment">Consultar proyecto y asignación</Link></>}
+    {history.length > 0 && <details className="profile-disclosure"><summary>Participaciones anteriores ({history.length})</summary><ul className="module-list">{history.map(row => <li key={row.id}><div><strong>{participationLabel(row.status)}</strong><p>Participación registrada en un periodo anterior.</p></div><Link className="text-link" to={'/app/student/assignment?period='+encodeURIComponent(row.academic_period_id)}>Consultar asignación histórica</Link></li>)}</ul></details>}</Card></div>
+    <Card><div className="section-header"><div><h2>Lo siguiente para mí</h2><p className="muted">Avanza a tu ritmo, desde cualquier programa académico.</p></div><Link className="text-link" to="/app/student/documents">Ver documentos ({data.documents.length})</Link></div>
+    {pending.length ? <ol className="student-next-actions">{pending.slice(0,3).map((item,index) => <li key={item.label}><span className="step-icon" aria-hidden="true">{index+1}</span><div><h3>{item.label}</h3><p className="muted">{item.group}</p></div><Link className="text-link" aria-label={'Revisar '+item.label} to={'/app/student/'+item.path}>Revisar</Link></li>)}</ol> : <p>Estás al día con tu perfil. La participación y las asignaciones se consultan en tu recorrido académico.</p>}
+    <details className="profile-disclosure"><summary>Ver todo mi avance · {completion.sections.filter(item=>item.complete).length} de {completion.sections.length} apartados</summary><div className="student-progress-groups">{['Datos básicos','Información recomendable','Documentación'].map(group=><section key={group}><h3>{group}</h3><ul className="student-progress-list">{completion.sections.filter(item=>item.group===group).map(item=><li key={item.label}><Link to={'/app/student/'+item.path}>{item.label}</Link><span>{item.complete?'Completo':'Por completar'}</span></li>)}</ul></section>)}<section><h3>Información opcional</h3><p>Experiencias, GitHub, LinkedIn y portafolio. Puedes guardar tu perfil sin ellos; no alteran este porcentaje ni tu elegibilidad.</p><Link className="text-link" to="/app/student/experience">Compartir una experiencia</Link></section></div></details></Card>
   </>
 }
 function StudentProfile({ data, userId, reload }: { data: StudentData; userId: string; reload: () => Promise<void> }) {
@@ -61,14 +67,14 @@ function StudentProfile({ data, userId, reload }: { data: StudentData; userId: s
       if (Object.keys(errors).length) throw new FeatureError('Revisa los enlaces señalados.')
       await saveStudent(userId, student?.id, text(form, 'display_name'), { student_code: nullable(text(form, 'student_code')), academic_program_id: nullable(text(form, 'academic_program_id')), current_semester: text(form, 'current_semester') ? Number(text(form, 'current_semester')) : null, bio: nullable(text(form, 'bio')), desired_work_description: nullable(text(form, 'desired_work_description')), origin_municipality_id: nullable(text(form, 'origin_municipality_id')), current_municipality_id: nullable(text(form, 'current_municipality_id')), profile_links: profileLinks }); await reload()
     }}>
-      <h2>Identidad y formación</h2><div className="form-grid"><Input label="Nombre visible" name="display_name" defaultValue={data.profile?.display_name ?? ''} maxLength={160} /><Input label="Código estudiantil" name="student_code" defaultValue={student?.student_code ?? ''} maxLength={80} />
+      <h2>Datos básicos · Identidad y formación</h2><p className="muted">Guarda la información disponible. Los campos obligatorios, cuando existan, se indican expresamente.</p><div className="form-grid"><Input label="Nombre visible" name="display_name" defaultValue={data.profile?.display_name ?? ''} maxLength={160} /><Input label="Código estudiantil" name="student_code" defaultValue={student?.student_code ?? ''} maxLength={80} />
       <Select label="Programa académico" name="academic_program_id" defaultValue={student?.academic_program_id ?? ''}><option value="">Sin registrar</option>{data.programs.filter(row => row.active || row.id === student?.academic_program_id).map(row => <option key={row.id} value={row.id}>{row.name}</option>)}</Select>
       <Input label="Semestre" name="current_semester" type="number" min={1} step={1} defaultValue={student?.current_semester ?? ''} /></div>
       {data.programs.length === 0 && <Alert title="Catálogo de programas pendiente">Coordinación debe cargar los programas académicos. Puedes guardar los demás datos.</Alert>}
-      <h2>Presentación profesional</h2><Textarea label="Bio" name="bio" rows={4} maxLength={5000} defaultValue={student?.bio ?? ''} /><Textarea label="Qué trabajo te gustaría desarrollar" name="desired_work_description" rows={4} maxLength={5000} defaultValue={student?.desired_work_description ?? ''} />
+      <h2>Presentación profesional · Recomendado</h2><p className="muted">Ayuda a conocer tus intereses. Puedes completar estos textos más adelante.</p><Textarea label="Bio" name="bio" rows={3} hint="Recomendado: una presentación breve desde tu área de formación." maxLength={5000} defaultValue={student?.bio ?? ''} /><Textarea label="Qué trabajo te gustaría desarrollar" hint="Recomendado. No necesitas experiencia laboral previa." name="desired_work_description" rows={3} maxLength={5000} defaultValue={student?.desired_work_description ?? ''} />
       <h2>Territorio</h2><div className="form-grid">{(['origin_municipality_id', 'current_municipality_id'] as const).map(key => <Select key={key} label={key === 'origin_municipality_id' ? 'Municipio de origen' : 'Municipio actual'} name={key} defaultValue={student?.[key] ?? ''}><option value="">Sin registrar</option>{data.municipalities.filter(row => row.active || row.id === student?.[key]).map(row => <option key={row.id} value={row.id}>{row.municipality_name} · {row.department_name}</option>)}</Select>)}</div>
       {data.municipalities.length === 0 && <Alert title="Catálogo territorial pendiente">Coordinación debe cargar los municipios.</Alert>}
-      <h2>Enlaces opcionales</h2><div className="form-grid">{[ ['linkedin', 'LinkedIn'], ['github', 'GitHub'], ['website', 'Portfolio / web'], ['other', 'Otro enlace'] ].map(([key, label]) => <Input key={key} label={label ?? ''} name={key} type="url" maxLength={2048} defaultValue={linkValue(key ?? '') ?? ''} error={urlErrors[key ?? '']} />)}</div>
+      <details className="profile-disclosure" open={Object.keys(urlErrors).length > 0 || undefined}><summary>Enlaces profesionales · Opcional</summary><p>Cualquier estudiante puede compartir estos enlaces. GitHub puede ser útil para mostrar código, investigación o proyectos; LinkedIn y portafolio permiten compartir tu trayectoria o trabajos de cualquier área. Ninguno es necesario para guardar, participar o hacer matching.</p><div className="form-grid">{[ ['linkedin', 'LinkedIn'], ['github', 'GitHub'], ['website', 'Portfolio / web'], ['other', 'Otro enlace'] ].map(([key, label]) => <Input key={key} label={(label ?? '')+' · Opcional'} name={key} type="url" maxLength={2048} defaultValue={linkValue(key ?? '') ?? ''} error={urlErrors[key ?? '']} />)}</div></details>
     </Editor></Card></>
 }
 type ChildProps = { data: StudentData; reload: () => Promise<void> }
@@ -79,7 +85,7 @@ function Experiences({ data, reload }: ChildProps) {
   const [isCurrent, setIsCurrent] = useState(false)
   const [dateError, setDateError] = useState('')
   const studentId = data.student?.id ?? ''
-  return <><PageHeader title="Experiencia" description="Agrega experiencias profesionales, académicas o de voluntariado." />
+  return <><PageHeader title="Experiencia" description="Sección opcional. Puedes compartir experiencias académicas, de voluntariado o profesionales; no necesitas experiencia laboral para guardar tu perfil." />
     <Card><h2>{current ? 'Editar experiencia' : 'Nueva experiencia'}</h2><Editor resetOnSave={!editing} key={editing ?? 'new'} label={current ? 'Guardar experiencia' : 'Agregar experiencia'} onSave={async form => {
       const start = text(form, 'started_on'); const end = isCurrent ? '' : text(form, 'ended_on')
       if (start && end && end < start) { setDateError('La fecha final debe ser posterior o igual a la inicial.'); throw new FeatureError('Revisa las fechas.') }

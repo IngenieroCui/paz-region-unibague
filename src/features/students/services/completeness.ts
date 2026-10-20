@@ -9,5 +9,6 @@ export function studentCompleteness(data: StudentData) {
     { label: 'Preferencias territoriales', path: 'preferences', complete: data.preferences.length > 0 },
     { label: 'CV / Hoja de vida', path: 'documents', complete: data.documents.some(doc => doc.category_code === 'CV' && doc.status === 'uploaded') },
   ]
-  return { sections, percent: Math.round(sections.filter(section => section.complete).length / sections.length * 100) }
+  const grouped = sections.map((section,index) => ({ ...section, group: index === 0 ? 'Datos básicos' : index === sections.length-1 ? 'Documentación' : 'Información recomendable' }))
+  return { sections: grouped, percent: Math.round(sections.filter(section => section.complete).length / sections.length * 100) }
 }

@@ -3,6 +3,25 @@ import { describe, expect, it, vi } from 'vitest'
 import { useResource } from './useResource'
 import { FeatureError } from '../../lib/supabase/feature-helpers'
 describe('Feature resources', () => {
+  it('hides the old owner immediately even before a slow new request finishes', async () => {
+    const first=vi.fn(async()=>({owner:'one'}))
+    const second=vi.fn(()=>new Promise<{owner:string}>(()=>{}))
+    const {result,rerender}=renderHook(({loader})=>useResource(loader),{initialProps:{loader:first}})
+    await waitFor(()=>expect(result.current.data?.owner).toBe('one'))
+    rerender({loader:second})
+    expect(result.current.data).toBeNull();expect(result.current.loading).toBe(true)
+  })
+  it('keeps valid content during a slow refresh and after its failure', async () => {
+    let reject: (error: Error) => void = () => {}
+    const loader=vi.fn().mockResolvedValueOnce('valid').mockImplementationOnce(()=>new Promise((_,fail)=>{reject=fail}))
+    const {result}=renderHook(()=>useResource(loader))
+    await waitFor(()=>expect(result.current.data).toBe('valid'))
+    let flight: Promise<void> = Promise.resolve()
+    act(()=>{flight=result.current.reload()})
+    expect(result.current.data).toBe('valid');expect(result.current.refreshing).toBe(true)
+    await act(async()=>{reject(new FeatureError('Actualización pendiente'));await flight})
+    expect(result.current.data).toBe('valid');expect(result.current.error).toBe('Actualización pendiente')
+  })
   it('loads asynchronously and recovers from a request error on retry', async () => {
     const loader = vi.fn().mockRejectedValueOnce(new FeatureError('Reintenta')).mockResolvedValueOnce({ name: 'Perfil' })
     const { result } = renderHook(() => useResource(loader))

@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockFeatureClient } from '../../../test/feature-client'
 import { editableOrganization, loadOrganizations, organizationCompleteness, registerOrganization, saveOrganization, statusLabel, submitOrganization, organizationSubmissionAvailable } from './organizations'
 import type { Organization, OrganizationEdit } from './organizations'
+import { clearCatalogCache } from '../../../lib/supabase/catalog-cache'
 const clientMock = vi.hoisted(() => ({ get: vi.fn() }))
 vi.mock('../../../lib/supabase/client', () => ({ getSupabase: clientMock.get }))
 let mock: ReturnType<typeof mockFeatureClient>
 const fields: OrganizationEdit = { legal_name: 'Entidad', display_name: null, tax_id: null, description: null, website: null, municipality_id: null, organization_type_id: null }
-beforeEach(() => { mock = mockFeatureClient(); clientMock.get.mockResolvedValue(mock.db) })
+beforeEach(() => { clearCatalogCache(); mock = mockFeatureClient(); clientMock.get.mockResolvedValue(mock.db) })
 describe('Organization workflows', () => {
   it('submits only through the protected workflow RPC', async () => {
     await submitOrganization('a')
