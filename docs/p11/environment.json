@@ -1,7 +1,8 @@
 {
-  "checked_at": "2026-10-16T16:03:07.001Z",
+  "checked_at": "2026-10-20T12:40:36.032Z",
   "project": "unxiuzkhxlzneywtnuvf",
   "environment_files": [
+    ".env",
     ".env.local"
   ],
   "http_status": 200,
@@ -11,8 +12,7 @@
   "mailer_autoconfirm": true,
   "frontend_google_enabled": false,
   "frontend_registration_enabled": false,
-  "administrative_connection": "NOT CHECKED by this public-only preflight",
-  "smtp": "NOT VERIFIED; user requested no new accounts until University provides configuration",
-  "hosted_mutations": 0,
-  "accounts_created": 0
+  "administrative_connection": "See accounts.json and real-validation.json; this preflight is public/read-only",
+  "smtp": "NOT VERIFIED; public registration must remain closed",
+  "scope": "public settings only; TEST account mutations recorded separately"
 }

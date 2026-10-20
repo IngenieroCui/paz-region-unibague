@@ -2,6 +2,10 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
+  // .env has a legacy VITE_* administrative name. Expose public names only.
+  envPrefix: ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_PYR_DEMO',
+    'VITE_INSTITUTIONAL_GOOGLE_ENABLED', 'VITE_EXTERNAL_REGISTRATION_ENABLED',
+    'VITE_TURNSTILE_SITE_KEY', 'VITE_REGISTRATION_TERMS_URL', 'VITE_REGISTRATION_PRIVACY_URL'],
   plugins: [
     react(),
     VitePWA({

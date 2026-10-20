@@ -1,15 +1,16 @@
 // Real hosted Auth/RLS checks. Credentials remain local; no traces or network bodies.
 import { chromium, expect } from '@playwright/test'
 import { AxeBuilder } from '@axe-core/playwright'
-import { createClient } from '@supabase/supabase-js'
+import { publicClient, ref } from './supabase-admin.mjs'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-process.loadEnvFile('.env.local')
+
 const base = process.env.PYR_TEST_BASE_URL || 'http://localhost:5173'
-const out = resolve('work/p9')
+const out = resolve('work/p11/browser')
 await mkdir(out + '/screens', { recursive: true })
-const ledger = JSON.parse(await readFile(out + '/cuentas-institucionales.local.json', 'utf8'))
+const ledger = JSON.parse(await readFile('work/p11/cuentas-test.local.json', 'utf8'))
+if (ledger.project_ref !== ref) throw Error('Registro de proyecto diferente.')
 const results = []
 const paths = { ADMIN: 'admin', ADVISOR: 'advisor', ORGANIZATION: 'organization', STUDENT: 'student' }
 const totals = { STUDENT: 4, ADVISOR: 2, ORGANIZATION: 2, ADMIN: 1 }
@@ -44,7 +45,7 @@ try {
   await publicContext.close()
   const seenRoles = new Set()
   for (const account of ledger.accounts) {
-    const api = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
+    const api = await publicClient()
     const login = await api.auth.signInWithPassword({ email: account.email, password: account.password })
     expect(login.error).toBeNull(); expect(login.data.user.id).toBe(account.user_id)
     const roles = await api.rpc('pyr_unibague_current_roles')
@@ -55,7 +56,7 @@ try {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 960 } })
     const page = await ctx.newPage(), errors = []
     page.on('pageerror', e => errors.push(e.message))
-    await page.goto(base + '/login')
+    await page.goto(base + (account.role === 'ORGANIZATION' ? '/login/organizaciones' : '/login/institucional'))
     await page.getByLabel('Correo electrónico', { exact: true }).fill(account.email)
     await page.getByLabel('Contraseña', { exact: true }).fill(account.password)
     await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
@@ -95,6 +96,7 @@ try {
   // Optional existing P8 fixtures: populated journeys are read-only.
   if (process.env.PYR_P8_FIXTURES) {
     const f = JSON.parse(await readFile(process.env.PYR_P8_FIXTURES, 'utf8'))
+    if (f.project_ref !== ref) throw Error('Fixtures de proyecto diferente.')
     const routes = {
       admin: ['/app/admin/matching', '/app/admin/assignments', '/app/admin/operations?period=' + f.period.id, '/app/admin/audit'],
       orgA: ['/app/organization/projects/' + f.projects[0].id, '/app/organization/calls', '/app/organization/groups'],
@@ -104,7 +106,7 @@ try {
     for (const [tag, list] of Object.entries(routes)) {
       const u = f.users.find(u => u.tag === tag)
       const ctx = await browser.newContext({ viewport: { width: 1440, height: 960 } }), page = await ctx.newPage()
-      await page.goto(base + '/login'); await page.getByLabel('Correo electrónico', { exact: true }).fill(u.email); await page.getByLabel('Contraseña', { exact: true }).fill(u.password); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
+      await page.goto(base + '/login/institucional'); await page.getByLabel('Correo electrónico', { exact: true }).fill(u.email); await page.getByLabel('Contraseña', { exact: true }).fill(u.password); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
       await page.waitForURL(/\/app\//)
       for (const route of list) {
         await page.goto(base + route); await settle(page); await responsive(page, route); await audit(page, route)

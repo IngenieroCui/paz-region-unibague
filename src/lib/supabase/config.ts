@@ -10,6 +10,7 @@ export function readSupabaseConfiguration(url?: string, key?: string): SupabaseC
     const publicKey = key.trim()
     if (!['https:', 'http:'].includes(parsed.protocol)) throw new Error('Invalid protocol')
     if (parsed.username || parsed.password) throw new Error('Credentials in URL')
+    if (parsed.hostname.endsWith('.supabase.co') && parsed.hostname !== 'unxiuzkhxlzneywtnuvf.supabase.co') throw new Error('Unexpected hosted project')
     if (publicKey.startsWith('sb_secret_')) throw new Error('Private key')
     if (publicKey.split('.').length === 3) {
       const encodedPayload = publicKey.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/')

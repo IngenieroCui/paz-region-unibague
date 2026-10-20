@@ -1,0 +1,330 @@
+{
+  "checked_at": "2026-10-20T12:44:25.138Z",
+  "mode": "real Supabase browser",
+  "project": "unxiuzkhxlzneywtnuvf",
+  "results": [
+    {
+      "scope": "public",
+      "route": "/",
+      "status": "PASS"
+    },
+    {
+      "scope": "public",
+      "route": "/login",
+      "status": "PASS"
+    },
+    {
+      "scope": "public",
+      "route": "/forgot-password",
+      "status": "PASS"
+    },
+    {
+      "scope": "public",
+      "route": "/reset-password",
+      "status": "PASS"
+    },
+    {
+      "scope": "public",
+      "route": "/unauthorized",
+      "status": "PASS"
+    },
+    {
+      "scope": "public",
+      "route": "/not-found",
+      "status": "PASS"
+    },
+    {
+      "scope": "STUDENT",
+      "route": "/app/student",
+      "status": "PASS"
+    },
+    {
+      "scope": "STUDENT",
+      "route": "/app/student/assignment",
+      "status": "PASS"
+    },
+    {
+      "scope": "STUDENT",
+      "route": "/app/student/profile",
+      "status": "PASS"
+    },
+    {
+      "scope": "STUDENT",
+      "route": "/app/student/experience",
+      "status": "PASS"
+    },
+    {
+      "scope": "STUDENT",
+      "route": "/app/student/skills",
+      "status": "PASS"
+    },
+    {
+      "scope": "STUDENT",
+      "route": "/app/student/preferences",
+      "status": "PASS"
+    },
+    {
+      "scope": "STUDENT",
+      "route": "/app/student/documents",
+      "status": "PASS"
+    },
+    {
+      "scope": "STUDENT",
+      "route": "/app/student/notifications",
+      "status": "PASS"
+    },
+    {
+      "scope": "account",
+      "email": "pyrprueba.estudiante@estudiantesunibague.edu.co",
+      "role": "STUDENT",
+      "authProfileRoles": "PASS",
+      "browserLogin": "PASS",
+      "responsive": "320/390/768/1440",
+      "guards": "3 forbidden roles rejected",
+      "persistence": "PASS",
+      "logout": "PASS",
+      "status": "PASS"
+    },
+    {
+      "scope": "account",
+      "email": "pyrprueba.estudiante2@estudiantesunibague.edu.co",
+      "role": "STUDENT",
+      "authProfileRoles": "PASS",
+      "browserLogin": "PASS",
+      "responsive": "320/390/768/1440",
+      "guards": "3 forbidden roles rejected",
+      "persistence": "PASS",
+      "logout": "PASS",
+      "status": "PASS"
+    },
+    {
+      "scope": "account",
+      "email": "pyrprueba.estudiante3@estudiantesunibague.edu.co",
+      "role": "STUDENT",
+      "authProfileRoles": "PASS",
+      "browserLogin": "PASS",
+      "responsive": "320/390/768/1440",
+      "guards": "3 forbidden roles rejected",
+      "persistence": "PASS",
+      "logout": "PASS",
+      "status": "PASS"
+    },
+    {
+      "scope": "account",
+      "email": "pyrprueba.estudiante4@estudiantesunibague.edu.co",
+      "role": "STUDENT",
+      "authProfileRoles": "PASS",
+      "browserLogin": "PASS",
+      "responsive": "320/390/768/1440",
+      "guards": "3 forbidden roles rejected",
+      "persistence": "PASS",
+      "logout": "PASS",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADVISOR",
+      "route": "/app/advisor",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADVISOR",
+      "route": "/app/advisor/organizations",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADVISOR",
+      "route": "/app/advisor/students",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADVISOR",
+      "route": "/app/advisor/projects",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADVISOR",
+      "route": "/app/advisor/profile",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADVISOR",
+      "route": "/app/advisor/notifications",
+      "status": "PASS"
+    },
+    {
+      "scope": "account",
+      "email": "pyrprueba.asesor@unibague.edu.co",
+      "role": "ADVISOR",
+      "authProfileRoles": "PASS",
+      "browserLogin": "PASS",
+      "responsive": "320/390/768/1440",
+      "guards": "3 forbidden roles rejected",
+      "persistence": "PASS",
+      "logout": "PASS",
+      "status": "PASS"
+    },
+    {
+      "scope": "account",
+      "email": "pyrprueba.asesor2@unibague.edu.co",
+      "role": "ADVISOR",
+      "authProfileRoles": "PASS",
+      "browserLogin": "PASS",
+      "responsive": "320/390/768/1440",
+      "guards": "3 forbidden roles rejected",
+      "persistence": "PASS",
+      "logout": "PASS",
+      "status": "PASS"
+    },
+    {
+      "scope": "ORGANIZATION",
+      "route": "/app/organization",
+      "status": "PASS"
+    },
+    {
+      "scope": "ORGANIZATION",
+      "route": "/app/organization/profile",
+      "status": "PASS"
+    },
+    {
+      "scope": "ORGANIZATION",
+      "route": "/app/organization/projects",
+      "status": "PASS"
+    },
+    {
+      "scope": "ORGANIZATION",
+      "route": "/app/organization/calls",
+      "status": "PASS"
+    },
+    {
+      "scope": "ORGANIZATION",
+      "route": "/app/organization/groups",
+      "status": "PASS"
+    },
+    {
+      "scope": "ORGANIZATION",
+      "route": "/app/organization/documents",
+      "status": "PASS"
+    },
+    {
+      "scope": "ORGANIZATION",
+      "route": "/app/organization/reviews",
+      "status": "PASS"
+    },
+    {
+      "scope": "ORGANIZATION",
+      "route": "/app/organization/notifications",
+      "status": "PASS"
+    },
+    {
+      "scope": "account",
+      "email": "pyrprueba.entidad@unibague.edu.co",
+      "role": "ORGANIZATION",
+      "authProfileRoles": "PASS",
+      "browserLogin": "PASS",
+      "responsive": "320/390/768/1440",
+      "guards": "3 forbidden roles rejected",
+      "persistence": "PASS",
+      "logout": "PASS",
+      "status": "PASS"
+    },
+    {
+      "scope": "account",
+      "email": "pyrprueba.entidad2@unibague.edu.co",
+      "role": "ORGANIZATION",
+      "authProfileRoles": "PASS",
+      "browserLogin": "PASS",
+      "responsive": "320/390/768/1440",
+      "guards": "3 forbidden roles rejected",
+      "persistence": "PASS",
+      "logout": "PASS",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/operations",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/students",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/organizations",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/projects",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/calls",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/groups",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/advisors",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/special-cases",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/users",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/matching",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/assignments",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/settings",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/audit",
+      "status": "PASS"
+    },
+    {
+      "scope": "ADMIN",
+      "route": "/app/admin/notifications",
+      "status": "PASS"
+    },
+    {
+      "scope": "account",
+      "email": "pyrprueba.administrador@unibague.edu.co",
+      "role": "ADMIN",
+      "authProfileRoles": "PASS",
+      "browserLogin": "PASS",
+      "responsive": "320/390/768/1440",
+      "guards": "3 forbidden roles rejected",
+      "persistence": "PASS",
+      "logout": "PASS",
+      "status": "PASS"
+    }
+  ]
+}

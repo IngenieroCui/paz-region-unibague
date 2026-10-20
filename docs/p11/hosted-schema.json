@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-10-20T12:41:49.757Z",
+  "project": "unxiuzkhxlzneywtnuvf",
+  "http_status": 200,
+  "tables": 45,
+  "columns": 381,
+  "rpcs": 29,
+  "missing_p11_rpcs": [
+    "pyr_unibague_external_registration_ready",
+    "pyr_unibague_start_external_onboarding",
+    "pyr_unibague_submit_organization"
+  ],
+  "scope": "OpenAPI metadata filtered to PYRUnibague; no other application row data queried",
+  "rls_catalog": "NOT AVAILABLE from REST; behavioral RLS tests recorded separately",
+  "sql_access": "MCP permission denied; no PostgreSQL connection credentials provided"
+}

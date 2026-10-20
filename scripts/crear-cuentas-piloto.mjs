@@ -1,153 +1,77 @@
-/**
- * Cuentas ficticias de prueba PYR para una base de desarrollo autorizada.
- * Ejecutar SOLO desde la raíz del worktree P8 con Node >=22 y npm ci.
- * No modifica Auth en modo vista previa. No mostrar tokens ni claves en consola.
- */
+// Auth Admin only; no SQL in auth.users, invitations or emails.
 import { randomBytes } from 'node:crypto'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { execFileSync } from 'node:child_process'
+import { resolve, dirname } from 'node:path'
+import { adminClient, publicClient, check, ref } from './supabase-admin.mjs'
 
-const PROJECT_REF = 'flrdqhemgbrdclgeynpk'
-const URL = `https://${PROJECT_REF}.supabase.co`
-const args = new Set(process.argv.slice(2))
-const APPLY = args.has('--apply')
-const CHECK = args.has('--check-collisions')
-const CONFIRM = args.has('--confirmo-correos-ficticios')
-const USERS = [
-  { first:'Pyrprueba', last:'Estudiante', suffix:'', role:'STUDENT' },
-  { first:'Pyrprueba', last:'Estudiante', suffix:'2', role:'STUDENT' },
-  { first:'Pyrprueba', last:'Estudiante', suffix:'3', role:'STUDENT' },
-  { first:'Pyrprueba', last:'Estudiante', suffix:'4', role:'STUDENT' },
-  { first:'Pyrprueba', last:'Administrador', suffix:'', role:'ADMIN' },
-  { first:'Pyrprueba', last:'Asesor', suffix:'', role:'ADVISOR' },
-  { first:'Pyrprueba', last:'Asesor', suffix:'2', role:'ADVISOR' },
-  { first:'Pyrprueba', last:'Entidad', suffix:'', role:'ORGANIZATION' },
-  { first:'Pyrprueba', last:'Entidad', suffix:'2', role:'ORGANIZATION' },
-].map(user => ({
- ...user,
- email: `${user.first.toLowerCase()}.${user.last.toLowerCase()}${user.suffix}@${user.role === 'STUDENT' ? 'estudiantesunibague.edu.co' : 'unibague.edu.co'}`,
- display_name: `${user.first} ${user.last}${user.suffix ? ' ' + user.suffix : ''} (TEST)`
-}))
-
-const outputDir = resolve('work/p9')
-const outputPath = join(outputDir, 'cuentas-institucionales.local.json')
-
-function loadEnv(text) {
-  const values={}
-  for(const line of text.split(/\r?\n/)) {
-    const match=line.match(/^\s*(?:export\s+)?([A-Z][A-Z0-9_]*)\s*=\s*(.*?)\s*$/)
-    if(!match)continue
-    let value=match[2]
-    if((value.startsWith('"')&&value.endsWith('"'))||(value.startsWith("'")&&value.endsWith("'")))value=value.slice(1,-1)
-    values[match[1]]=value
-  }
-  return values
+const users = [
+  ['estudiante','STUDENT'], ['estudiante2','STUDENT'], ['estudiante3','STUDENT'], ['estudiante4','STUDENT'],
+  ['asesor','ADVISOR'], ['asesor2','ADVISOR'], ['entidad','ORGANIZATION'], ['entidad2','ORGANIZATION'], ['administrador','ADMIN'],
+].map(([name, role]) => ({ email: `pyrprueba.${name}@${role === 'STUDENT' ? 'estudiantesunibague.edu.co' : 'unibague.edu.co'}`, role, display_name: `Pyrprueba ${name} (TEST)` }))
+const apply = process.argv.includes('--apply')
+const ledgerPath = resolve(process.env.PYR_P11_LEDGER || 'work/p11/cuentas-test.local.json')
+await mkdir(dirname(ledgerPath), { recursive: true })
+try { execFileSync('git', ['check-ignore', '--quiet', ledgerPath]) }
+catch { throw Error('El registro privado debe estar dentro del repositorio e ignorado por Git.') }
+let ledger = { project_ref: ref, accounts: [] }
+try { ledger = JSON.parse(await readFile(ledgerPath, 'utf8')) }
+catch (error) { if (error.code !== 'ENOENT') throw error }
+if (ledger.project_ref !== ref) throw Error('Registro de otro proyecto; no se reutilizan UUID ni contraseñas.')
+if (process.env.PYR_P9_LEDGER) {
+  const historical = JSON.parse(await readFile(process.env.PYR_P9_LEDGER, 'utf8'))
+  if (historical.accounts.length !== 9 || users.some(u => !historical.accounts.some(a => a.email === u.email && a.role === u.role))) throw Error('Las cuentas no coinciden con P9.')
 }
-
-async function localAccessToken() {
-  if(process.env.SUPABASE_ACCESS_TOKEN)return process.env.SUPABASE_ACCESS_TOKEN
-  const envFile=process.env.PYR_ADMIN_ENV_FILE || 'work/p8/admin.env'
+const admin = await adminClient({ testInventory: true })
+const existing = check(await admin.auth.admin.listUsers({ page: 1, perPage: 1000 }), 'Inventario TEST').users
+if (existing.length >= 1000 || existing.some(u => !u.email?.startsWith('pyrprueba.'))) throw Error('Inventario TEST no acotado.')
+const roles = check(await admin.from('PYRUnibague_Roles').select('id,code'), 'Catálogo de roles')
+for (const u of users) if (!roles.some(r => r.code === u.role)) throw Error(`Falta rol persistido ${u.role}`)
+for (const u of users) {
+  const identity = existing.find(a => a.email?.toLowerCase() === u.email)
+  // Metadata alone never proves ownership of a preexisting account.
+  if (identity && (!ledger.accounts.some(a => a.email === u.email && a.user_id === identity.id && a.role === u.role) || identity.user_metadata?.pyr_test_account !== true)) throw Error(`Colisión TEST ${u.email}; cuenta no modificada.`)
+}
+const report = { checked_at: new Date().toISOString(), project: ref, mode: apply ? 'apply' : 'inventory', accounts: [] }
+const persist = () => writeFile(ledgerPath, JSON.stringify(ledger, null, 2) + '\n', { mode: 0o600 })
+for (const u of users) {
+  let identity = existing.find(a => a.email?.toLowerCase() === u.email)
+  let account = ledger.accounts.find(a => a.email === u.email)
+  const outcome = { email: u.email, role: u.role, existed: Boolean(identity), status: 'MISSING' }
+  if (!apply) { outcome.status = identity ? 'EXISTS' : 'MISSING'; report.accounts.push(outcome); continue }
   try {
-    const env=loadEnv(await readFile(resolve(envFile),'utf8'))
-    return env.SUPABASE_ACCESS_TOKEN
-  } catch {return undefined}
+    if (!identity) {
+      if (account?.user_id) throw Error('Identidad registrada ausente; revisar antes de recrear.')
+      // Persist before mutation, preserving credentials after interruptions.
+      if (!account) { account = { ...u, password: `PyR!${randomBytes(36).toString('base64url')}7x`, created_at: new Date().toISOString() }; ledger.accounts.push(account); await persist() }
+      identity = check(await admin.auth.admin.createUser({ email: u.email, password: account.password, email_confirm: true, user_metadata: { display_name: u.display_name, pyr_test_account: true }, app_metadata: { pyr_test_batch: 'P11' } }), 'Crear TEST').user
+      if (!identity?.id) throw Error('Auth no devolvió UUID.')
+      account.user_id = identity.id; await persist()
+    }
+    const profile = check(await admin.from('PYRUnibague_UserProfiles').select('*').eq('user_id', identity.id).maybeSingle(), 'Consultar perfil')
+    if (profile?.display_name && !profile.display_name.includes('(TEST)')) throw Error('Perfil no reconocido como TEST.')
+    check(await admin.from('PYRUnibague_UserProfiles').upsert({ user_id: identity.id, display_name: u.display_name, institutional_email: u.email }, { onConflict: 'user_id' }), 'Guardar perfil TEST')
+    const roleId = roles.find(r => r.code === u.role).id
+    const assigned = check(await admin.from('PYRUnibague_UserRoles').select('role_id').eq('user_id', identity.id), 'Consultar permisos')
+    if (assigned.some(r => r.role_id !== roleId)) throw Error('Permisos inesperados; no se reemplazan.')
+    if (!assigned.length) check(await admin.from('PYRUnibague_UserRoles').insert({ user_id: identity.id, role_id: roleId }), 'Asignar rol TEST')
+    if (u.role === 'ADVISOR') {
+      const staff = check(await admin.from('PYRUnibague_StaffProfiles').select('*').eq('user_id', identity.id).maybeSingle(), 'Consultar StaffProfile')
+      if (!staff) check(await admin.from('PYRUnibague_StaffProfiles').insert({ user_id: identity.id, staff_code: `TEST-P11-${u.email.split('@')[0]}`, academic_unit: 'TEST · Paz y Región', status: 'active' }), 'Crear StaffProfile TEST')
+    }
+    const client = await publicClient()
+    try {
+      const login = check(await client.auth.signInWithPassword({ email: u.email, password: account.password }), 'Login TEST')
+      if (login.user.id !== identity.id) throw Error('UUID inesperado.')
+      const codes = check(await client.rpc('pyr_unibague_current_roles'), 'Roles persistidos')
+      if (JSON.stringify(codes) !== JSON.stringify([u.role])) throw Error('Rol de sesión inesperado.')
+      outcome.status = 'PASS'; outcome.login = true; outcome.profile = true; outcome.persisted_role = true
+      if (u.role === 'ADVISOR') outcome.staff_profile = true
+    } finally { await client.auth.signOut() }
+  } catch (error) { outcome.status = 'FAIL'; outcome.error = error.message; process.exitCode = 1 }
+  report.accounts.push(outcome)
+  console.log(u.role, u.email, outcome.status, outcome.error ?? '')
 }
-
-function newPassword() {
-  // 48+ caracteres, no claves compartidas entre usuarios.
-  return `PyR!${randomBytes(36).toString('base64url')}7x`
-}
-
-async function main(){
-  console.log('Cuentas ficticias propuestas (NO corresponden a buzones reales verificados):')
-  for(const u of USERS)console.log(`${u.role.padEnd(13)} ${u.email}`)
-  if(!APPLY && !CHECK) {
-    console.log('\nVISTA PREVIA. No se ha creado ningún usuario.')
-    console.log('Aplicación: node scripts/crear-cuentas-piloto.mjs --apply --confirmo-correos-ficticios')
-    return
-  }
-  if(APPLY && !CONFIRM)throw Error('Para ejecutar, confirma explícitamente que son direcciones ficticias de prueba y que no se enviarán invitaciones ni correos.')
-  const token=await localAccessToken()
-  if(!token)throw Error('Falta SUPABASE_ACCESS_TOKEN en work/p8/admin.env o en variable de entorno. No lo pegues en el chat.')
-  const keysReq=await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/api-keys?reveal=true`,{
-    headers:{Authorization:`Bearer ${token}`,Accept:'application/json'},
-    signal:AbortSignal.timeout(20000)
-  })
-  if(!keysReq.ok)throw Error(`No se pudieron consultar credenciales administrativas (${keysReq.status}); verifica permisos del PAT.`)
-  const keysBody=await keysReq.json()
-  const keys=Array.isArray(keysBody) ? keysBody : keysBody.keys || []
-  const keyInfo=keys.find(k=>k.type==='secret'&&k.api_key)||keys.find(k=>k.name==='service_role'&&k.api_key)
-  if(!keyInfo)throw Error('No se encontró una clave secret/service_role en Management API. Consultar Settings > API Keys; no crear claves nuevas automáticamente.')
-  const { createClient } = await import('@supabase/supabase-js')
-  const client=createClient(URL,keyInfo.api_key,{
-    auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
-  })
-  const {data:roles,error:rolesError}=await client.from('PYRUnibague_Roles').select('id,code')
-  if(rolesError)throw Error(`No se pudo consultar catálogo Roles: ${rolesError.message}`)
-  const roleIds=new Map((roles||[]).map(r=>[r.code,r.id]))
-  for(const u of USERS)if(!roleIds.get(u.role))throw Error(`El rol ${u.role} no existe en el catálogo persistido`)
-  // Salida exclusiva local ignorada por Git; nunca exponer por consola.
-  await mkdir(outputDir,{recursive:true,mode:0o700})
-  let ledger={project_ref:PROJECT_REF,warning:'SOLO TEST. Eliminar antes de producción o impedir recuperación por correo en cuentas ficticias.',accounts:[]}
-  try {ledger=JSON.parse(await readFile(outputPath,'utf8'))}catch(e){if(e.code!=='ENOENT')throw e}
-  if(ledger.project_ref!==PROJECT_REF)throw Error('El archivo de credenciales local corresponde a otro proyecto.')
-  const recorded=new Set(ledger.accounts.map(a=>a.email))
-  const existing=[]
-  let page=1
-  while(true){
-    const {data,error}=await client.auth.admin.listUsers({page,perPage:1000})
-    if(error)throw Error(`No se pudo consultar usuarios de Auth: ${error.message}`)
-    existing.push(...(data.users||[]))
-    if(!data.users||data.users.length<1000)break
-    page++
-    if(page>10)throw Error('Demasiadas páginas de usuarios para comprobar duplicados')
-  }
-  const emailMap=new Map(existing.map(x=>[x.email?.toLowerCase(),x]))
-  const collisions=USERS.filter(u=>emailMap.has(u.email) && !ledger.accounts.some(a=>a.email===u.email && a.user_id===emailMap.get(u.email).id))
-  if(collisions.length)throw Error(`Colisiones con cuentas ajenas al registro local: ${collisions.map(u=>u.email).join(', ')}. No se modifica ninguna cuenta.`)
-  if(CHECK && !APPLY) {
-    for(const u of USERS)console.log(`${emailMap.has(u.email)?'TEST PROPIO':'DISPONIBLE'} ${u.email}`)
-    console.log('Comprobación completada, sin cambios en Auth ni permisos.')
-    return
-  }
-  let incomplete=0
-  for(const u of USERS){
-    if(emailMap.has(u.email)){
-      console.log(`EXISTE   ${u.email} — no se modifica contraseña ni permisos de cuentas preexistentes.`)
-      continue
-    }
-    if(recorded.has(u.email)){
-      console.log(`REGISTRO ${u.email} — verificar manualmente; no duplicar.`)
-      continue
-    }
-    const password=newPassword()
-    const {data,error}=await client.auth.admin.createUser({
-      email:u.email,password,email_confirm:true,
-      user_metadata:{display_name:u.display_name,pyr_test_account:true},
-    })
-    if(error||!data?.user?.id){console.log(`ERROR Auth ${u.email}: ${error?.message||'no se devolvió ID'}`);incomplete++;continue}
-    const userId=data.user.id
-    // Registrar localmente ANTES de operaciones posteriores, para conservar credenciales si algo falla.
-    ledger.accounts.push({email:u.email,password,role:u.role,user_id:userId,display_name:u.display_name,created_at:new Date().toISOString()})
-    await writeFile(outputPath,JSON.stringify(ledger,null,2),{mode:0o600,flag:'w'})
-    const {error:profileError}=await client.from('PYRUnibague_UserProfiles').upsert({
-      user_id:userId,display_name:u.display_name,institutional_email:u.email
-    },{onConflict:'user_id'})
-    const {error:roleError}=await client.from('PYRUnibague_UserRoles').insert({user_id:userId,role_id:roleIds.get(u.role)})
-    let staffError
-    if(!profileError && !roleError && u.role==='ADVISOR') {
-      const result=await client.from('PYRUnibague_StaffProfiles').insert({user_id:userId,staff_code:`TEST-P9-ADVISOR${u.suffix||'1'}`,academic_unit:'TEST · Paz y Región',status:'active'})
-      staffError=result.error
-    }
-    if(profileError||roleError||staffError){
-      incomplete++
-      console.log(`PARCIAL  ${u.email}: Auth creado; verificar perfil/rol en el panel de administración antes de entrar.`)
-      continue
-    }
-    console.log(`CREADO   ${u.email} (${u.role})`)
-  }
-  console.log(`\nCredenciales locales: ${outputPath}`)
-  console.log('No compartir este archivo, ni subirlo a Git o a la conversación. Cambiar/eliminar estas cuentas antes del lanzamiento.')
-  if(incomplete)throw Error(`${incomplete} cuentas incompletas; revisar el registro local antes de repetir. No se modifican automáticamente usuarios existentes.`)
-}
-main().catch(e=>{console.error('Error:',e.message);process.exitCode=1})
+await mkdir('docs/p11', { recursive: true })
+await writeFile('docs/p11/accounts.json', JSON.stringify(report, null, 2) + '\n')
+console.log('Credenciales: work/p11/cuentas-test.local.json (ignorado). Informe: docs/p11/accounts.json')

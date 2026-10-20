@@ -1,12 +1,12 @@
 {
-  "checked_at": "2026-10-16T16:13:04.371Z",
+  "checked_at": "2026-10-20T12:44:25.136Z",
   "typecheck": "PASS",
   "lint": "PASS",
   "build": "PASS",
   "unit": {
     "status": "PASS",
     "files": 35,
-    "tests": 302
+    "tests": 303
   },
   "e2e": [
     {
@@ -62,7 +62,7 @@
   "sql": {
     "status": "PASS",
     "mode": "single-session PostgreSQL WASM; Auth and Storage stubs; not hosted pgTAP",
-    "total_assertions": 529,
+    "total_assertions": 532,
     "suites": [
       {
         "suite": "supabase/tests/security.test.sql",
@@ -98,18 +98,46 @@
       },
       {
         "suite": "supabase/tests/p11.test.sql",
-        "assertions": 55
+        "assertions": 58
       }
     ]
   },
   "hosted": {
-    "public_settings": "PASS",
-    "administrative_connection": "UNAVAILABLE",
-    "schema_rls_pgtap_advisors": "SKIPPED",
-    "smtp_google_registration": "SKIPPED: not activated, as requested",
-    "mutations": 0,
-    "accounts_created": 0
+    "project": "unxiuzkhxlzneywtnuvf",
+    "administrative_connection": "PASS: Secret API Key, Auth Admin/Data API",
+    "accounts_created": 9,
+    "real_api": {
+      "pass": 19,
+      "skipped": 3,
+      "evidence": "real-validation.json"
+    },
+    "real_browser": {
+      "accounts": 9,
+      "routes": 43,
+      "widths": [
+        320,
+        390,
+        768,
+        1440
+      ],
+      "status": "PASS"
+    },
+    "real_journey": {
+      "pass": 4,
+      "skipped": 1,
+      "evidence": "real-browser-journey.json"
+    },
+    "sql_migrations_pgtap_advisors": "SKIPPED: connector permission denied; no authorized PostgreSQL connection",
+    "smtp_captcha_google": "SKIPPED: not configured; public UI remains disabled"
   },
-  "security_checks": "PASS; checked separately before commit",
-  "production_deployment": "NOT EXECUTED"
+  "security_checks": "PASS: staged Git blobs and exact local secrets/passwords scanned; 0 findings",
+  "production_deployment": "No manual deployment; push to dev can trigger existing automatic deployment without enabling public signup/Google",
+  "frontend_secret_exposure": {
+    "dev": "PASS",
+    "build": "PASS",
+    "built_files": 108,
+    "findings": 0
+  },
+  "project_guard": "PASS: unexpected hosted project rejected before network",
+  "account_reconciliation": "PASS: second --apply recognized all 9 existing TEST identities; 0 duplicates"
 }

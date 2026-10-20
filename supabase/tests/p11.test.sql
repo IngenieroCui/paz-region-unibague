@@ -110,5 +110,15 @@ select set_config('request.jwt.claim.sub',pg_temp.p11_id(2)::text,true);
 select is((select count(*)::integer from "PYRUnibague_OrganizationReviews"),3,'all three administrative decisions remain visible');
 select ok(pg_temp.p11_denied($$select pyr_unibague_submit_organization(current_setting('p11.organization')::uuid)$$,'23514'),'rejected organization cannot reset its workflow');
 reset role;
+-- Even a persisted ADMIN must not approve an organization they belong to.
+reset role;
+insert into "PYRUnibague_OrganizationMembers"(organization_id,user_id,membership_role,can_manage,status)
+values(current_setting('p11.organization')::uuid,pg_temp.p11_id(1),'owner',true,'active');
+set local role authenticated;
+select set_config('request.jwt.claim.sub',pg_temp.p11_id(1)::text,true);
+select ok(pg_temp.p11_denied($$select pyr_unibague_review_organization(current_setting('p11.organization')::uuid,'approved','Own organization')$$,'42501'),'multirole ADMIN cannot review own membership');
+select ok(pg_temp.p11_denied($$update "PYRUnibague_Organizations" set status='approved',verified_at=now(),verified_by=auth.uid() where id=current_setting('p11.organization')::uuid$$,'42501'),'multirole ADMIN cannot bypass review by direct approval');
+select is((select count(*)::integer from "PYRUnibague_OrganizationReviews"),3,'denied self approval creates no review history');
+reset role;
 select * from finish();
 rollback;
