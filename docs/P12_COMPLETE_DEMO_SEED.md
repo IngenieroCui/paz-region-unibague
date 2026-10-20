@@ -104,6 +104,10 @@ Idempotencia real: tras dos ejecuciones se conservan los mismos 46 registros y U
 
 Los PDFs se renderizaron e inspeccionaron visualmente. Capturas de escritorio y móvil, impresión institucional y tiempos de navegación con Supabase real se guardan en `work/p12/browser/`. El informe de navegador diferencia expresamente frontend local y hospedado; sus resultados finales están en `work/p12/browser-verification.local.json`. Las capturas y UUID de ejecución permanecen fuera de Git.
 
+Resultado final de navegador local conectado a Supabase real: **nueve cuentas, 50 comprobaciones PASS, cero FAIL**, 41 pantallas con capturas a 390/1440 px, aislamiento de rutas por rol y una ficha institucional A4 legible. Los intentos anteriores detectaron aserciones incorrectas del verificador y tiempos de espera; el intento previo se conserva localmente en `browser-attempt3.local.json`. ADMIN se comprobó por separado y se combinó con los ocho recorridos correctos del mismo frontend/base. Se puede aislar un rol mediante `PYR_P12_BROWSER_ROLE`; no combina despliegues diferentes.
+
+Medianas descriptivas de navegación por documento, sin throttling y con SW bloqueado: estudiante 1872 ms (16 pantallas), organización 1866 ms (9), asesor 1436 ms (8), ADMIN 1400 ms (8). Son rutas distintas con datos poblados y red real; **no son una comparación controlada antes/después ni una garantía de rendimiento hospedado**. No se modificó frontend y el build mantiene 64 entradas de precaché, aproximadamente 1227 KiB, como P11.1.
+
 Evidencias privadas: `preflight.local.json`, `contracts.local.json`, `manifest.local.json`, `verification.local.json`, `idempotence.local.json` y `browser-verification.local.json` dentro de `work/p12/`. No incluyen claves, contraseñas, sesiones, trazas ni cuerpos de Auth.
 
 ## Hospedaje, Git y pendientes
@@ -111,5 +115,7 @@ Evidencias privadas: `preflight.local.json`, `contracts.local.json`, `manifest.l
 La puerta `https://pazregionunibague-sepia.vercel.app/login/institucional` sigue devolviendo **404**. No se certifican nueve recorridos hospedados ni se presentan tiempos locales como medidas de esa URL. El frontend de `dev` ya incluye la reescritura SPA de P11.1; falta comprobar el despliegue que sirve esa URL. No se modificó `main` ni el proyecto Vercel de otra cuenta.
 
 **No se publica a `origin/dev` mientras fallen las condiciones críticas remotas exigidas por el pedido.** El trabajo se conserva en la rama P12 para su revisión y continuación. El estado concreto del commit/entrega se comprueba en el repositorio, sin incluir credenciales en Git.
+
+Implementación inicial `890b4e2` y corrección de referencias territoriales estables `c371dda`. Revisión previa a entrega: escaneo de 463 rutas y 447 blobs sin hallazgos de secretos; `git diff --check` y `git diff --cached --check` aprobados. Las referencias territoriales persistidas evitan que insertar un catálogo nuevo cambie el significado del escenario al reejecutar.
 
 Para cerrar P12: disponer de canal SQL autorizado; cotejar y aplicar migraciones pendientes; verificar SQL/RLS y conflicto de interés; desplegar matching; ejecutar y revisar scores/optimizador/confirmaciones/capacidad; completar equipo/notificaciones/ciclos reversibles; restaurar el estado de dos asignados, uno elegible pendiente y uno no elegible; comprobar el despliegue hospedado y repetir allí los nueve recorridos y rendimiento; entonces realizar push normal a `dev`, sin force.

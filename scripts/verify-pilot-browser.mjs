@@ -16,6 +16,14 @@ const out = 'work/p12/browser'
 await mkdir(out, { recursive: true })
 const results = [], measurements = []
 const expect = playwrightExpect.configure({ timeout: 30000 })
+const roleFilter = process.env.PYR_P12_BROWSER_ROLE
+if (roleFilter && !['STUDENT','ORGANIZATION','ADVISOR','ADMIN'].includes(roleFilter)) throw Error('Rol de verificación desconocido')
+if (roleFilter) {
+  const prior = JSON.parse(await readFile('work/p12/browser-verification.local.json', 'utf8'))
+  if (prior.base !== base) throw Error('No combinar resultados de despliegues distintos')
+  results.push(...prior.results.filter(r => r.role && r.role !== roleFilter))
+  measurements.push(...prior.measurements.filter(r => r.role !== roleFilter))
+}
 let browser, child
 try {
   // Verify the hosted entry point before submitting any account credentials.
@@ -27,9 +35,11 @@ try {
   }
   browser = await chromium.launch({ channel: 'msedge', headless: true })
   for (const [index, account] of ledger.accounts.entries()) {
+    if (roleFilter && account.role !== roleFilter) continue
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 960 }, serviceWorkers: 'block' })
-    const page = await ctx.newPage(), errors = [], foreignHosts = []
+    const page = await ctx.newPage(), errors = [], foreignHosts = [], authHttp = []
     page.on('pageerror', e => errors.push(e.name))
+    page.on('response', response => { if (response.url().includes('/auth/v1/token')) authHttp.push(response.status()) })
     await ctx.route('**/*', route => {
       const host = new URL(route.request().url()).hostname
       if (host.endsWith('.supabase.co') && host !== ref + '.supabase.co') { foreignHosts.push(host); return route.abort() }
@@ -101,11 +111,12 @@ try {
       await page.goto(base + other, { waitUntil: 'domcontentloaded' }); await page.waitForURL(base + '/unauthorized', { waitUntil: 'domcontentloaded' })
       results.push({ label: 'Login, contenido, responsive y rol ajeno denegado', account_index: index, role: account.role, status: 'PASS' })
       console.log('PASS browser', index, account.role)
-    } catch (error) { results.push({ label: 'Cuenta navegador', account_index: index, role: account.role, status: 'FAIL', error: error.message }); console.log('FAIL browser', index, account.role, error.message); process.exitCode = 1 }
+    } catch (error) { results.push({ label: 'Cuenta navegador', account_index: index, role: account.role, status: 'FAIL', error: error.message, path: new URL(page.url()).pathname, auth_http: authHttp, alerts: await page.getByRole('alert').allTextContents() }); console.log('FAIL browser', index, account.role, error.message); process.exitCode = 1 }
     finally { await ctx.close() }
   }
 } finally {
   await browser?.close()
   if (child && child.exitCode === null) { const done = once(child, 'exit'); child.kill(); await done }
   await save('browser-verification.local.json', { checked_at: new Date().toISOString(), base, hosted, results, measurements, limitations: ['Ningún alumno tiene asignación hasta disponer de matching real', 'Ciclos de capacidad/retiro y equipo final bloqueados por dependencias remotas', 'Tiempos de frontend local con Supabase real; no se presentan como tiempos hospedados'] })
+  if (!process.exitCode && results.some(x => x.status === 'BLOCKED')) process.exitCode = 2
 }
