@@ -6,7 +6,7 @@ test('production excludes previews and keeps role routes closed', async ({ page 
   await page.goto('/dev/student')
   await expect(page.getByRole('heading', { name: 'No encontramos esta página' })).toBeVisible()
   await page.goto('/app/admin')
-  await expect(page.getByRole('heading', { name: 'Bienvenido a tu espacio' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Elige tu acceso' })).toBeVisible()
 })
 test('PWA registers, serves a complete manifest and caches the public shell', async ({ page }) => {
   await page.goto('/')

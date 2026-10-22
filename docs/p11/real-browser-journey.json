@@ -1,0 +1,28 @@
+{
+  "checked_at": "2026-10-20T12:41:43.587Z",
+  "project": "unxiuzkhxlzneywtnuvf",
+  "mode": "real browser/Auth/Data/Storage",
+  "results": [
+    {
+      "label": "Perfil y contacto guardados desde UI móvil contra Supabase real",
+      "status": "PASS"
+    },
+    {
+      "label": "Documento privado subido desde navegador contra Storage real",
+      "status": "PASS"
+    },
+    {
+      "label": "Envío formal P11 desde navegador",
+      "status": "SKIPPED",
+      "reason": "La UI informa RPC pendiente; no se simula envío."
+    },
+    {
+      "label": "ADMIN solicita corrección y aprueba; organización consulta ambas decisiones reales",
+      "status": "PASS"
+    },
+    {
+      "label": "Estado aprobado y recorrido adaptables en 320/390/768/1440",
+      "status": "PASS"
+    }
+  ]
+}

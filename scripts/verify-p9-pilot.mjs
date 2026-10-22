@@ -1,22 +1,24 @@
 // Real hosted Auth/RLS checks. Credentials remain local; no traces or network bodies.
 import { chromium, expect } from '@playwright/test'
 import { AxeBuilder } from '@axe-core/playwright'
-import { createClient } from '@supabase/supabase-js'
+import { publicClient, ref } from './supabase-admin.mjs'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-process.loadEnvFile('.env.local')
+
 const base = process.env.PYR_TEST_BASE_URL || 'http://localhost:5173'
-const out = resolve('work/p9')
+const out = resolve('work/p11/browser')
 await mkdir(out + '/screens', { recursive: true })
-const ledger = JSON.parse(await readFile(out + '/cuentas-institucionales.local.json', 'utf8'))
+const ledger = JSON.parse(await readFile('work/p11/cuentas-test.local.json', 'utf8'))
+if (ledger.project_ref !== ref) throw Error('Registro de proyecto diferente.')
 const results = []
 const paths = { ADMIN: 'admin', ADVISOR: 'advisor', ORGANIZATION: 'organization', STUDENT: 'student' }
 const totals = { STUDENT: 4, ADVISOR: 2, ORGANIZATION: 2, ADMIN: 1 }
 for (const [role, count] of Object.entries(totals)) expect(ledger.accounts.filter(a => a.role === role)).toHaveLength(count)
 const browser = await chromium.launch({ channel: 'msedge', headless: true })
+let diagnosticPage
 async function settle(page) {
-  await expect(page.getByRole('heading', { level: 1 }), new URL(page.url()).pathname).toBeVisible({ timeout: 15000 })
+  await expect(page.getByRole('heading', { level: 1 }), new URL(page.url()).pathname).toBeVisible({ timeout: 30000 })
   await page.waitForLoadState('networkidle')
   await page.evaluate(() => document.fonts.ready)
   await expect(page.getByRole('heading', { level: 1 }), new URL(page.url()).pathname + ' settled').toBeVisible()
@@ -44,7 +46,8 @@ try {
   await publicContext.close()
   const seenRoles = new Set()
   for (const account of ledger.accounts) {
-    const api = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
+    if (process.env.PYR_TEST_ROLE && account.role !== process.env.PYR_TEST_ROLE) continue
+    const api = await publicClient()
     const login = await api.auth.signInWithPassword({ email: account.email, password: account.password })
     expect(login.error).toBeNull(); expect(login.data.user.id).toBe(account.user_id)
     const roles = await api.rpc('pyr_unibague_current_roles')
@@ -54,8 +57,9 @@ try {
     await api.auth.signOut()
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 960 } })
     const page = await ctx.newPage(), errors = []
+    diagnosticPage=page
     page.on('pageerror', e => errors.push(e.message))
-    await page.goto(base + '/login')
+    await page.goto(base + (account.role === 'ORGANIZATION' ? '/login/organizaciones' : '/login/institucional'))
     await page.getByLabel('Correo electrónico', { exact: true }).fill(account.email)
     await page.getByLabel('Contraseña', { exact: true }).fill(account.password)
     await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
@@ -95,6 +99,7 @@ try {
   // Optional existing P8 fixtures: populated journeys are read-only.
   if (process.env.PYR_P8_FIXTURES) {
     const f = JSON.parse(await readFile(process.env.PYR_P8_FIXTURES, 'utf8'))
+    if (f.project_ref !== ref) throw Error('Fixtures de proyecto diferente.')
     const routes = {
       admin: ['/app/admin/matching', '/app/admin/assignments', '/app/admin/operations?period=' + f.period.id, '/app/admin/audit'],
       orgA: ['/app/organization/projects/' + f.projects[0].id, '/app/organization/calls', '/app/organization/groups'],
@@ -104,7 +109,7 @@ try {
     for (const [tag, list] of Object.entries(routes)) {
       const u = f.users.find(u => u.tag === tag)
       const ctx = await browser.newContext({ viewport: { width: 1440, height: 960 } }), page = await ctx.newPage()
-      await page.goto(base + '/login'); await page.getByLabel('Correo electrónico', { exact: true }).fill(u.email); await page.getByLabel('Contraseña', { exact: true }).fill(u.password); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
+      await page.goto(base + '/login/institucional'); await page.getByLabel('Correo electrónico', { exact: true }).fill(u.email); await page.getByLabel('Contraseña', { exact: true }).fill(u.password); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
       await page.waitForURL(/\/app\//)
       for (const route of list) {
         await page.goto(base + route); await settle(page); await responsive(page, route); await audit(page, route)
@@ -120,6 +125,10 @@ try {
     }
   }
 } catch (error) {
+  if(diagnosticPage && !diagnosticPage.isClosed()) {
+    await diagnosticPage.screenshot({path:out+'/screens/failure.png',fullPage:true}).catch(()=>{})
+    console.log(JSON.stringify({path:new URL(diagnosticPage.url()).pathname,headingsInDom:await diagnosticPage.locator('h1').count(),headingsInAccessibility:await diagnosticPage.getByRole('heading',{level:1}).count(),loading:await diagnosticPage.locator('.loading-state').count(),pageErrors:await diagnosticPage.locator('[role="alert"]').count()}))
+  }
   results.push({ status: 'FAIL', error: error.message }); console.error(error.message); process.exitCode = 1
 } finally {
   await writeFile(out + '/verification.json', JSON.stringify(results, null, 2)); await browser.close()

@@ -1,5 +1,6 @@
 import { allPages, check, client, FeatureError } from '../../../lib/supabase/feature-helpers'
 import type { Row, Insert, Update } from '../../../lib/supabase/feature-helpers'
+import { catalog } from '../../../lib/supabase/catalog-cache'
 
 export type Student = Row<'PYRUnibague_Students'>
 export function participationLabel(status: string) {
@@ -8,31 +9,36 @@ export function participationLabel(status: string) {
 }
 export type StudentEdit = Pick<Student, 'student_code' | 'academic_program_id' | 'current_semester' | 'bio' | 'desired_work_description' | 'origin_municipality_id' | 'current_municipality_id' | 'profile_links'>
 export type ExperienceEdit = Pick<Row<'PYRUnibague_StudentExperiences'>, 'title' | 'organization_name' | 'description' | 'started_on' | 'ended_on' | 'is_current'>
-export async function loadStudent(userId: string) {
+export type StudentSection = 'all' | 'home' | 'profile' | 'experience' | 'skills' | 'preferences' | 'documents'
+export async function loadStudent(userId: string, section: StudentSection = 'all') {
   const db = await client()
+  const needs = (...sections: StudentSection[]) => section === 'all' || sections.includes(section)
+  async function cached<T>(name: string, query: () => PromiseLike<{ data: T | null; error: Parameters<typeof check>[0] }>) {
+    return catalog(userId, name, async () => { const result = await query(); check(result.error); return result })
+  }
   const results = await Promise.all([
     db.from('PYRUnibague_UserProfiles').select('*').eq('user_id', userId).single(),
     db.from('PYRUnibague_Students').select('*').eq('user_id', userId).maybeSingle(),
-    db.from('PYRUnibague_AcademicPrograms').select('*').order('name'),
-    allPages((from, to) => db.from('PYRUnibague_Municipalities').select('*').order('municipality_name').order('id').range(from, to)).then(data => ({ data, error: null })),
-    db.from('PYRUnibague_Skills').select('*').order('name'),
-    db.from('PYRUnibague_AcademicPeriods').select('*').eq('is_current', true).maybeSingle(),
+    needs('home','profile') ? cached('programs', () => db.from('PYRUnibague_AcademicPrograms').select('id,name,active').order('name')) : { data: [], error: null },
+    needs('profile','preferences') ? cached('municipalities', () => allPages((from, to) => db.from('PYRUnibague_Municipalities').select('id,municipality_name,department_name,active').order('municipality_name').order('id').range(from, to)).then(data => ({ data, error: null }))) : { data: [], error: null },
+    needs('skills') ? cached('skills', () => db.from('PYRUnibague_Skills').select('id,name,aliases,active').order('name')) : { data: [], error: null },
+    needs('home') ? db.from('PYRUnibague_AcademicPeriods').select('*').eq('is_current', true).maybeSingle() : { data: null, error: null },
   ])
   results.forEach(result => check(result.error))
   const [profile, student, programs, municipalities, skills, period] = results
-  let extras = { experiences: [] as Row<'PYRUnibague_StudentExperiences'>[], studentSkills: [] as Row<'PYRUnibague_StudentSkills'>[], interests: [] as Row<'PYRUnibague_StudentInterests'>[], preferences: [] as Row<'PYRUnibague_StudentLocationPreferences'>[], documents: [] as Row<'PYRUnibague_StudentDocuments'>[], participation: null as Row<'PYRUnibague_StudentPeriodParticipations'> | null }
+  let extras = { experiences: [] as Row<'PYRUnibague_StudentExperiences'>[], studentSkills: [] as Row<'PYRUnibague_StudentSkills'>[], interests: [] as Row<'PYRUnibague_StudentInterests'>[], preferences: [] as Row<'PYRUnibague_StudentLocationPreferences'>[], documents: [] as Row<'PYRUnibague_StudentDocuments'>[], participation: null as Row<'PYRUnibague_StudentPeriodParticipations'> | null, participations: [] as Row<'PYRUnibague_StudentPeriodParticipations'>[] }
   if (student.data) {
     const id = student.data.id
     const children = await Promise.all([
-      db.from('PYRUnibague_StudentExperiences').select('*').eq('student_id', id).order('started_on', { ascending: false }),
-      db.from('PYRUnibague_StudentSkills').select('*').eq('student_id', id),
-      db.from('PYRUnibague_StudentInterests').select('*').eq('student_id', id).order('sort_order').order('id'),
-      db.from('PYRUnibague_StudentLocationPreferences').select('*').eq('student_id', id).order('preference_order'),
-      db.from('PYRUnibague_StudentDocuments').select('*').eq('student_id', id).order('created_at', { ascending: false }),
-      db.from('PYRUnibague_StudentPeriodParticipations').select('*').eq('student_id', id),
+      needs('experience') ? db.from('PYRUnibague_StudentExperiences').select('*').eq('student_id', id).order('started_on', { ascending: false }) : { data: [], error: null },
+      needs('home','skills') ? db.from('PYRUnibague_StudentSkills').select('*').eq('student_id', id) : { data: [], error: null },
+      needs('home','skills') ? db.from('PYRUnibague_StudentInterests').select('*').eq('student_id', id).order('sort_order').order('id') : { data: [], error: null },
+      needs('home','preferences') ? db.from('PYRUnibague_StudentLocationPreferences').select('*').eq('student_id', id).order('preference_order') : { data: [], error: null },
+      needs('home','documents') ? db.from('PYRUnibague_StudentDocuments').select('*').eq('student_id', id).order('created_at', { ascending: false }) : { data: [], error: null },
+      needs('home') ? db.from('PYRUnibague_StudentPeriodParticipations').select('*').eq('student_id', id) : { data: [], error: null },
     ])
     children.forEach(result => check(result.error))
-    extras = { experiences: children[0].data ?? [], studentSkills: children[1].data ?? [], interests: children[2].data ?? [], preferences: children[3].data ?? [], documents: children[4].data ?? [], participation: children[5].data?.find(row => row.academic_period_id === period.data?.id) ?? null }
+    extras = { experiences: children[0].data ?? [], studentSkills: children[1].data ?? [], interests: children[2].data ?? [], preferences: children[3].data ?? [], documents: children[4].data ?? [], participation: children[5].data?.find(row => row.academic_period_id === period.data?.id) ?? null, participations: children[5].data ?? [] }
   }
   return { profile: profile.data, student: student.data, programs: programs.data ?? [], municipalities: municipalities.data ?? [], skills: skills.data ?? [], period: period.data, ...extras }
 }

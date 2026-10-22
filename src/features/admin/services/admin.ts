@@ -67,16 +67,18 @@ export async function listOrganizations(page:number,search:string,filters:{statu
 }
 export async function organizationDetail(id:string) {
   const db=await client()
-  const [organization,members,documents,reviews,projects]=await Promise.all([
+  const [organization,members,documents,reviews,projects,submissions]=await Promise.all([
     db.from('PYRUnibague_Organizations').select('*').eq('id',id).single(),
     allPages((a,b)=>db.from('PYRUnibague_OrganizationMembers').select('*').eq('organization_id',id).order('id').range(a,b)),
     allPages((a,b)=>db.from('PYRUnibague_OrganizationDocuments').select('*').eq('organization_id',id).order('created_at',{ascending:false}).order('id').range(a,b)),
     allPages((a,b)=>db.from('PYRUnibague_OrganizationReviews').select('*').eq('organization_id',id).order('created_at',{ascending:false}).order('id').range(a,b)),
     db.from('PYRUnibague_Projects').select('id,name,status',{count:'exact'}).eq('organization_id',id).order('created_at',{ascending:false}).order('id').range(0,24),
+    db.from('PYRUnibague_AuditLogs').select('created_at,actor_user_id').eq('entity_id',id).eq('entity_table','PYRUnibague_Organizations').eq('action','ORGANIZATION_SUBMITTED').order('created_at',{ascending:false}).limit(1),
   ]);check(organization.error)
   check(projects.error)
+  check(submissions.error)
   const profiles=members.length?await db.from('PYRUnibague_UserProfiles').select('*').in('user_id',members.map(row=>row.user_id)):{data:[],error:null};check(profiles.error)
-  return {organization:organization.data!,members:members.map(row=>({...row,profile:profiles.data?.find(profile=>profile.user_id===row.user_id)})),documents,reviews,projects:projects.data??[],projectCount:projects.count??0}
+  return {organization:organization.data!,members:members.map(row=>({...row,profile:profiles.data?.find(profile=>profile.user_id===row.user_id)})),documents,reviews,projects:projects.data??[],projectCount:projects.count??0,submittedAt:submissions.data?.[0]?.created_at??null}
 }
 export async function correctOrganization(id:string,form:FormData) {
   const name=text(form,'name'),website=text(form,'website');if(!name||!validUrl(website))throw new FeatureError('Revisa el nombre legal y la URL http/https.')

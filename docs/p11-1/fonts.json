@@ -1,0 +1,26 @@
+[
+  {
+    "weight": "roboto-400",
+    "before": 123720,
+    "after": 55112,
+    "glyphs": 1036
+  },
+  {
+    "weight": "roboto-500",
+    "before": 123904,
+    "after": 56468,
+    "glyphs": 1036
+  },
+  {
+    "weight": "roboto-600",
+    "before": 124288,
+    "after": 56568,
+    "glyphs": 1036
+  },
+  {
+    "weight": "roboto-700",
+    "before": 124292,
+    "after": 56548,
+    "glyphs": 1036
+  }
+]

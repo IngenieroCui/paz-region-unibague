@@ -1,0 +1,26 @@
+[
+  {
+    "role": "STUDENT",
+    "code": 0,
+    "accounts": 4,
+    "routes": 8
+  },
+  {
+    "role": "ADVISOR",
+    "code": 0,
+    "accounts": 2,
+    "routes": 6
+  },
+  {
+    "role": "ORGANIZATION",
+    "code": 0,
+    "accounts": 2,
+    "routes": 8
+  },
+  {
+    "role": "ADMIN",
+    "code": 0,
+    "accounts": 1,
+    "routes": 15
+  }
+]

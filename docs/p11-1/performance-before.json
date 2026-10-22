@@ -1,0 +1,1166 @@
+{
+  "label": "before",
+  "base": "http://127.0.0.1:5881",
+  "browser": "Edge, headless, 1440x960, no throttling, SW blocked",
+  "results": [
+    {
+      "role": "STUDENT",
+      "operation": "login-to-useful",
+      "ms": 2485,
+      "requests": [
+        {
+          "kind": "auth",
+          "ms": 806,
+          "bytes": 1825
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 397,
+          "bytes": 824
+        },
+        {
+          "kind": "PYRUnibague_UserProfiles",
+          "ms": 309,
+          "bytes": 1137
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 310,
+          "bytes": 1126
+        },
+        {
+          "kind": "PYRUnibague_Skills",
+          "ms": 411,
+          "bytes": 856
+        },
+        {
+          "kind": "PYRUnibague_AcademicPrograms",
+          "ms": 412,
+          "bytes": 866
+        },
+        {
+          "kind": "PYRUnibague_Students",
+          "ms": 722,
+          "bytes": 885
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 1128,
+          "bytes": 867
+        }
+      ]
+    },
+    {
+      "role": "STUDENT",
+      "operation": "cold-document",
+      "sample": 0,
+      "ms": 5295,
+      "transferBytes": 19200,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 265,
+          "bytes": 826
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 263,
+          "bytes": 821
+        },
+        {
+          "kind": "PYRUnibague_UserProfiles",
+          "ms": 269,
+          "bytes": 1133
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 270,
+          "bytes": 1125
+        },
+        {
+          "kind": "PYRUnibague_AcademicPrograms",
+          "ms": 269,
+          "bytes": 866
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 278,
+          "bytes": 866
+        },
+        {
+          "kind": "PYRUnibague_Students",
+          "ms": 1395,
+          "bytes": 883
+        },
+        {
+          "kind": "PYRUnibague_Skills",
+          "ms": 4832,
+          "bytes": 858
+        }
+      ]
+    },
+    {
+      "role": "STUDENT",
+      "operation": "warm-document",
+      "sample": 1,
+      "ms": 1142,
+      "transferBytes": 19200,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 291,
+          "bytes": 823
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 336,
+          "bytes": 818
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 223,
+          "bytes": 1126
+        },
+        {
+          "kind": "PYRUnibague_UserProfiles",
+          "ms": 223,
+          "bytes": 1133
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 221,
+          "bytes": 867
+        },
+        {
+          "kind": "PYRUnibague_AcademicPrograms",
+          "ms": 223,
+          "bytes": 864
+        },
+        {
+          "kind": "PYRUnibague_Students",
+          "ms": 273,
+          "bytes": 884
+        },
+        {
+          "kind": "PYRUnibague_Skills",
+          "ms": 678,
+          "bytes": 857
+        }
+      ]
+    },
+    {
+      "role": "STUDENT",
+      "operation": "warm-document",
+      "sample": 2,
+      "ms": 685,
+      "transferBytes": 19200,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 247,
+          "bytes": 820
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 248,
+          "bytes": 823
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 231,
+          "bytes": 1125
+        },
+        {
+          "kind": "PYRUnibague_UserProfiles",
+          "ms": 234,
+          "bytes": 1135
+        },
+        {
+          "kind": "PYRUnibague_Students",
+          "ms": 282,
+          "bytes": 884
+        },
+        {
+          "kind": "PYRUnibague_AcademicPrograms",
+          "ms": 282,
+          "bytes": 866
+        },
+        {
+          "kind": "PYRUnibague_Skills",
+          "ms": 282,
+          "bytes": 858
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 294,
+          "bytes": 868
+        }
+      ]
+    },
+    {
+      "role": "STUDENT",
+      "operation": "warm-document",
+      "sample": 3,
+      "ms": 1496,
+      "transferBytes": 19200,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 255,
+          "bytes": 821
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 256,
+          "bytes": 823
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 896,
+          "bytes": 870
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 900,
+          "bytes": 1130
+        },
+        {
+          "kind": "PYRUnibague_AcademicPrograms",
+          "ms": 948,
+          "bytes": 865
+        },
+        {
+          "kind": "PYRUnibague_Students",
+          "ms": 1051,
+          "bytes": 882
+        },
+        {
+          "kind": "PYRUnibague_Skills",
+          "ms": 1051,
+          "bytes": 856
+        },
+        {
+          "kind": "PYRUnibague_UserProfiles",
+          "ms": 1111,
+          "bytes": 1132
+        }
+      ]
+    },
+    {
+      "role": "STUDENT",
+      "operation": "warm-document",
+      "sample": 4,
+      "ms": 766,
+      "transferBytes": 19200,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 294,
+          "bytes": 823
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 295,
+          "bytes": 823
+        },
+        {
+          "kind": "PYRUnibague_Skills",
+          "ms": 276,
+          "bytes": 857
+        },
+        {
+          "kind": "PYRUnibague_UserProfiles",
+          "ms": 278,
+          "bytes": 1139
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 279,
+          "bytes": 1129
+        },
+        {
+          "kind": "PYRUnibague_AcademicPrograms",
+          "ms": 278,
+          "bytes": 864
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 327,
+          "bytes": 868
+        },
+        {
+          "kind": "PYRUnibague_Students",
+          "ms": 328,
+          "bytes": 884
+        }
+      ]
+    },
+    {
+      "role": "STUDENT",
+      "operation": "spa-profile",
+      "ms": 393,
+      "requests": [
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 218,
+          "bytes": 871
+        },
+        {
+          "kind": "PYRUnibague_Skills",
+          "ms": 219,
+          "bytes": 858
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 219,
+          "bytes": 1123
+        },
+        {
+          "kind": "PYRUnibague_AcademicPrograms",
+          "ms": 219,
+          "bytes": 866
+        },
+        {
+          "kind": "PYRUnibague_Students",
+          "ms": 225,
+          "bytes": 885
+        },
+        {
+          "kind": "PYRUnibague_UserProfiles",
+          "ms": 228,
+          "bytes": 1133
+        }
+      ]
+    },
+    {
+      "role": "STUDENT",
+      "operation": "spa-home",
+      "ms": 578,
+      "requests": [
+        {
+          "kind": "PYRUnibague_UserProfiles",
+          "ms": 212,
+          "bytes": 1132
+        },
+        {
+          "kind": "PYRUnibague_Students",
+          "ms": 211,
+          "bytes": 882
+        },
+        {
+          "kind": "PYRUnibague_Skills",
+          "ms": 211,
+          "bytes": 859
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 216,
+          "bytes": 869
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 314,
+          "bytes": 1128
+        },
+        {
+          "kind": "PYRUnibague_AcademicPrograms",
+          "ms": 521,
+          "bytes": 864
+        }
+      ]
+    },
+    {
+      "role": "ORGANIZATION",
+      "operation": "login-to-useful",
+      "ms": 1632,
+      "requests": [
+        {
+          "kind": "auth",
+          "ms": 1070,
+          "bytes": 1846
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 453,
+          "bytes": 829
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 319,
+          "bytes": 1072
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 369,
+          "bytes": 1067
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 379,
+          "bytes": 1127
+        },
+        {
+          "kind": "PYRUnibague_OrganizationTypes",
+          "ms": 421,
+          "bytes": 1075
+        },
+        {
+          "kind": "PYRUnibague_Organizations",
+          "ms": 421,
+          "bytes": 1242
+        },
+        {
+          "kind": "PYRUnibague_OrganizationMembers",
+          "ms": 421,
+          "bytes": 1159
+        },
+        {
+          "kind": "PYRUnibague_OrganizationDocuments",
+          "ms": 252,
+          "bytes": 1223
+        },
+        {
+          "kind": "PYRUnibague_OrganizationReviews",
+          "ms": 354,
+          "bytes": 1561
+        }
+      ]
+    },
+    {
+      "role": "ORGANIZATION",
+      "operation": "cold-document",
+      "sample": 0,
+      "ms": 1805,
+      "transferBytes": 19500,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 174,
+          "bytes": 827
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 217,
+          "bytes": 827
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 1039,
+          "bytes": 1126
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 1099,
+          "bytes": 1066
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 1105,
+          "bytes": 1073
+        },
+        {
+          "kind": "PYRUnibague_Organizations",
+          "ms": 1142,
+          "bytes": 1239
+        },
+        {
+          "kind": "PYRUnibague_OrganizationMembers",
+          "ms": 1142,
+          "bytes": 1165
+        },
+        {
+          "kind": "PYRUnibague_OrganizationTypes",
+          "ms": 1194,
+          "bytes": 1074
+        },
+        {
+          "kind": "PYRUnibague_OrganizationDocuments",
+          "ms": 203,
+          "bytes": 1221
+        },
+        {
+          "kind": "PYRUnibague_OrganizationReviews",
+          "ms": 203,
+          "bytes": 1554
+        }
+      ]
+    },
+    {
+      "role": "ORGANIZATION",
+      "operation": "warm-document",
+      "sample": 1,
+      "ms": 827,
+      "transferBytes": 19500,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 227,
+          "bytes": 827
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 226,
+          "bytes": 826
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 184,
+          "bytes": 1123
+        },
+        {
+          "kind": "PYRUnibague_OrganizationTypes",
+          "ms": 228,
+          "bytes": 1075
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 228,
+          "bytes": 1074
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 229,
+          "bytes": 1066
+        },
+        {
+          "kind": "PYRUnibague_Organizations",
+          "ms": 228,
+          "bytes": 1237
+        },
+        {
+          "kind": "PYRUnibague_OrganizationMembers",
+          "ms": 236,
+          "bytes": 1165
+        },
+        {
+          "kind": "PYRUnibague_OrganizationDocuments",
+          "ms": 247,
+          "bytes": 1222
+        },
+        {
+          "kind": "PYRUnibague_OrganizationReviews",
+          "ms": 247,
+          "bytes": 1555
+        }
+      ]
+    },
+    {
+      "role": "ORGANIZATION",
+      "operation": "warm-document",
+      "sample": 2,
+      "ms": 785,
+      "transferBytes": 19500,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 171,
+          "bytes": 827
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 177,
+          "bytes": 827
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 172,
+          "bytes": 1123
+        },
+        {
+          "kind": "PYRUnibague_OrganizationTypes",
+          "ms": 175,
+          "bytes": 1074
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 274,
+          "bytes": 1071
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 275,
+          "bytes": 1068
+        },
+        {
+          "kind": "PYRUnibague_OrganizationMembers",
+          "ms": 275,
+          "bytes": 1158
+        },
+        {
+          "kind": "PYRUnibague_Organizations",
+          "ms": 277,
+          "bytes": 1237
+        },
+        {
+          "kind": "PYRUnibague_OrganizationDocuments",
+          "ms": 200,
+          "bytes": 1220
+        },
+        {
+          "kind": "PYRUnibague_OrganizationReviews",
+          "ms": 200,
+          "bytes": 1561
+        }
+      ]
+    },
+    {
+      "role": "ORGANIZATION",
+      "operation": "warm-document",
+      "sample": 3,
+      "ms": 989,
+      "transferBytes": 19500,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 169,
+          "bytes": 827
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 170,
+          "bytes": 828
+        },
+        {
+          "kind": "PYRUnibague_OrganizationMembers",
+          "ms": 176,
+          "bytes": 1156
+        },
+        {
+          "kind": "PYRUnibague_OrganizationTypes",
+          "ms": 183,
+          "bytes": 1070
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 222,
+          "bytes": 1127
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 480,
+          "bytes": 1067
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 480,
+          "bytes": 1067
+        },
+        {
+          "kind": "PYRUnibague_Organizations",
+          "ms": 479,
+          "bytes": 1238
+        },
+        {
+          "kind": "PYRUnibague_OrganizationReviews",
+          "ms": 165,
+          "bytes": 1556
+        },
+        {
+          "kind": "PYRUnibague_OrganizationDocuments",
+          "ms": 205,
+          "bytes": 1224
+        }
+      ]
+    },
+    {
+      "role": "ORGANIZATION",
+      "operation": "warm-document",
+      "sample": 4,
+      "ms": 787,
+      "transferBytes": 19500,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 183,
+          "bytes": 827
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 184,
+          "bytes": 826
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 228,
+          "bytes": 1069
+        },
+        {
+          "kind": "PYRUnibague_OrganizationMembers",
+          "ms": 227,
+          "bytes": 1158
+        },
+        {
+          "kind": "PYRUnibague_OrganizationTypes",
+          "ms": 227,
+          "bytes": 1072
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 227,
+          "bytes": 1131
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 236,
+          "bytes": 1069
+        },
+        {
+          "kind": "PYRUnibague_Organizations",
+          "ms": 276,
+          "bytes": 1234
+        },
+        {
+          "kind": "PYRUnibague_OrganizationReviews",
+          "ms": 169,
+          "bytes": 1557
+        },
+        {
+          "kind": "PYRUnibague_OrganizationDocuments",
+          "ms": 204,
+          "bytes": 1227
+        }
+      ]
+    },
+    {
+      "role": "ORGANIZATION",
+      "operation": "spa-profile",
+      "ms": 904,
+      "requests": [
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 229,
+          "bytes": 1067
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 229,
+          "bytes": 1066
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 229,
+          "bytes": 1125
+        },
+        {
+          "kind": "PYRUnibague_OrganizationMembers",
+          "ms": 229,
+          "bytes": 1157
+        },
+        {
+          "kind": "PYRUnibague_Organizations",
+          "ms": 231,
+          "bytes": 1238
+        },
+        {
+          "kind": "PYRUnibague_OrganizationTypes",
+          "ms": 239,
+          "bytes": 1074
+        },
+        {
+          "kind": "PYRUnibague_OrganizationReviews",
+          "ms": 194,
+          "bytes": 1553
+        },
+        {
+          "kind": "PYRUnibague_OrganizationDocuments",
+          "ms": 194,
+          "bytes": 1226
+        },
+        {
+          "kind": "PYRUnibague_OrganizationContacts",
+          "ms": 243,
+          "bytes": 1232
+        }
+      ]
+    },
+    {
+      "role": "ORGANIZATION",
+      "operation": "spa-home",
+      "ms": 894,
+      "requests": [
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 196,
+          "bytes": 1069
+        },
+        {
+          "kind": "PYRUnibague_OrganizationMembers",
+          "ms": 195,
+          "bytes": 1157
+        },
+        {
+          "kind": "pyr_unibague_external_registration_ready",
+          "ms": 196,
+          "bytes": 1067
+        },
+        {
+          "kind": "PYRUnibague_Organizations",
+          "ms": 196,
+          "bytes": 1235
+        },
+        {
+          "kind": "PYRUnibague_Municipalities",
+          "ms": 196,
+          "bytes": 1128
+        },
+        {
+          "kind": "PYRUnibague_OrganizationTypes",
+          "ms": 196,
+          "bytes": 1072
+        },
+        {
+          "kind": "PYRUnibague_OrganizationDocuments",
+          "ms": 164,
+          "bytes": 1219
+        },
+        {
+          "kind": "PYRUnibague_OrganizationReviews",
+          "ms": 202,
+          "bytes": 1556
+        }
+      ]
+    },
+    {
+      "role": "ADVISOR",
+      "operation": "login-to-useful",
+      "ms": 821,
+      "requests": [
+        {
+          "kind": "auth",
+          "ms": 470,
+          "bytes": 1794
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 250,
+          "bytes": 821
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 185,
+          "bytes": 889
+        }
+      ]
+    },
+    {
+      "role": "ADVISOR",
+      "operation": "cold-document",
+      "sample": 0,
+      "ms": 633,
+      "transferBytes": 18300,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 170,
+          "bytes": 824
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 180,
+          "bytes": 822
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 222,
+          "bytes": 891
+        }
+      ]
+    },
+    {
+      "role": "ADVISOR",
+      "operation": "warm-document",
+      "sample": 1,
+      "ms": 556,
+      "transferBytes": 18300,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 174,
+          "bytes": 823
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 209,
+          "bytes": 823
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 235,
+          "bytes": 889
+        }
+      ]
+    },
+    {
+      "role": "ADVISOR",
+      "operation": "warm-document",
+      "sample": 2,
+      "ms": 480,
+      "transferBytes": 18300,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 174,
+          "bytes": 824
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 184,
+          "bytes": 821
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 188,
+          "bytes": 889
+        }
+      ]
+    },
+    {
+      "role": "ADVISOR",
+      "operation": "warm-document",
+      "sample": 3,
+      "ms": 515,
+      "transferBytes": 18300,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 167,
+          "bytes": 821
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 212,
+          "bytes": 819
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 177,
+          "bytes": 890
+        }
+      ]
+    },
+    {
+      "role": "ADVISOR",
+      "operation": "warm-document",
+      "sample": 4,
+      "ms": 461,
+      "transferBytes": 18300,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 162,
+          "bytes": 821
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 167,
+          "bytes": 820
+        },
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 183,
+          "bytes": 888
+        }
+      ]
+    },
+    {
+      "role": "ADVISOR",
+      "operation": "spa-profile",
+      "ms": 760,
+      "requests": [
+        {
+          "kind": "auth",
+          "ms": 374,
+          "bytes": 1162
+        },
+        {
+          "kind": "PYRUnibague_StaffProfiles",
+          "ms": 210,
+          "bytes": 1138
+        },
+        {
+          "kind": "PYRUnibague_UserProfiles",
+          "ms": 306,
+          "bytes": 1021
+        }
+      ]
+    },
+    {
+      "role": "ADVISOR",
+      "operation": "spa-home",
+      "ms": 267,
+      "requests": [
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 183,
+          "bytes": 891
+        }
+      ]
+    },
+    {
+      "role": "ADMIN",
+      "operation": "login-to-useful",
+      "ms": 1086,
+      "requests": [
+        {
+          "kind": "auth",
+          "ms": 697,
+          "bytes": 1838
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 253,
+          "bytes": 821
+        },
+        {
+          "kind": "pyr_unibague_admin_dashboard",
+          "ms": 395,
+          "bytes": 978
+        }
+      ]
+    },
+    {
+      "role": "ADMIN",
+      "operation": "cold-document",
+      "sample": 0,
+      "ms": 703,
+      "transferBytes": 22200,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 220,
+          "bytes": 818
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 222,
+          "bytes": 817
+        },
+        {
+          "kind": "pyr_unibague_admin_dashboard",
+          "ms": 264,
+          "bytes": 979
+        }
+      ]
+    },
+    {
+      "role": "ADMIN",
+      "operation": "warm-document",
+      "sample": 1,
+      "ms": 565,
+      "transferBytes": 22200,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 180,
+          "bytes": 819
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 184,
+          "bytes": 819
+        },
+        {
+          "kind": "pyr_unibague_admin_dashboard",
+          "ms": 248,
+          "bytes": 981
+        }
+      ]
+    },
+    {
+      "role": "ADMIN",
+      "operation": "warm-document",
+      "sample": 2,
+      "ms": 573,
+      "transferBytes": 22200,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 180,
+          "bytes": 817
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 220,
+          "bytes": 820
+        },
+        {
+          "kind": "pyr_unibague_admin_dashboard",
+          "ms": 260,
+          "bytes": 982
+        }
+      ]
+    },
+    {
+      "role": "ADMIN",
+      "operation": "warm-document",
+      "sample": 3,
+      "ms": 526,
+      "transferBytes": 22200,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 170,
+          "bytes": 819
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 178,
+          "bytes": 818
+        },
+        {
+          "kind": "pyr_unibague_admin_dashboard",
+          "ms": 206,
+          "bytes": 975
+        }
+      ]
+    },
+    {
+      "role": "ADMIN",
+      "operation": "warm-document",
+      "sample": 4,
+      "ms": 524,
+      "transferBytes": 22200,
+      "requests": [
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 184,
+          "bytes": 818
+        },
+        {
+          "kind": "pyr_unibague_current_roles",
+          "ms": 218,
+          "bytes": 817
+        },
+        {
+          "kind": "pyr_unibague_admin_dashboard",
+          "ms": 193,
+          "bytes": 977
+        }
+      ]
+    },
+    {
+      "role": "ADMIN",
+      "operation": "spa-profile",
+      "ms": 411,
+      "requests": [
+        {
+          "kind": "PYRUnibague_AcademicPeriods",
+          "ms": 313,
+          "bytes": 905
+        }
+      ]
+    },
+    {
+      "role": "ADMIN",
+      "operation": "spa-home",
+      "ms": 416,
+      "requests": [
+        {
+          "kind": "pyr_unibague_admin_dashboard",
+          "ms": 319,
+          "bytes": 979
+        }
+      ]
+    }
+  ]
+}

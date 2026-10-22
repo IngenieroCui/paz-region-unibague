@@ -7,6 +7,7 @@ export default function StatusPage({ unauthorized = false }: { unauthorized?: bo
   const Icon = unauthorized ? ShieldCheck : Signpost
   return <section className="status-page"><Icon size={42} aria-hidden="true" /><p className="eyebrow">{unauthorized ? 'ACCESO RESTRINGIDO' : 'ERROR 404'}</p>
     <h1>{unauthorized ? 'Este espacio requiere autorización' : 'No encontramos esta página'}</h1>
-    <p>{unauthorized ? 'Tu cuenta necesita un rol autorizado para acceder a este espacio.' : 'La dirección puede haber cambiado. Puedes regresar al inicio para continuar.'}</p>
+    <p>{unauthorized ? auth.session && !auth.roles.length ? 'Tu acceso a Paz y Región todavía no ha sido habilitado' : 'Tu cuenta necesita un rol autorizado para acceder a este espacio.' : 'La dirección puede haber cambiado. Puedes regresar al inicio para continuar.'}</p>
+    {unauthorized && auth.session && !auth.roles.length && <Link className="text-link" to="/registro/organizacion">Si solicitaste una cuenta externa, retoma el registro de tu organización</Link>}
     <Link className="button button--primary" to={unauthorized ? '/login' : '/'}><ArrowLeft size={18} aria-hidden="true" />{unauthorized ? 'Ir al acceso' : 'Volver al inicio'}</Link>{unauthorized && auth.session && <Logout />}</section>
 }

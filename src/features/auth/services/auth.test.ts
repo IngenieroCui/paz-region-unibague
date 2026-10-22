@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 import { signIn, signOut, recoverPassword, updatePassword, completeCallback, currentRoles, workspaceForRoles } from './auth'
-const mocks = vi.hoisted(() => ({ rpc: vi.fn(), signInWithPassword: vi.fn(), signOut: vi.fn(), resetPasswordForEmail: vi.fn(), updateUser: vi.fn(), exchangeCodeForSession: vi.fn(), unsubscribe: vi.fn(), listener: undefined as undefined | ((event: string) => void) }))
-vi.mock('../../../lib/supabase/client', () => ({ getSupabase: async () => ({ rpc: mocks.rpc, auth: { ...mocks,
+const mocks = vi.hoisted(() => ({ rpc: vi.fn(), from: vi.fn(), getUser: vi.fn(), signInWithPassword: vi.fn(), signOut: vi.fn(), resetPasswordForEmail: vi.fn(), updateUser: vi.fn(), exchangeCodeForSession: vi.fn(), unsubscribe: vi.fn(), listener: undefined as undefined | ((event: string) => void) }))
+vi.mock('../../../lib/supabase/client', () => ({ getSupabase: async () => ({ rpc: mocks.rpc, from: mocks.from, auth: { ...mocks,
   onAuthStateChange: (listener: typeof mocks.listener) => { mocks.listener = listener; return { data: { subscription: { unsubscribe: mocks.unsubscribe } } } },
 } }) }))
 beforeEach(() => { vi.clearAllMocks(); for (const method of [mocks.signInWithPassword, mocks.signOut, mocks.resetPasswordForEmail, mocks.updateUser]) method.mockResolvedValue({ error: null }) })
@@ -48,4 +48,22 @@ it('accepts ADVISOR only from the persisted-role RPC and preserves multirole sel
   expect(workspaceForRoles(['ADMIN', 'ADVISOR'])).toBe('/select-role')
   mocks.rpc.mockResolvedValue({ data: ['COORDINATOR'], error: null })
   await expect(currentRoles()).rejects.toThrow('verification')
+})
+it('validates Google identity without duplicating profiles or granting roles', async () => {
+  mocks.exchangeCodeForSession.mockResolvedValue({ data: { session: {} }, error: null })
+  mocks.getUser.mockResolvedValue({ data: { user: { id: 'existing', email: 'authorized@unibague.edu.co', email_confirmed_at: '2026-10-16', identities: [{ provider: 'google', identity_data: { email_verified: true, email: 'authorized@unibague.edu.co' } }] } }, error: null })
+  await expect(completeCallback('?code=google-existing&flow=institutional')).resolves.toBe(false)
+  mocks.rpc.mockResolvedValue({ data: [], error: null }); expect(await currentRoles()).toEqual([])
+  expect(workspaceForRoles([])).toBe('/unauthorized'); expect(mocks.from).not.toHaveBeenCalled()
+})
+it.each([
+  { email: 'outsider@external.test', email_confirmed_at: 'now', identities: [{ provider: 'google', identity_data: { email_verified: true, email: 'outsider@external.test' } }] },
+  { email: 'authorized@unibague.edu.co', email_confirmed_at: 'now', identities: [{ provider: 'email' }] },
+  { email: 'authorized@unibague.edu.co', email_confirmed_at: 'now', identities: [{ provider: 'google', identity_data: { email_verified: false } }] },
+  { email: 'pyrprueba.administrador@unibague.edu.co', email_confirmed_at: 'now', identities: [{ provider: 'google', identity_data: { email_verified: true, email: 'pyrprueba.administrador@unibague.edu.co' } }] },
+])('rejects an unauthorized Google identity and discards its session', async user => {
+  mocks.exchangeCodeForSession.mockResolvedValue({ data: { session: {} }, error: null })
+  mocks.getUser.mockResolvedValue({ data: { user }, error: null })
+  await expect(completeCallback('?code=google-invalid-'+encodeURIComponent(JSON.stringify(user))+'&flow=institutional')).rejects.toThrow('identity')
+  expect(mocks.signOut).toHaveBeenCalledOnce(); expect(mocks.from).not.toHaveBeenCalled()
 })

@@ -2,6 +2,10 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
+  // Exact public names only; Node administrative credentials live in work/admin.env.
+  envPrefix: ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_PYR_DEMO',
+    'VITE_INSTITUTIONAL_GOOGLE_ENABLED', 'VITE_EXTERNAL_REGISTRATION_ENABLED',
+    'VITE_TURNSTILE_SITE_KEY', 'VITE_REGISTRATION_TERMS_URL', 'VITE_REGISTRATION_PRIVACY_URL'],
   plugins: [
     react(),
     VitePWA({
@@ -20,7 +24,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html}', 'logos/web/*.{png,ico}', 'brand/*.png', 'fonts/*.ttf'],
+        globPatterns: ['**/*.{js,css,html}', 'logos/web/*.{png,ico}', 'brand/*.png', 'fonts/*.woff2'],
         cleanupOutdatedCaches: true,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/dev(?:\/|$)/, /^\/auth(?:\/|$)/, /^\/reset-password(?:\/|$)/, /^\/api(?:\/|$)/],

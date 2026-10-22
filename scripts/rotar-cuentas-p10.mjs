@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises'
 import assert from 'node:assert/strict'
 import { adminClient, ledger, ledgerPath, check, login, save } from './p10-context.mjs'
 if(!process.argv.includes('--apply')) throw Error('Requiere --apply: rota exclusivamente las nueve identidades P9 conocidas.')
-const admin=await adminClient(), targets=new Set(ledger.accounts.map(a=>a.user_id))
+const admin=await adminClient({testInventory:true}), targets=new Set(ledger.accounts.map(a=>a.user_id))
 async function allUsers() {
  const users=[]
  for(let page=1;page<=100;page++) { const data=check(await admin.auth.admin.listUsers({page,perPage:1000}),'Inventario Auth');users.push(...data.users);if(data.users.length<1000)return users }
@@ -36,4 +36,4 @@ for(const a of ledger.accounts) {
 const after=await allUsers()
 const outsiders=users=>users.filter(u=>!targets.has(u.id)).map(u=>({id:u.id,email:u.email,updated_at:u.updated_at,app_metadata:u.app_metadata,user_metadata:u.user_metadata})).sort((a,b)=>a.id.localeCompare(b.id))
 assert.ok(JSON.stringify(outsiders(after))===JSON.stringify(outsiders(before)),'Las identidades ajenas deben permanecer sin modificaciones')
-await save('rotation-results.json',{accounts:report,unrelated_users_unchanged:true,unrelated_user_count:outsiders(after).length,note:'Revocados refresh tokens; los JWT ya emitidos pueden durar hasta su expiración.'})
+await save('rotation-results.json',{accounts:report,inventory_scope:'pyrprueba. only',unrelated_prefix_users_unchanged:true,unrelated_prefix_user_count:outsiders(after).length,note:'No se enumeran ni modifican cuentas fuera del prefijo. Revocados refresh tokens; los JWT ya emitidos pueden durar hasta su expiración.'})

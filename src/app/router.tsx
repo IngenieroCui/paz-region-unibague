@@ -6,7 +6,7 @@ import { RequireRole } from '../features/auth/RequireRole'
 import { roles, rolePaths } from '../config/app'
 import RouteError from './RouteError'
 
-import { RouteRoot, Landing, Auth, Status, Callback, Reset, SelectRole } from './RouteRoot'
+import { RouteRoot, Landing, Auth, AccessSelection, OrganizationRegistration, Status, Callback, Reset, SelectRole } from './RouteRoot'
 
 const studentPage = async () => ({ Component: (await import('../features/students/StudentWorkspace')).default })
 const studentAssignmentPage = async () => ({ Component: (await import('../features/assignments/StudentAssignment')).StudentAssignmentPage })
@@ -34,7 +34,10 @@ function moduleRoutes(role: typeof roles[number]): RouteObject[] {
 export function createAppRoutes(preview = import.meta.env.DEV): RouteObject[] {
   return [{ element: <RouteRoot />, errorElement: <RouteError />, children: [
     { element: <PublicLayout />, children: [
-      { index: true, element: <Landing /> }, { path: 'login', element: <Auth /> },
+      { index: true, element: <Landing /> }, { path: 'login', element: <AccessSelection /> },
+      { path: 'login/institucional', element: <Auth audience="institutional" /> },
+      { path: 'login/organizaciones', element: <Auth audience="organization" /> },
+      { path: 'registro/organizacion', element: <OrganizationRegistration /> },
       { path: 'forgot-password', element: <Auth recovery /> }, { path: 'unauthorized', element: <Status unauthorized /> },
       { path: 'auth/callback', element: <Callback /> }, { path: 'reset-password', element: <Reset /> },
       { path: 'select-role', element: <SelectRole /> }, { path: '*', element: <Status /> },

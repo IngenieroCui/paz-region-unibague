@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-10-20T14:06:43.174Z",
+  "project": "unxiuzkhxlzneywtnuvf",
+  "environment_files": [
+    ".env.local"
+  ],
+  "http_status": 200,
+  "google_enabled": false,
+  "email_enabled": true,
+  "signup_disabled": false,
+  "mailer_autoconfirm": true,
+  "frontend_google_enabled": false,
+  "frontend_registration_enabled": false,
+  "administrative_connection": "See accounts.json and real-validation.json; this preflight is public/read-only",
+  "smtp": "NOT VERIFIED; public registration must remain closed",
+  "scope": "public settings only; TEST account mutations recorded separately"
+}

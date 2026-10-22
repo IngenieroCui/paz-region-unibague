@@ -7,7 +7,7 @@ const mid = '20000000-0000-0000-0000-000000000001'
 const now = '2026-10-01T12:00:00Z'
 export async function p3Api(page: Page, role: 'STUDENT' | 'ORGANIZATION', options: { onboarding?: boolean; emptyCatalogs?: boolean; readOnly?: boolean } = {}) {
   const tables: Record<string, TestRow[]> = {}
-  const names = ['UserProfiles','Students','AcademicPrograms','Municipalities','Skills','AcademicPeriods','StudentPeriodParticipations','StudentExperiences','StudentSkills','StudentInterests','StudentLocationPreferences','StudentDocuments','Organizations','OrganizationMembers','OrganizationTypes','OrganizationDocuments','OrganizationReviews']
+  const names = ['UserProfiles','Students','AcademicPrograms','Municipalities','Skills','AcademicPeriods','StudentPeriodParticipations','StudentExperiences','StudentSkills','StudentInterests','StudentLocationPreferences','StudentDocuments','Organizations','OrganizationMembers','OrganizationTypes','OrganizationDocuments','OrganizationReviews','SystemConfigurations','OrganizationContacts']
   for (const name of names) tables['PYRUnibague_' + name] = []
   const table = (name: string) => tables['PYRUnibague_' + name]!
   table('UserProfiles').push({ user_id: uid, display_name: 'Cuenta de prueba', created_at: now, updated_at: now })
@@ -77,5 +77,5 @@ export async function p3Api(page: Page, role: 'STUDENT' | 'ORGANIZATION', option
   return { tables, calls, uid, sid, oid, mid, table, failNext: (name: string) => { failNextTable = 'PYRUnibague_' + name } }
 }
 export async function p3Login(page: Page) {
-  await page.goto('/login'); await page.getByLabel('Correo electrónico').fill('test@example.test'); await page.getByLabel('Contraseña', { exact: true }).fill('password123'); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
+  await page.goto('/login/organizaciones'); await page.getByLabel('Correo electrónico').fill('test@example.test'); await page.getByLabel('Contraseña', { exact: true }).fill('password123'); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
 }

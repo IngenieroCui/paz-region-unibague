@@ -5,12 +5,32 @@ import { studentCompleteness } from './completeness'
 import type { ExperienceEdit, StudentData, StudentEdit } from './students'
 import { allPages, validUrl } from '../../../lib/supabase/feature-helpers'
 const clientMock = vi.hoisted(() => ({ get: vi.fn() }))
+import { clearCatalogCache } from '../../../lib/supabase/catalog-cache'
 vi.mock('../../../lib/supabase/client', () => ({ getSupabase: clientMock.get }))
 let mock: ReturnType<typeof mockFeatureClient>
 const studentEdit: StudentEdit = { student_code: 'A1', academic_program_id: null, current_semester: 1, bio: 'Perfil', desired_work_description: 'Trabajo', origin_municipality_id: null, current_municipality_id: null, profile_links: {} }
 const experience: ExperienceEdit = { title: 'Experiencia', organization_name: 'Entidad', description: null, started_on: '2026-01-01', ended_on: '2026-02-01', is_current: false }
-beforeEach(() => { mock = mockFeatureClient(); clientMock.get.mockResolvedValue(mock.db) })
+beforeEach(() => { clearCatalogCache(); mock = mockFeatureClient(); clientMock.get.mockResolvedValue(mock.db) })
 describe('Student data workflows', () => {
+  it('loads documents without unrelated catalogs or experience requests', async () => {
+    mock.enqueue({user_id:'u'}); mock.enqueue({id:'s'}); mock.enqueue([])
+    const data = await loadStudent('u','documents')
+    expect(data.documents).toEqual([])
+    expect([...new Set(mock.calls.map(call=>call.table))]).toEqual(['PYRUnibague_UserProfiles','PYRUnibague_Students','PYRUnibague_StudentDocuments'])
+  })
+  it('loads home without municipalities, skill catalog or experiences and keeps history', async () => {
+    mock.enqueue({user_id:'u'});mock.enqueue({id:'s'});mock.enqueue([]);mock.enqueue({id:'current'})
+    for(let i=0;i<4;i++) mock.enqueue([])
+    mock.enqueue([{id:'old',academic_period_id:'old-period',status:'completed'},{id:'now',academic_period_id:'current',status:'active'}])
+    const data=await loadStudent('u','home')
+    expect(data.participations).toHaveLength(2);expect(data.participation?.id).toBe('now')
+    expect(mock.calls.some(c=>/Municipalities|Experiences|^PYRUnibague_Skills$/.test(c.table))).toBe(false)
+  })
+  it('saves a nontechnology profile without links, bio or work experience', async () => {
+    mock.enqueue({id:'s'});mock.enqueue({user_id:'u'})
+    await saveStudent('u',undefined,'Estudiante de Derecho',{...studentEdit,academic_program_id:'law',bio:null,desired_work_description:null,profile_links:{}})
+    expect(mock.calls.find(c=>c.operation==='insert')?.args[0]).toMatchObject({academic_program_id:'law',profile_links:{},bio:null})
+  })
   it('loads a missing student without creating data or inventing catalogs', async () => {
     mock.enqueue({ user_id: 'u', display_name: 'Nombre' }); mock.enqueue(null); mock.enqueue([]); mock.enqueue([]); mock.enqueue([]); mock.enqueue(null)
     const data = await loadStudent('u')

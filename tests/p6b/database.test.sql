@@ -14,7 +14,7 @@ insert into public."PYRUnibague_UserRoles"(user_id,role_id)
 select pg_temp.id(n),r.id from generate_series(5,8) n cross join public."PYRUnibague_Roles" r where r.code='STUDENT';
 insert into public."PYRUnibague_AcademicPeriods"(id,code,name,status) values(pg_temp.id(10),'P6B-A','Periodo A','test'),(pg_temp.id(11),'P6B-B','Periodo B','test');
 insert into public."PYRUnibague_AcademicPrograms"(id,code,name) values(pg_temp.id(12),'P6B-S','Sistemas'),(pg_temp.id(13),'P6B-M','Mecánica');
-insert into public."PYRUnibague_Organizations"(id,legal_name,status) values(pg_temp.id(20),'Institución A','approved'),(pg_temp.id(21),'Institución B','approved');
+insert into public."PYRUnibague_Organizations"(id,legal_name,status,verified_at) values(pg_temp.id(20),'Institución A','approved',now()),(pg_temp.id(21),'Institución B','approved',now());
 insert into public."PYRUnibague_OrganizationMembers"(organization_id,user_id,membership_role,can_manage,status) values
  (pg_temp.id(20),pg_temp.id(2),'manager',true,'active'),(pg_temp.id(21),pg_temp.id(3),'manager',true,'active'),(pg_temp.id(20),pg_temp.id(4),'reader',false,'active');
 insert into public."PYRUnibague_Projects"(id,organization_id,academic_period_id,name,status,zone_type) values
