@@ -13,12 +13,12 @@ select ok(not has_function_privilege('anon','public.pyr_unibague_start_external_
 select ok(not has_function_privilege('authenticated','pyr_unibague_private.before_external_user_created(jsonb)','execute'),'browser cannot call Auth hook');
 select ok(has_function_privilege('supabase_auth_admin','pyr_unibague_private.before_external_user_created(jsonb)','execute'),'Auth server can call hook');
 select ok(pyr_unibague_private.before_external_user_created('{"user":{"email":"a@external.test","app_metadata":{"provider":"email"}}}') ? 'error','closed hook refuses new accounts');
-insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values
- (pg_temp.p11_id(1),'p11-admin@external.test',now(),'{}'),
- (pg_temp.p11_id(2),'p11-external@external.test',now(),'{"role":"ADMIN"}'),
- (pg_temp.p11_id(3),'p11-unconfirmed@external.test',null,'{}'),
- (pg_temp.p11_id(4),'p11-student@unibague.edu.co',now(),'{}'),
- (pg_temp.p11_id(5),'p11-other@external.test',now(),'{}');
+insert into auth.users(id,email,email_confirmed_at,created_at,raw_user_meta_data) values
+ (pg_temp.p11_id(1),'p11-admin@external.test',now(),now(),'{}'),
+ (pg_temp.p11_id(2),'p11-external@external.test',now(),now(),'{"role":"ADMIN"}'),
+ (pg_temp.p11_id(3),'p11-unconfirmed@external.test',null,now(),'{}'),
+ (pg_temp.p11_id(4),'p11-student@unibague.edu.co',now(),now(),'{}'),
+ (pg_temp.p11_id(5),'p11-other@external.test',now(),now(),'{}');
 insert into auth.identities(user_id,provider,provider_id,identity_data)
  select pg_temp.p11_id(n),'email',pg_temp.p11_id(n)::text,'{}' from generate_series(1,5) n;
 insert into "PYRUnibague_UserRoles"(user_id,role_id)
