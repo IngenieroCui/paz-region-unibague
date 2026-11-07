@@ -12,3 +12,6 @@
   nuevos se registrarán con sus fechas reales.
 - El repositorio original no se modifica. La configuración de demo usará
   servicios propios y datos ficticios, separados del entorno original.
+
+Demo: https://paz-region-unibague.vercel.app
+La base de demostración pertenece a la organización Supabase del propietario.
