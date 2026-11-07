@@ -28,7 +28,8 @@ export function MatchingWorkspace() {
   const period = periodOverride ?? metadata.data?.periods.find(p => p.is_current)?.id ?? metadata.data?.periods[0]?.id ?? ''
   const runLoader = useCallback(() => loadRuns(period, runPage), [period, runPage])
   const runs = useMatchingResource(runLoader, Boolean(period))
-  const selected = runs.data?.rows.find(r => r.id === selectedId) ?? runs.data?.rows[0] ?? null
+  // Do not display an unrelated historical run while the requested run is loading.
+  const selected = selectedId ? runs.data?.rows.find(r => r.id === selectedId) ?? null : runs.data?.rows[0] ?? null
   const configOptions = metadata.data?.configurations.filter(c => c.is_active && (!c.academic_period_id || c.academic_period_id === period)) ?? []
   const config = configOptions.find(c => c.id === configurationId)
   const blockedByRunning = runs.data?.rows.some(r => r.matching_configuration_id === config?.id && r.status === 'running') ?? false
@@ -59,7 +60,7 @@ export function MatchingWorkspace() {
       {runs.data && <><ul className="module-list">{runs.data.rows.map(r => <li key={r.id}><div><p>{new Date(r.created_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })} · {runStateLabel(r.status)}</p><p>{data.configurations.find(c => c.id === r.matching_configuration_id)?.name ?? r.matching_configuration_id}</p></div><Button variant="secondary" aria-pressed={selected?.id === r.id} onClick={() => { setSelected(r.id); setTab('results') }}>Ver ejecución</Button></li>)}</ul>
       <div className="module-actions"><Button variant="secondary" disabled={!runPage} onClick={() => { setRunPage(runPage - 1); setSelected('') }}>Historial anterior</Button><Button variant="secondary" disabled={(runPage + 1) * PAGE_SIZE >= runs.data.count} onClick={() => { setRunPage(runPage + 1); setSelected('') }}>Historial siguiente</Button></div></>}
     </Card>}
-    {tab === 'results' && (selected ? <><Card><RunSummary run={selected} /></Card><MatchingResults key={selected.id} run={selected} /></> : <EmptyState title="Sin ejecución seleccionada">Ejecuta matching o selecciona un resultado del historial.</EmptyState>)}
+    {tab === 'results' && !runs.loading && !runs.error && (selected ? <><Card><RunSummary run={selected} /></Card><MatchingResults key={selected.id} run={selected} /></> : <EmptyState title={selectedId ? 'Ejecución no encontrada en esta página' : 'Sin ejecución seleccionada'}>{selectedId ? 'Actualiza el historial o selecciona otra ejecución.' : 'Ejecuta matching o selecciona un resultado del historial.'}</EmptyState>)}
   </div>
 }
 function RunSummary({ run }: { run: RunRow }) {
