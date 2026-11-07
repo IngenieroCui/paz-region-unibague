@@ -1,121 +1,50 @@
-# P12 - Seeder y demostración real
+# Demo completa · Paz y Región
 
-20 de octubre de 2026, America/Bogota. **Estado: PARCIAL / BLOQUEADO. P12 no cumple todavía su criterio final.**
+Esta ejecución usa exclusivamente `paz-region-demo` (`irykykwhvattrduuqxhj`). No se conecta al proyecto institucional. Los identificadores Auth los asigna Auth Admin; los registros nuevos se crean con UUID nuevos y se conservan en un manifiesto privado. Los catálogos y el periodo presentes en esta base demo se consultan por sus claves, sin trasladar UUID del sistema institucional.
 
-Base: `origin/dev` verificado por fetch, commit `688c2b5`. Rama `feat/p12-complete-demo-seed`. Destino único: Supabase `unxiuzkhxlzneywtnuvf`. No se usó el proyecto anterior, no se crearon identidades ni se cambiaron roles o contraseñas.
+## Ejecución idempotente
 
-## Estado remoto y límites
-
-La Secret API Key local permite Auth Admin, REST y Storage desde Node. No concede permisos de Management/SQL ni despliegue de Edge Functions. El conector de Supabase respondió `You do not have permission to perform this action` al consultar el proyecto, migraciones y funciones.
-
-OpenAPI administrativo expone 45 tablas PYR y 29 RPC PYR. Se inspeccionaron los contratos REST actuales y las migraciones locales; **no se certificó el catálogo SQL remoto de FK, triggers, RLS ni el historial de migraciones**. El archivo privado de contratos se limita al prefijo PYR; el proyecto contiene otras aplicaciones que no son parte del escenario.
-
-Faltan las tres RPC de P11: `pyr_unibague_external_registration_ready`, `pyr_unibague_start_external_onboarding`, `pyr_unibague_submit_organization`. `GET /functions/v1/matching-run` autenticado devuelve 404 `NOT_FOUND`. Se mantienen bloqueadas publicación, matching, confirmaciones y equipo final. No se insertan candidatos, recomendaciones ni notificaciones artificiales; no se confirma manualmente para sustituir el algoritmo.
-
-Migraciones locales que requieren cotejo y aplicación por un canal SQL autorizado, en orden y sin reset:
-
-1. `20261016154045_p11_dual_auth_organizations.sql`
-2. `20261020122421_p11_review_safety.sql`
-3. `20261020134931_p11_1_organization_identity.sql`
-
-Después se debe desplegar `matching-run` mediante el mecanismo autorizado del proyecto actual y comprobar su autenticación. El seeder no despliega funciones ni aplica DDL con la Secret Key. Si existe un `SUPABASE_ACCESS_TOKEN` autorizado en el entorno privado, el preflight consulta el historial por Management; nunca lo imprime. No es necesario ese token para las etapas independientes ya ejecutadas.
-
-## Datos reales del escenario
-
-Identificador estable: `PYR-DEMO-2026B`, presente en descripciones, nombres de documentos, entidades del piloto y manifiesto local. Los UUID actuales permanecen en `work/p12/manifest.local.json`, ignorado por Git.
-
-| Entidad | Resultado persistido |
-| --- | --- |
-| Periodo | `TEST-PYR-2026B`, nombre `2026B — Piloto TEST`, activo y actual; no existía periodo actual |
-| Programas | Ingeniería de Sistemas, Comunicación Social y Derecho, todos etiquetados TEST; no son un catálogo oficial |
-| Territorio/tipo | Municipio y tipo ficticios P11 reutilizados; segundo municipio TEST creado |
-| Habilidades | Tres habilidades interdisciplinarias TEST |
-| Estudiantes | Cuatro perfiles distintos, semestres 8/9, presentación, territorio, habilidades, intereses, preferencias y PDF privado |
-| Participación | Cuatro participaciones activas; estudiantes 1/2/3 elegibles, estudiante 4 no elegible; no se inventó un motivo institucional |
-| Organización A | Reutiliza `TEST P11 Organización 2`, cuenta `entidad2`, ya aprobada por ADMIN independiente |
-| Organización B | Reutiliza `TEST P11 Organización 1`, cuenta `entidad`, pasa de rechazada a cambios solicitados mediante la revisión P4 existente; conserva historial y observación TEST |
-| Contactos | Representante principal e interlocutor adicional por organización; contactos anteriores conservados |
-| Documentos | Cuatro CV y dos constancias organizacionales P12 sintéticos, PDF legibles, buckets privados y metadata vinculada |
-| Asesor 1 | Cuenta `asesor`: organización A y estudiante 1, responsabilidades independientes por periodo |
-| Asesor 2 | Cuenta `asesor2`: organización B y estudiante 2, responsabilidades independientes por periodo |
-| Proyecto/plazas | Un proyecto interdisciplinario borrador de A; dos plazas activas de capacidad uno, programas y habilidades compatibles con estudiantes 1/2 |
-| Convocatoria | Borrador con ambas plazas del proyecto y mismo periodo/organización |
-| Configuración | `hybrid-v0.1`, pesos 40 académico + 30 habilidades + 10 ubicación + 20 preferencia, suma 100; semántica desactivada, umbral 70 |
-| Asignaciones/matching/equipo | Ninguna ejecución ni asignación fabricada. Los cuatro estudiantes permanecen sin asignación mientras falte el matching real |
-
-Se registraron 46 entidades creadas mediante `ensure`, además de reutilizar las dos organizaciones, catálogos P11 y crear responsabilidades mediante sus RPC. El manifiesto contiene también identidades y referencias reutilizadas. Las preferencias y responsabilidades usan sus RPC reales. No hay matrícula, cronograma, plan de acción, entregable ni módulos nuevos.
-
-La revisión organizacional usa el flujo P4 realmente disponible, con ADMIN sin membresía en ambas organizaciones. No se presenta como envío formal P11 ni certifica las protecciones adicionales pendientes. B conserva el estado de cambios solicitados y puede editar sus datos; el botón de reenvío formal permanece bloqueado por la RPC ausente.
-
-## Cuentas existentes verificadas
-
-| Cuenta | Rol | Estado |
-| --- | --- | --- |
-| `pyrprueba.estudiante@estudiantesunibague.edu.co` | STUDENT | Sistemas, elegible, asignación pendiente por dependencia remota |
-| `pyrprueba.estudiante2@estudiantesunibague.edu.co` | STUDENT | Comunicación Social, sin GitHub, elegible, asignación pendiente |
-| `pyrprueba.estudiante3@estudiantesunibague.edu.co` | STUDENT | Sistemas, elegible sin asignación |
-| `pyrprueba.estudiante4@estudiantesunibague.edu.co` | STUDENT | Derecho, no elegible, sin asignación |
-| `pyrprueba.entidad@unibague.edu.co` | ORGANIZATION | B, cambios solicitados |
-| `pyrprueba.entidad2@unibague.edu.co` | ORGANIZATION | A, aprobada |
-| `pyrprueba.asesor@unibague.edu.co` | ADVISOR | StaffProfile activo; A y estudiante 1 |
-| `pyrprueba.asesor2@unibague.edu.co` | ADVISOR | StaffProfile activo; B y estudiante 2 |
-| `pyrprueba.administrador@unibague.edu.co` | ADMIN | Revisión independiente, métricas, pendientes y exportaciones reales |
-
-Los nueve emails/UUID se cotejan mediante Auth Admin, luego se realizan logins con contraseña y se consultan los roles persistidos. La metadata TEST es una comprobación adicional; no concede permisos. Las contraseñas siguen en el registro local privado P11; no están en este documento ni en el seed.
-
-## Reproducción
-
-Node >=22.12, `npm ci`, entorno público del proyecto actual y `SUPABASE_SECRET_KEY` en `work/admin.env` (o variable de entorno local). `supabase-admin.mjs` comprueba proyecto y clave pública, y restringe las peticiones al proyecto autorizado.
-
-Conservar/restaurar el registro autorizado de las nueve cuentas en `work/p11/cuentas-test.local.json`, o indicar `PYR_P12_LEDGER`. Debe tener `project_ref` y `accounts` con `email`, `user_id`, `role`, `password`. No se genera ni incluye un registro nuevo. Conservar también el manifiesto de ejecución privado cuando se cambie de checkout; contiene el vínculo exacto entre documento y ruta privada. **No eliminar el manifiesto para intentar reiniciar un escenario ya sembrado.**
-
-Desde la raíz del repositorio:
-
-```text
-node scripts/seed-pilot-complete.mjs --plan
-node scripts/seed-pilot-complete.mjs --apply
+```sh
+node scripts/seed-pilot-complete.mjs --apply --confirm=PYR-DEMO-2026B
 node scripts/seed-pilot-complete.mjs --verify
-node scripts/verify-pilot-complete.mjs
-node scripts/verify-pilot-browser.mjs
-node --test tests/p12/seed.test.mjs
 ```
 
-`--plan` no modifica datos de dominio; sí verifica Auth y escribe evidencias locales. `--apply` guarda intención/UUID antes de insertar, y persiste el manifiesto por pasos mediante reemplazo atómico. Los errores de red no justifican duplicar filas. Si una fila reutilizada desaparece, cambia de UUID o hay coincidencias ambiguas, aborta. El archivo `seed.lock` impide ejecuciones simultáneas de plan/apply/cleanup; después de un proceso interrumpido, revisar su PID antes de retirar manualmente un lock obsoleto.
+Configura únicamente la URL/clave pública demo y la clave privada de Auth Admin en un entorno privado; `scripts/supabase-admin.mjs` rechaza cualquier otro proyecto. La aplicación recibe únicamente las variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`. No se habilitan registro público ni Google.
 
-Código de salida: 0 para comprobación sin bloqueos, 1 para error y 2 para ejecución parcial con dependencias pendientes. La verificación no declara terminado P12 cuando quedan bloqueos. La fase futura de matching invoca la Edge Function real, usa el optimizador existente sobre candidatos reales restringidos al escenario y confirma mediante RPC con la revisión del snapshot. **Esa fase no se ejecutó ni se certificó remotamente.** El ciclo de retiro/reasignación/restauración y sus negativos siguen pendientes; el verificador los marca bloqueados, no PASS.
+La primera orden crea el ledger privado si no existe, provisiona las nueve cuentas por Auth Admin, vincula perfiles/roles y crea los StaffProfiles de asesores antes de ejecutar el seeder existente. No requiere cuentas ni registros institucionales previos. Las siguientes ejecuciones conservan credenciales, UUID, relaciones y el matching completado del manifiesto. No vuelve a generar el ledger existente.
 
-Si cambia la elegibilidad, asesor o periodo fuera del seeder, se exige revisar la discrepancia. Las correcciones no borran historial. El periodo actual institucional existente se respeta. La activación inicial del periodo TEST usa UPDATE ADMIN sujeto al índice único parcial, sin desmarcar un periodo que pudiera aparecer concurrentemente.
+El seeder usa `work/p12/cuentas-test.local.json` para las credenciales y `work/p12/manifest.local.json` para recuperar las operaciones. Ambos están ignorados por Git. No imprimas estos archivos. La clave administrativa de esta ejecución se usó desde `work/admin.env`, también ignorado; se retira al terminar. Para repetir el provisionamiento, vuelve a proporcionar esa clave exclusivamente en un proceso privado.
 
-Limpieza explícita, acotada y conservadora:
+## Cuentas
 
-```text
-node scripts/seed-pilot-complete.mjs --cleanup --confirm=PYR-DEMO-2026B
-```
+| Correo | Rol |
+| --- | --- |
+| pyrdemo.administrador@unibague.edu.co | ADMIN |
+| pyrdemo.estudiante@estudiantesunibague.edu.co | STUDENT |
+| pyrdemo.estudiante2@estudiantesunibague.edu.co | STUDENT |
+| pyrdemo.estudiante3@estudiantesunibague.edu.co | STUDENT |
+| pyrdemo.estudiante4@estudiantesunibague.edu.co | STUDENT |
+| pyrdemo.entidad@unibague.edu.co | ORGANIZATION |
+| pyrdemo.entidad2@unibague.edu.co | ORGANIZATION |
+| pyrdemo.asesor@unibague.edu.co | ADVISOR |
+| pyrdemo.asesor2@unibague.edu.co | ADVISOR |
 
-Solo elimina hojas creadas y registradas por el seed (intereses, habilidades y vínculos de plazas/interlocución). Conserva perfiles, organizaciones, periodos, PDFs, revisiones, responsabilidades e historial. Si hay runs de matching o asignaciones del escenario, cancela la limpieza para preservar evidencia. **No es una eliminación integral del piloto.** No se ejecutó cleanup confirmado en esta entrega; sí se comprobó que sin confirmación aborta antes de conectarse.
+Las contraseñas aleatorias se recuperan privadamente desde el ledger local. Si se pierde el archivo, usa una rotación controlada de Auth Admin que actualice el ledger al mismo tiempo. No se envían invitaciones ni correos a estas direcciones ficticias de evaluación.
 
-## Verificación y evidencias
+## Datos y verificación real
 
-Typecheck, lint, 312 Vitest, build y 40 E2E base: PASS. Cinco pruebas Node del seeder: PASS (idempotencia, persistencia de intención antes de fallo, rechazo de ambigüedad, protección de registros reutilizados y proyecto incorrecto). Las suites E2E base usan fixtures HTTP y no se confunden con las pruebas reales siguientes.
+Se sembraron cuatro perfiles de estudiante, dos organizaciones del escenario, dos asesores, tres programas de referencia, tres habilidades del escenario, intereses, requisitos, participaciones y responsabilidades de asesoría. Hay dos proyectos aprobados del escenario, cada uno con dos plazas de capacidad dos, y dos convocatorias abiertas. Se conserva el periodo 2026B de la base demo. El cuarto estudiante está deliberadamente marcado como no elegible; los otros tres participan del matching.
 
-Verificación Supabase real: 24 PASS, 0 FAIL y cinco grupos BLOCKED. Cubre Auth de nueve cuentas, periodo visible, perfiles diferentes, preferencias/participaciones, roles, aislamiento de datos y Storage, documentos propios/ADMIN y denegación cruzada/anónima, responsabilidades independientes, integridad de proyecto/convocatoria/plazas, cupos persistidos, métricas y exportaciones por RPC. Los asesores no obtienen documentos privados de estudiantes según el contrato existente. Una capacidad persistida correcta **no** equivale a haber ensayado un exceso de cupo en servidor.
+La ejecución `6fe4a44c-4d35-4730-9722-9b57f8e75db6` terminó en 309 ms y persistió 18 pares: seis elegibles y recomendados, doce bloqueados. Evaluó tres estudiantes elegibles frente a seis plazas presentes en el periodo (cuatro plazas del escenario y dos de una demo anterior). Se usa el motor real `matching-run`, algoritmo `hybrid-v0.1`, modo estructurado con componente semántico desactivado; no se presentan resultados de IA inventados.
 
-Idempotencia real: tras dos ejecuciones se conservan los mismos 46 registros y UUID del manifiesto. No se crearon asignaciones ni runs. No se reescribieron revisiones innecesariamente.
+Las nueve cuentas pasaron login y consulta del rol persistido. ADMIN actualizó una configuración autorizada. STUDENT recibió HTTP 403 al ejecutar matching y `42501` al insertar una configuración administrativa. ORGANIZATION consultó sus registros y ambos ADVISOR consultaron sus responsabilidades propias. El informe sin contraseñas queda en `work/p12/verification-final.local.json`.
 
-Los PDFs se renderizaron e inspeccionaron visualmente. Capturas de escritorio y móvil, impresión institucional y tiempos de navegación con Supabase real se guardan en `work/p12/browser/`. El informe de navegador diferencia expresamente frontend local y hospedado; sus resultados finales están en `work/p12/browser-verification.local.json`. Las capturas y UUID de ejecución permanecen fuera de Git.
+La interfaz tenía un hostname Supabase antiguo fijado en su configuración y por eso bloqueaba el login aun con las variables correctas de Vercel. Se corrigió para aceptar únicamente `irykykwhvattrduuqxhj.supabase.co`; pasaron las seis pruebas específicas de configuración y la compilación. No se repitieron las pruebas de matching previamente aprobadas.
 
-Resultado final de navegador local conectado a Supabase real: **nueve cuentas, 50 comprobaciones PASS, cero FAIL**, 41 pantallas con capturas a 390/1440 px, aislamiento de rutas por rol y una ficha institucional A4 legible. Los intentos anteriores detectaron aserciones incorrectas del verificador y tiempos de espera; el intento previo se conserva localmente en `browser-attempt3.local.json`. ADMIN se comprobó por separado y se combinó con los ocho recorridos correctos del mismo frontend/base. Se puede aislar un rol mediante `PYR_P12_BROWSER_ROLE`; no combina despliegues diferentes.
+## Recorrido
 
-Medianas descriptivas de navegación por documento, sin throttling y con SW bloqueado: estudiante 1872 ms (16 pantallas), organización 1866 ms (9), asesor 1436 ms (8), ADMIN 1400 ms (8). Son rutas distintas con datos poblados y red real; **no son una comparación controlada antes/después ni una garantía de rendimiento hospedado**. No se modificó frontend y el build mantiene 64 entradas de precaché, aproximadamente 1227 KiB, como P11.1.
+Abre https://paz-region-unibague.vercel.app/login y elige el acceso universitario para ADMIN, STUDENT y ADVISOR; para ORGANIZATION elige el acceso de organizaciones. Entra al panel del rol, consulta tus registros y cierra sesión. Como ADMIN, abre Matching, selecciona el periodo 2026B y la configuración `PYR-DEMO-2026B · TEST · Matching estructurado`, ejecuta el motor y consulta los resultados persistidos.
 
-Evidencias privadas: `preflight.local.json`, `contracts.local.json`, `manifest.local.json`, `verification.local.json`, `idempotence.local.json` y `browser-verification.local.json` dentro de `work/p12/`. No incluyen claves, contraseñas, sesiones, trazas ni cuerpos de Auth.
+Se conserva la configuración de protección de Vercel. No se crean enlaces temporales ni bypass. La accesibilidad de la URL principal y del dominio inmutable del despliegue se informa por separado; cualquier ampliación de acceso a los dominios protegidos requiere que el propietario cambie Deployment Protection expresamente.
 
-## Hospedaje, Git y pendientes
-
-La puerta `https://pazregionunibague-sepia.vercel.app/login/institucional` sigue devolviendo **404**. No se certifican nueve recorridos hospedados ni se presentan tiempos locales como medidas de esa URL. El frontend de `dev` ya incluye la reescritura SPA de P11.1; falta comprobar el despliegue que sirve esa URL. No se modificó `main` ni el proyecto Vercel de otra cuenta.
-
-**Push normal a `origin/dev` realizado y verificado el 20 de octubre de 2026.** La rama P12 se integró por fast-forward: `688c2b5` → `c1862056a2cf319ca99e51623bd58ba2df9b73a6`, cotejado con `git ls-remote`. Se publica el código con sus bloqueos explícitos; P12 sigue PARCIAL. No se hizo force push ni se modificó `main`. Un commit documental posterior actualiza esta constancia y también se publica con push normal.
-
-Implementación inicial `890b4e2` y corrección de referencias territoriales estables `c371dda`. Revisión previa a entrega: escaneo de 463 rutas y 447 blobs sin hallazgos de secretos; `git diff --check` y `git diff --cached --check` aprobados. Las referencias territoriales persistidas evitan que insertar un catálogo nuevo cambie el significado del escenario al reejecutar.
-
-Para cerrar P12: disponer de canal SQL autorizado; cotejar y aplicar migraciones pendientes; verificar SQL/RLS y conflicto de interés; desplegar matching; ejecutar y revisar scores/optimizador/confirmaciones/capacidad; completar equipo/notificaciones/ciclos reversibles; restaurar el estado de dos asignados, uno elegible pendiente y uno no elegible; comprobar el despliegue hospedado y repetir allí los nueve recorridos y rendimiento. El push de código a `dev` ya se realizó; no equivale a certificar estos pendientes remotos.
+No se aplicaron migraciones nuevas en esta ejecución de Paz y Región: se usó el esquema demo ya migrado. Las tablas usadas tienen prefijo `PYRUnibague_`, principalmente `UserProfiles`, `UserRoles`, `Students`, `StaffProfiles`, `AcademicPeriods`, `AcademicPrograms`, `Skills`, `StudentSkills`, `StudentInterests`, `StudentLocationPreferences`, `StudentPeriodParticipations`, `Organizations`, `OrganizationMembers`, `OrganizationContacts`, `AdvisorOrganizationAssignments`, `AdvisorStudentAssignments`, `Projects`, `ProjectPositions`, `ProjectPositionPrograms`, `ProjectPositionSkills`, `Calls`, `CallPositions`, `MatchingConfigurations`, `MatchingRuns` y `MatchCandidates`.

@@ -1,48 +1,48 @@
 {
-  "checked_at": "2026-10-20T12:44:27.434Z",
-  "project": "unxiuzkhxlzneywtnuvf",
+  "checked_at": "2026-11-07T13:00:22.223Z",
+  "project": "irykykwhvattrduuqxhj",
   "mode": "apply",
   "accounts": [
     {
-      "email": "pyrprueba.estudiante@estudiantesunibague.edu.co",
+      "email": "pyrdemo.estudiante@estudiantesunibague.edu.co",
       "role": "STUDENT",
-      "existed": true,
+      "existed": false,
       "status": "PASS",
       "login": true,
       "profile": true,
       "persisted_role": true
     },
     {
-      "email": "pyrprueba.estudiante2@estudiantesunibague.edu.co",
+      "email": "pyrdemo.estudiante2@estudiantesunibague.edu.co",
       "role": "STUDENT",
-      "existed": true,
+      "existed": false,
       "status": "PASS",
       "login": true,
       "profile": true,
       "persisted_role": true
     },
     {
-      "email": "pyrprueba.estudiante3@estudiantesunibague.edu.co",
+      "email": "pyrdemo.estudiante3@estudiantesunibague.edu.co",
       "role": "STUDENT",
-      "existed": true,
+      "existed": false,
       "status": "PASS",
       "login": true,
       "profile": true,
       "persisted_role": true
     },
     {
-      "email": "pyrprueba.estudiante4@estudiantesunibague.edu.co",
+      "email": "pyrdemo.estudiante4@estudiantesunibague.edu.co",
       "role": "STUDENT",
-      "existed": true,
+      "existed": false,
       "status": "PASS",
       "login": true,
       "profile": true,
       "persisted_role": true
     },
     {
-      "email": "pyrprueba.asesor@unibague.edu.co",
+      "email": "pyrdemo.asesor@unibague.edu.co",
       "role": "ADVISOR",
-      "existed": true,
+      "existed": false,
       "status": "PASS",
       "login": true,
       "profile": true,
@@ -50,9 +50,9 @@
       "staff_profile": true
     },
     {
-      "email": "pyrprueba.asesor2@unibague.edu.co",
+      "email": "pyrdemo.asesor2@unibague.edu.co",
       "role": "ADVISOR",
-      "existed": true,
+      "existed": false,
       "status": "PASS",
       "login": true,
       "profile": true,
@@ -60,27 +60,27 @@
       "staff_profile": true
     },
     {
-      "email": "pyrprueba.entidad@unibague.edu.co",
+      "email": "pyrdemo.entidad@unibague.edu.co",
       "role": "ORGANIZATION",
-      "existed": true,
+      "existed": false,
       "status": "PASS",
       "login": true,
       "profile": true,
       "persisted_role": true
     },
     {
-      "email": "pyrprueba.entidad2@unibague.edu.co",
+      "email": "pyrdemo.entidad2@unibague.edu.co",
       "role": "ORGANIZATION",
-      "existed": true,
+      "existed": false,
       "status": "PASS",
       "login": true,
       "profile": true,
       "persisted_role": true
     },
     {
-      "email": "pyrprueba.administrador@unibague.edu.co",
+      "email": "pyrdemo.administrador@unibague.edu.co",
       "role": "ADMIN",
-      "existed": true,
+      "existed": false,
       "status": "PASS",
       "login": true,
       "profile": true,

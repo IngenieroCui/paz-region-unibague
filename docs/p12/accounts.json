@@ -1,0 +1,90 @@
+{
+  "checked_at": "2026-11-07T13:18:07.806Z",
+  "project": "irykykwhvattrduuqxhj",
+  "mode": "apply",
+  "accounts": [
+    {
+      "email": "pyrdemo.estudiante@estudiantesunibague.edu.co",
+      "role": "STUDENT",
+      "existed": true,
+      "status": "PASS",
+      "login": true,
+      "profile": true,
+      "persisted_role": true
+    },
+    {
+      "email": "pyrdemo.estudiante2@estudiantesunibague.edu.co",
+      "role": "STUDENT",
+      "existed": true,
+      "status": "PASS",
+      "login": true,
+      "profile": true,
+      "persisted_role": true
+    },
+    {
+      "email": "pyrdemo.estudiante3@estudiantesunibague.edu.co",
+      "role": "STUDENT",
+      "existed": true,
+      "status": "PASS",
+      "login": true,
+      "profile": true,
+      "persisted_role": true
+    },
+    {
+      "email": "pyrdemo.estudiante4@estudiantesunibague.edu.co",
+      "role": "STUDENT",
+      "existed": true,
+      "status": "PASS",
+      "login": true,
+      "profile": true,
+      "persisted_role": true
+    },
+    {
+      "email": "pyrdemo.asesor@unibague.edu.co",
+      "role": "ADVISOR",
+      "existed": true,
+      "status": "PASS",
+      "login": true,
+      "profile": true,
+      "persisted_role": true,
+      "staff_profile": true
+    },
+    {
+      "email": "pyrdemo.asesor2@unibague.edu.co",
+      "role": "ADVISOR",
+      "existed": true,
+      "status": "PASS",
+      "login": true,
+      "profile": true,
+      "persisted_role": true,
+      "staff_profile": true
+    },
+    {
+      "email": "pyrdemo.entidad@unibague.edu.co",
+      "role": "ORGANIZATION",
+      "existed": true,
+      "status": "PASS",
+      "login": true,
+      "profile": true,
+      "persisted_role": true
+    },
+    {
+      "email": "pyrdemo.entidad2@unibague.edu.co",
+      "role": "ORGANIZATION",
+      "existed": true,
+      "status": "PASS",
+      "login": true,
+      "profile": true,
+      "persisted_role": true
+    },
+    {
+      "email": "pyrdemo.administrador@unibague.edu.co",
+      "role": "ADMIN",
+      "existed": true,
+      "status": "PASS",
+      "login": true,
+      "profile": true,
+      "persisted_role": true
+    }
+  ]
+}

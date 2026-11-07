@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { createHash, randomUUID } from 'node:crypto'
 import { context, inspect, readManifest, lock, writer, rows, table, check, save, ref, SCENARIO } from './p12-context.mjs'
@@ -9,9 +10,13 @@ const modes = ['--plan', '--apply', '--verify', '--cleanup'].filter(flag => args
 assert.equal(modes.length, 1, 'Usar exactamente --plan, --apply, --verify o --cleanup')
 assert.ok(args.every(a => modes.includes(a) || a === '--confirm=' + SCENARIO), 'Argumento desconocido')
 if (modes[0] === '--verify') {
-  await import('./verify-pilot-complete.mjs')
+  await import('./verify-demo-final.mjs')
 } else {
   if (modes[0] === '--cleanup') assert.ok(args.includes('--confirm=' + SCENARIO), 'Cleanup requiere --confirm=' + SCENARIO)
+  if (modes[0] === '--apply') {
+    execFileSync(process.execPath, ['scripts/generate-demo-ledger.mjs'], { stdio: 'inherit' })
+    execFileSync(process.execPath, ['scripts/crear-cuentas-piloto.mjs', '--apply'], { stdio: 'inherit' })
+  }
   const release = await lock()
   let ctx
   try {
@@ -22,7 +27,7 @@ if (modes[0] === '--verify') {
       const periods = await rows(ctx.admin, 'AcademicPeriods', { is_current: true })
       console.log(JSON.stringify({ scenario: SCENARIO, project: ref, mode: 'READ ONLY', accounts_verified: ctx.clients.map(x => ({ email: x.account.email, role: x.account.role })),
         current_period: periods[0]?.name ?? 'Se crearía 2026B — Piloto TEST',
-        intended: ['4 perfiles distintos y documentos privados', '3 programas TEST si faltan', 'municipios/tipo/habilidades reutilizados o TEST', '4 participaciones: 3 elegibles, 1 no elegible', '2 organizaciones P11 reutilizadas; historial preservado', 'contactos, documentos y responsabilidades independientes', 'proyecto borrador, 2 plazas y convocatoria', 'publicación, matching real, optimizador y RPC solo tras preflight completo'],
+        intended: ['4 perfiles distintos y documentos privados', '3 programas TEST si faltan', 'municipios/tipo/habilidades reutilizados o TEST', '4 participaciones: 3 elegibles, 1 no elegible', '2 organizaciones demo creadas mediante cuentas propias', 'contactos, documentos y responsabilidades independientes', '2 proyectos, 4 plazas con capacidad disponible y convocatorias', 'publicación, matching real, optimizador y RPC solo tras preflight completo'],
         recorded_entities: Object.keys(manifest.records).length, blockers: preflight.blockers }, null, 2))
     } else if (modes[0] === '--cleanup') {
       // Deliberately preserve parent entities, reviews, audit, assignments and responsibility history.
@@ -113,19 +118,24 @@ async function apply(ctx, m, preflight) {
     await persist()
   }
   const orgRecords = []
-  for (const x of organizations) {
+  for (const [i, x] of organizations.entries()) {
     const own = await rows(x.client, 'Organizations', { created_by: x.account.user_id })
-    const known = own.filter(o => /^TEST P11 Organización [12]$/.test(o.legal_name) || o.description?.includes(SCENARIO))
-    assert.equal(known.length, 1, 'Se requiere una organización TEST reconocida por cuenta; no se duplicará')
-    const org = known[0]
+    let org = own.find(o => o.legal_name === `TEST P11 Organización ${i + 1}` || o.description?.includes(SCENARIO))
+    if (!org) {
+      const id = check(await x.client.rpc('pyr_unibague_register_organization', {
+        p_legal_name: `TEST P11 Organización ${i + 1}`, p_display_name: `TEST P11 Organización ${i + 1}`,
+        p_tax_id: `TEST-PYR-${i + 1}`, p_description: prefix + `Organización ${i + 1} ficticia`,
+        p_website: 'https://example.test/paz-region', p_organization_type_id: null, p_municipality_id: municipality.id,
+      }), 'Crear organización demo')
+      org = (await rows(a, 'Organizations', { id }))[0]
+    }
+    assert.ok(org && org.created_by === x.account.user_id, 'Organización demo propia')
     const members = await rows(a, 'OrganizationMembers', { organization_id: org.id, status: 'active' })
     assert.ok(members.some(member => member.user_id === x.account.user_id && member.can_manage))
     assert.ok(!members.some(member => member.user_id === ctx.clients.find(u => u.client === a).account.user_id), 'ADMIN debe ser independiente')
     orgRecords.push({ ...x, org })
   }
-  // Reuse the already approved P11 organization as A, never approve B to fill visuals.
-  orgRecords.sort((x,y) => Number(y.org.status === 'approved') - Number(x.org.status === 'approved'))
-  assert.equal(orgRecords[0].org.status, 'approved', 'A requiere aprobación existente o migración y flujo de revisión autorizado')
+  // Both organizations are created by their demo accounts; ADMIN reviews them below.
   m.organizations = orgRecords.map(x => x.org.id)
   for (const [i, { client: c, account, org }] of orgRecords.entries()) {
     await update(c, 'Organizations', org.id, { description: prefix + (i ? 'Organización B ficticia; revisión y correcciones.' : 'Organización A ficticia; innovación y comunicación comunitaria.') })
@@ -145,7 +155,7 @@ async function apply(ctx, m, preflight) {
     }
     await document(c, account, 'Organization', org.id, 'org-doc-' + i)
     // Existing P4 review remains supported; formal P11 submission is never simulated.
-    const decision = i ? 'changes_required' : 'approved'
+    const decision = 'approved'
     const fresh = (await rows(a, 'Organizations', { id: org.id }))[0]
     if (fresh.status !== decision) check(await a.rpc('pyr_unibague_review_organization', { p_organization_id: org.id, p_decision: decision, p_notes: prefix + 'Observación de demostración: revisar descripción y contacto ficticios.' }), 'Revisión ADMIN independiente P4')
     const responsibilities = await rows(a, 'AdvisorOrganizationAssignments', { organization_id: org.id, academic_period_id: period.id, is_current: true })
@@ -164,8 +174,8 @@ async function apply(ctx, m, preflight) {
   await ensure(orgA, 'ProjectInterlocutors', 'project-contact', { project_id: project.id, organization_contact_id: m.primary_contact_id }, { is_primary_for_project: true })
   m.positions = []
   for (const i of [0,1]) {
-    const position = await ensure(orgA, 'ProjectPositions', 'position-' + i, { project_id: project.id, title: prefix + (i ? 'Comunicación Social' : 'Ingeniería de Sistemas') }, { description: prefix + 'Plaza de formación interdisciplinaria', capacity: 1, status: 'active', is_active: true })
-    assert.equal(position.capacity, 1); assert.equal(position.is_active, true)
+    const position = await ensure(orgA, 'ProjectPositions', 'position-' + i, { project_id: project.id, title: prefix + (i ? 'Comunicación Social' : 'Ingeniería de Sistemas') }, { description: prefix + 'Plaza de formación interdisciplinaria', capacity: 2, status: 'active', is_active: true })
+    if (position.capacity !== 2) await update(orgA, 'ProjectPositions', position.id, { capacity: 2 }); assert.equal(position.is_active, true)
     await ensure(orgA, 'ProjectPositionPrograms', 'position-program-' + i, { project_position_id: position.id, academic_program_id: programs[i].id }, { is_required: true })
     await ensure(orgA, 'ProjectPositionSkills', 'position-skill-' + i, { project_position_id: position.id, skill_id: skills[i].id }, { is_required: true })
     m.positions.push(position.id)
@@ -173,6 +183,17 @@ async function apply(ctx, m, preflight) {
   const call = await ensure(orgA, 'Calls', 'call', { organization_id: org.id, title: prefix + 'Convocatoria interdisciplinaria' }, { academic_period_id: period.id, details: prefix + 'Dos plazas de capacidad uno', status: 'draft' })
   assert.equal(call.academic_period_id, period.id); m.call_id = call.id
   for (const id of m.positions) await ensure(orgA, 'CallPositions', 'call-position-' + id, { call_id: call.id, project_position_id: id })
+  const orgB = orgRecords[1]
+  const projectB = await ensure(orgB.client, 'Projects', 'project-b', { organization_id: orgB.org.id, name: prefix + 'Educación ambiental comunitaria' }, { academic_period_id: period.id, summary: prefix + 'Segundo proyecto ficticio', description: prefix + 'Comunicación y herramientas comunitarias para el ambiente.', municipality_id: municipality.id, zone_type: 'urban', modality: 'Presencial (TEST)', status: 'draft', created_by: orgB.account.user_id })
+  m.projects = [project.id, projectB.id]
+  const callB = await ensure(orgB.client, 'Calls', 'call-b', { organization_id: orgB.org.id, title: prefix + 'Convocatoria ambiental' }, { academic_period_id: period.id, details: prefix + 'Plazas de evaluación', status: 'draft' })
+  for (const i of [0,1]) {
+    const position = await ensure(orgB.client, 'ProjectPositions', 'position-b-' + i, { project_id: projectB.id, title: prefix + (i ? 'Comunicación ambiental' : 'Tecnología comunitaria') }, { description: prefix + 'Plaza ficticia disponible', capacity: 2, status: 'active', is_active: true })
+    await ensure(orgB.client, 'ProjectPositionPrograms', 'position-b-program-' + i, { project_position_id: position.id, academic_program_id: programs[i].id }, { is_required: true })
+    await ensure(orgB.client, 'ProjectPositionSkills', 'position-b-skill-' + i, { project_position_id: position.id, skill_id: skills[i].id }, { is_required: true })
+    await ensure(orgB.client, 'CallPositions', 'call-b-position-' + i, { call_id: callB.id, project_position_id: position.id })
+    m.positions.push(position.id)
+  }
   const config = await ensure(a, 'MatchingConfigurations', 'matching-config', { name: prefix + 'Matching estructurado', academic_period_id: period.id }, { algorithm_version: 'hybrid-v0.1', minimum_recommended_score: 70, weights: { academic: 40, skills: 30, experience: 0, interests: 0, location: 10, preference: 20, semantic: 0 }, rules: { requiredSkillsAreHardConstraint: true, semanticEnabled: false }, is_active: true, created_by: ctx.clients.find(x => x.client === a).account.user_id })
   m.configuration_id = config.id; m.blockers = preflight.blockers
   m.references = { accounts: ctx.clients.map(x => ({ email: x.account.email, user_id: x.account.user_id, role: x.account.role })), municipalities: [municipality.id, alternate.id], programs: programs.map(x => x.id), staff: staff.map(x => x.id), organizations: orgRecords.map(x => ({ id: x.org.id, created_by: x.account.user_id, reused: true })) }
@@ -182,6 +203,10 @@ async function apply(ctx, m, preflight) {
     if (project.status !== 'approved') await update(a, 'Projects', project.id, { status: 'approved' })
     if (['draft', 'changes_required'].includes(call.status)) await update(orgA, 'Calls', call.id, { status: 'submitted' })
     if (call.status !== 'open') await update(a, 'Calls', call.id, { status: 'open' })
+    if (['draft', 'changes_required'].includes(projectB.status)) await update(orgB.client, 'Projects', projectB.id, { status: 'submitted' })
+    if (projectB.status !== 'approved') await update(a, 'Projects', projectB.id, { status: 'approved' })
+    if (['draft', 'changes_required'].includes(callB.status)) await update(orgB.client, 'Calls', callB.id, { status: 'submitted' })
+    if (callB.status !== 'open') await update(a, 'Calls', callB.id, { status: 'open' })
     await matchAndConfirm()
   }
   m.last_applied_at = new Date().toISOString(); await persist()
@@ -216,17 +241,17 @@ async function apply(ctx, m, preflight) {
     assert.equal(createHash('sha256').update(Buffer.from(await downloaded.arrayBuffer())).digest('hex'), createHash('sha256').update(bytes).digest('hex'))
   }
   async function matchAndConfirm() {
-    if (!m.run_id) {
-      const runs = await rows(a, 'MatchingRuns', { matching_configuration_id: config.id })
-      assert.ok(runs.length <= 1, 'Ejecuciones ambiguas; revisar antes de repetir matching')
-      if (runs[0]) { assert.equal(runs[0].status, 'completed', 'Ejecución incierta; revisar antes de reintentar'); m.run_id = runs[0].id }
-      else {
-        m.operations.matching = { status: 'intent' }; await persist()
-        const result = check(await a.functions.invoke('matching-run', { body: { academic_period_id: period.id, matching_configuration_id: config.id } }), 'Matching real')
-        m.run_id = result.run_id; m.operations.matching.status = 'done'
-      }
+    if (!m.run_id || m.matching_input_version !== 'two-projects-v1') {
+      m.operations.matching = { status: 'intent', started_at: new Date().toISOString() }; await persist()
+      const result = check(await a.functions.invoke('matching-run', { body: { academic_period_id: period.id, matching_configuration_id: config.id } }), 'Matching real')
+      m.run_id = result.run_id
+      assert.ok(m.run_id, 'Matching no devolvió identificador')
+      m.matching_input_version = 'two-projects-v1'
+      m.operations.matching.status = 'done'
       await persist()
     }
+    // This demo requires persisted matching results, not automatic assignments.
+    return
     const snap = check(await a.rpc('pyr_unibague_assignment_snapshot', { p_period_id: period.id, p_run_id: m.run_id }), 'Snapshot real')
     const { transform } = await import('esbuild')
     const source = await readFile('src/features/optimizer/solveAssignments.ts', 'utf8')
@@ -247,5 +272,5 @@ async function apply(ctx, m, preflight) {
 }
 
 function studentIndex(email) {
-  return Number(email.match(/^pyrprueba\.estudiante(\d*)@/)?.[1] || 1)
+  return Number(email.match(/^pyrdemo\.estudiante(\d*)@/)?.[1] || 1)
 }

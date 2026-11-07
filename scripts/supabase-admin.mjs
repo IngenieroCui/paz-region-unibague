@@ -2,7 +2,7 @@
 import { readFile } from 'node:fs/promises'
 import { parseEnv } from 'node:util'
 import { createClient } from '@supabase/supabase-js'
-export const ref = 'unxiuzkhxlzneywtnuvf'
+export const ref = 'irykykwhvattrduuqxhj'
 export const url = `https://${ref}.supabase.co`
 export const options = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
 export async function environment() {
@@ -39,7 +39,7 @@ export async function adminClient({ testInventory = false } = {}) {
   return createClient(url, key, { ...options, global: { fetch: (input, init) => {
     // Auth supports filter; the installed SDK exposes only pagination.
     const target = new URL(typeof input === 'string' ? input : input.url ?? input)
-    if (testInventory && target.pathname === '/auth/v1/admin/users' && (!init?.method || init.method === 'GET')) target.searchParams.set('filter', 'pyrprueba.')
+    if (testInventory && target.pathname === '/auth/v1/admin/users' && (!init?.method || init.method === 'GET')) target.searchParams.set('filter', 'pyrdemo.')
     return guardedFetch(target.href, init)
   } } })
 }

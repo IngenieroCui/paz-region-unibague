@@ -1,0 +1,17 @@
+import { readFile } from 'node:fs/promises'
+import { publicClient, check, ref } from './supabase-admin.mjs'
+const ledger = JSON.parse(await readFile(process.env.PYR_P12_LEDGER || 'work/p12/cuentas-test.local.json', 'utf8'))
+const account = ledger.accounts.find(a => a.role === 'ADMIN')
+if (!account) throw new Error('No ADMIN demo account')
+const client = await publicClient()
+const signed = check(await client.auth.signInWithPassword({ email: account.email, password: account.password }), 'Login ADMIN matching')
+const { data: configurations, error: configError } = await client.from('PYRUnibague_MatchingConfigurations').select('id,academic_period_id,name').eq('is_active', true).order('created_at')
+if (configError || !configurations?.length) throw new Error('No active matching configuration')
+const configuration = configurations.find(c => c.name.includes('PYR-DEMO-2026B')) ?? configurations.at(-1)
+const result = check(await client.functions.invoke('matching-run', { body: { academic_period_id: configuration.academic_period_id, matching_configuration_id: configuration.id } }), 'Matching real')
+const { data: runs, error: runsError } = await client.from('PYRUnibague_MatchingRuns').select('id,status,matching_configuration_id,summary,created_at').eq('matching_configuration_id', configuration.id).order('created_at', { ascending: false }).limit(1)
+if (runsError || !runs?.length) throw new Error('Matching run not persisted')
+const { data: candidates, error: candidateError } = await client.from('PYRUnibague_MatchCandidates').select('id,student_id,project_position_id,total_score,is_eligible,blockers,recommendations').eq('matching_run_id', runs[0].id).order('total_score', { ascending: false })
+if (candidateError) throw new Error(`Matching candidates unreadable: ${JSON.stringify({ code: candidateError.code, status: candidateError.status, details: candidateError.details })}`)
+console.log(JSON.stringify({ project_ref: ref, configuration: { id: configuration.id, name: configuration.name }, invocation: result, run: runs[0], candidate_count: candidates?.length ?? 0, eligible_count: candidates?.filter(c => c.is_eligible).length ?? 0, candidates: candidates ?? [] }))
+await client.auth.signOut()

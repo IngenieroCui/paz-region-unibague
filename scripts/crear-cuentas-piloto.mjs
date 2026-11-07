@@ -8,9 +8,9 @@ import { adminClient, publicClient, check, ref } from './supabase-admin.mjs'
 const users = [
   ['estudiante','STUDENT'], ['estudiante2','STUDENT'], ['estudiante3','STUDENT'], ['estudiante4','STUDENT'],
   ['asesor','ADVISOR'], ['asesor2','ADVISOR'], ['entidad','ORGANIZATION'], ['entidad2','ORGANIZATION'], ['administrador','ADMIN'],
-].map(([name, role]) => ({ email: `pyrprueba.${name}@${role === 'STUDENT' ? 'estudiantesunibague.edu.co' : 'unibague.edu.co'}`, role, display_name: `Pyrprueba ${name} (TEST)` }))
+].map(([name, role]) => ({ email: `pyrdemo.${name}@${role === 'STUDENT' ? 'estudiantesunibague.edu.co' : 'unibague.edu.co'}`, role, display_name: `Pyrdemo ${name} (TEST)` }))
 const apply = process.argv.includes('--apply')
-const ledgerPath = resolve(process.env.PYR_P11_LEDGER || 'work/p11/cuentas-test.local.json')
+const ledgerPath = resolve(process.env.PYR_P12_LEDGER || 'work/p12/cuentas-test.local.json')
 await mkdir(dirname(ledgerPath), { recursive: true })
 try { execFileSync('git', ['check-ignore', '--quiet', ledgerPath]) }
 catch { throw Error('El registro privado debe estar dentro del repositorio e ignorado por Git.') }
@@ -18,13 +18,9 @@ let ledger = { project_ref: ref, accounts: [] }
 try { ledger = JSON.parse(await readFile(ledgerPath, 'utf8')) }
 catch (error) { if (error.code !== 'ENOENT') throw error }
 if (ledger.project_ref !== ref) throw Error('Registro de otro proyecto; no se reutilizan UUID ni contraseñas.')
-if (process.env.PYR_P9_LEDGER) {
-  const historical = JSON.parse(await readFile(process.env.PYR_P9_LEDGER, 'utf8'))
-  if (historical.accounts.length !== 9 || users.some(u => !historical.accounts.some(a => a.email === u.email && a.role === u.role))) throw Error('Las cuentas no coinciden con P9.')
-}
 const admin = await adminClient({ testInventory: true })
 const existing = check(await admin.auth.admin.listUsers({ page: 1, perPage: 1000 }), 'Inventario TEST').users
-if (existing.length >= 1000 || existing.some(u => !u.email?.startsWith('pyrprueba.'))) throw Error('Inventario TEST no acotado.')
+if (existing.length >= 1000 || existing.some(u => !u.email?.startsWith('pyrdemo.'))) throw Error('Inventario TEST no acotado.')
 const roles = check(await admin.from('PYRUnibague_Roles').select('id,code'), 'Catálogo de roles')
 for (const u of users) if (!roles.some(r => r.code === u.role)) throw Error(`Falta rol persistido ${u.role}`)
 for (const u of users) {
@@ -41,7 +37,11 @@ for (const u of users) {
   if (!apply) { outcome.status = identity ? 'EXISTS' : 'MISSING'; report.accounts.push(outcome); continue }
   try {
     if (!identity) {
-      if (account?.user_id) throw Error('Identidad registrada ausente; revisar antes de recrear.')
+      if (account?.user_id) {
+        // A generated ledger may contain planned UUIDs; Auth Admin assigns the final UUID.
+        // Keep the private password and replace only the UUID after successful creation.
+        account.user_id = undefined
+      }
       // Persist before mutation, preserving credentials after interruptions.
       if (!account) { account = { ...u, password: `PyR!${randomBytes(36).toString('base64url')}7x`, created_at: new Date().toISOString() }; ledger.accounts.push(account); await persist() }
       identity = check(await admin.auth.admin.createUser({ email: u.email, password: account.password, email_confirm: true, user_metadata: { display_name: u.display_name, pyr_test_account: true }, app_metadata: { pyr_test_batch: 'P11' } }), 'Crear TEST').user
@@ -72,6 +72,6 @@ for (const u of users) {
   report.accounts.push(outcome)
   console.log(u.role, u.email, outcome.status, outcome.error ?? '')
 }
-await mkdir('docs/p11', { recursive: true })
-await writeFile('docs/p11/accounts.json', JSON.stringify(report, null, 2) + '\n')
-console.log('Credenciales: work/p11/cuentas-test.local.json (ignorado). Informe: docs/p11/accounts.json')
+await mkdir('docs/p12', { recursive: true })
+await writeFile('docs/p12/accounts.json', JSON.stringify(report, null, 2) + '\n')
+console.log('Credenciales: work/p12/cuentas-test.local.json (ignorado). Informe: docs/p12/accounts.json')

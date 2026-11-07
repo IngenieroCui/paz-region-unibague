@@ -7,7 +7,7 @@ import { resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import { readManifest, save, ref, SCENARIO } from './p12-context.mjs'
 
-const ledger = JSON.parse(await readFile(process.env.PYR_P12_LEDGER || 'work/p11/cuentas-test.local.json', 'utf8'))
+const ledger = JSON.parse(await readFile(process.env.PYR_P12_LEDGER || 'work/p12/cuentas-test.local.json', 'utf8'))
 if (ledger.project_ref !== ref) throw Error('Proyecto incompatible')
 const m = await readManifest()
 const base = process.env.PYR_TEST_BASE_URL || 'http://127.0.0.1:5892'
