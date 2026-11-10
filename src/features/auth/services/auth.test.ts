@@ -14,7 +14,9 @@ it('uses official Auth calls and an origin-bound callback', async () => {
 it('never sends recovery email to the nine fictitious institutional identities', async () => {
   const accounts = ['estudiante','estudiante2','estudiante3','estudiante4'].map(name => `${name}@estudiantesunibague.edu.co`)
   accounts.push(...['administrador','asesor','asesor2','entidad','entidad2'].map(name => `${name}@unibague.edu.co`))
-  for (const account of accounts) await expect(recoverPassword(' PYRPRUEBA.' + account.toUpperCase() + ' ')).rejects.toThrow('TEST')
+  for (const prefix of ['PYRPRUEBA.', 'PYRDEMO.']) {
+    for (const account of accounts) await expect(recoverPassword(' ' + prefix + account.toUpperCase() + ' ')).rejects.toThrow('TEST')
+  }
   expect(mocks.resetPasswordForEmail).not.toHaveBeenCalled()
 })
 it('exchanges a PKCE code once, derives recovery from the SDK event, ignores next', async () => {

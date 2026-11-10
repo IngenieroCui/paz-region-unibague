@@ -84,3 +84,14 @@ it('does not carry a recovery session across a change of identity', async () => 
   act(() => mocks.listener?.('SIGNED_IN', other))
   expect(await screen.findByText('authenticated:STUDENT:false')).toBeInTheDocument()
 })
+
+it('does not overwrite a newer sign-in when the initial getSession fails late', async () => {
+  let fail: (reason: Error) => void = () => {}
+  mocks.getSession.mockImplementation(() => new Promise((_, reject) => { fail = reject }))
+  render(<AuthProvider><Probe /></AuthProvider>)
+  await waitFor(() => expect(mocks.getSession).toHaveBeenCalled())
+  act(() => mocks.listener?.('SIGNED_IN', session))
+  await screen.findByText('authenticated:STUDENT:false')
+  await act(async () => fail(new Error('old initialization failure')))
+  expect(screen.getByText('authenticated:STUDENT:false')).toBeInTheDocument()
+})

@@ -6,6 +6,7 @@ import { ConfigurationEditor } from './ConfigurationEditor'
 import { MatchingResults } from './MatchingResults'
 import * as services from './services'
 import type { ConfigRow, RunRow, CandidateRow } from './services'
+import { FeatureError } from '../../lib/supabase/feature-helpers'
 vi.mock('./services', async original => ({ ...await original<typeof services>(), loadMatchingMetadata: vi.fn(), loadRuns: vi.fn(), configurationUsed: vi.fn(), saveConfiguration: vi.fn(), updateConfigurationMetadata: vi.fn(), executeMatching: vi.fn(), loadMatchingFilters: vi.fn(), loadCandidates: vi.fn() }))
 const config: ConfigRow = { id: 'c', name: 'Configuración histórica', algorithm_version: 'hybrid-v0.1', minimum_recommended_score: 99, academic_period_id: null, is_active: true, weights: { academic: 100, skills: 0, experience: 0, interests: 0, location: 0, preference: 0, semantic: 0 }, rules: { requiredSkillsAreHardConstraint: true, semanticEnabled: false }, created_at: '', updated_at: '', created_by: null }
 const run: RunRow = { id: 'r', academic_period_id: 'p', matching_configuration_id: 'c', status: 'completed', started_at: null, completed_at: null, created_at: '2026-10-01T12:00:00Z', started_by: null, summary: { configuration_snapshot: { minimum_recommended_score: 70 }, algorithm_version: 'hybrid-v0.1', semantic_mode: 'structured_only' } }
@@ -46,3 +47,19 @@ it('ranking uses historical threshold, opens components with unavailable semanti
   await waitFor(() => expect(services.loadCandidates).toHaveBeenLastCalledWith(run, 0, { student: '', position: '', state: 'blocked' }))
 })
 it('failed run never loads partial candidates as a completed ranking', async () => { render(<MatchingResults run={{ ...run, status: 'failed' }} />); expect(screen.getByText('Ejecución fallida')).toBeInTheDocument(); await waitFor(() => expect(services.loadCandidates).not.toHaveBeenCalled()) })
+
+it('requires a deliberate history refresh after an uncertain matching execution', async () => {
+  vi.mocked(services.loadMatchingMetadata).mockResolvedValue({ periods: [{ id: 'p', name: 'Periodo demo', is_current: true }], configurations: [config] } as Awaited<ReturnType<typeof services.loadMatchingMetadata>>)
+  vi.mocked(services.executeMatching).mockRejectedValue(new FeatureError('Revisa el historial antes de reintentar.', 'UNCERTAIN_RUN'))
+  render(<MatchingWorkspace />)
+  await userEvent.click(await screen.findByRole('button', { name: /^Ejecutar$/ }))
+  await userEvent.selectOptions(screen.getByLabelText('Configuración para ejecutar'), 'c')
+  await userEvent.click(screen.getByRole('button', { name: 'Revisar y ejecutar' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Ejecutar compatibilidad' }))
+  await screen.findByText('Revisa el historial antes de reintentar.')
+  expect(screen.getByRole('button', { name: 'Revisar y ejecutar' })).toBeDisabled()
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: 'Actualizar historial' }))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Revisar y ejecutar' })).toBeEnabled())
+  expect(services.executeMatching).toHaveBeenCalledTimes(1)
+})

@@ -68,15 +68,26 @@ export async function updateConfigurationMetadata(id: string, name: string, acti
 }
 export async function executeMatching(period: string, configuration: string) {
   const db = await adminClient()
-  const result = await db.functions.invoke('matching-run', { body: { academic_period_id: period, matching_configuration_id: configuration } })
+  const uncertain = () => new FeatureError('No se confirmó la ejecución. Actualiza el historial para revisar su estado antes de reintentar.', 'UNCERTAIN_RUN')
+  let result
+  try {
+    result = await db.functions.invoke('matching-run', { body: { academic_period_id: period, matching_configuration_id: configuration }, timeout: 120_000 })
+  } catch { throw uncertain() }
   if (result.error) {
     const context: unknown = 'context' in result.error ? result.error.context : null
     let code: unknown; let recovery = false
-    if (context instanceof Response) { try { const body = await context.json() as { error?: unknown; recovery_required?: boolean }; code = body.error; recovery = body.recovery_required === true } catch { /* Safe generic error below. */ } }
-    throw new FeatureError(recovery ? 'La ejecución necesita recuperación administrativa. Revisa el historial antes de reintentar.' : code === 'RUN_ALREADY_RUNNING' ? 'Ya hay una ejecución en curso para este periodo y configuración.' : code === 'CONFIGURATION_INVALID' ? 'La configuración no es compatible con hybrid-v0.1. Duplícala y revisa sus campos.' : 'No se confirmó la ejecución. Actualiza el historial para revisar su estado antes de reintentar.')
+    if (context instanceof Response) {
+      if (context.status === 401) throw new FeatureError('Tu sesión expiró. Vuelve a ingresar antes de ejecutar matching.', '401')
+      try { const body = await context.json() as { error?: unknown; recovery_required?: boolean }; code = body.error; recovery = body.recovery_required === true } catch { /* Safe generic error below. */ }
+    }
+    if (code === 'ADMIN_REQUIRED') throw new FeatureError('Matching requiere el rol ADMIN. Vuelve a ingresar para verificar tus permisos.', '42501')
+    if (code === 'RUN_ALREADY_RUNNING') throw new FeatureError('Ya hay una ejecución en curso para este periodo y configuración.', 'RUN_ALREADY_RUNNING')
+    if (code === 'CONFIGURATION_INVALID') throw new FeatureError('La configuración no es compatible con hybrid-v0.1. Duplícala y revisa sus campos.', 'CONFIGURATION_INVALID')
+    if (recovery) throw new FeatureError('La ejecución necesita recuperación administrativa. Revisa el historial antes de reintentar.', 'UNCERTAIN_RUN')
+    throw uncertain()
   }
   const value = result.data as { run_id?: unknown }
-  if (typeof value?.run_id !== 'string') throw new FeatureError('Respuesta incompleta. Revisa el historial.')
+  if (typeof value?.run_id !== 'string' || !value.run_id) throw uncertain()
   return value.run_id
 }
 export async function loadMatchingFilters() {

@@ -7,6 +7,7 @@ import { currentRoles } from './services/auth'
 import { AuthContext } from './auth-context'
 import type { AuthState } from './auth-context'
 import { clearCatalogCache } from '../../lib/supabase/catalog-cache'
+import { withDeadline } from '../../lib/supabase/deadline'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     status: supabaseConfiguration.status === 'ready' ? 'loading' : 'unconfigured', session: null, roles: [], recovery: false,
@@ -41,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Supabase calls listeners under its Auth lock; defer RPC until that lock is released.
       const timer = setTimeout(() => {
         timers.delete(timer)
-        void currentRoles().then(roles => {
+        void withDeadline(currentRoles(), 15_000).then(roles => {
           if (active && request === version) setState({ status: 'authenticated', session, roles, recovery })
         }).catch(() => {
           if (active && request === version) { lastToken = undefined; setState({ status: 'error', session, roles: [], recovery }) }
@@ -51,18 +52,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     async function initialize() {
       try {
-        const client = await getSupabase()
-        if (!active || !client) return
+        const client = await withDeadline(getSupabase(), 15_000)
+        if (!active) return
+        if (!client) throw new Error('Auth unavailable')
         const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
           receivedEvent = true
           resolve(session, event === 'PASSWORD_RECOVERY', event)
         })
         unsubscribe = () => subscription.unsubscribe()
-        const { data, error } = await client.auth.getSession()
+        const { data, error } = await withDeadline(client.auth.getSession(), 15_000)
         if (error) throw error
         if (active && !receivedEvent) resolve(data.session)
       } catch {
-        if (active) { ++version; setState({ status: 'error', session: null, roles: [], recovery: false }) }
+        // Auth events are newer than the initial read, including a failed initial read.
+        if (active && !receivedEvent) { ++version; setState({ status: 'error', session: null, roles: [], recovery: false }) }
       }
     }
     void initialize()

@@ -10,6 +10,7 @@ import type { RunRow } from './services'
 import { useMatchingResource } from './useMatchingResource'
 import { ConfigurationEditor } from './ConfigurationEditor'
 import { MatchingResults } from './MatchingResults'
+import { errorMessage } from '../../lib/supabase/feature-helpers'
 import './matching.css'
 function runStateLabel(status: string) {
   const labels: Record<string, string> = { running: 'En curso', completed: 'Completada', failed: 'Fallida', pending: 'Pendiente' }
@@ -24,6 +25,7 @@ export function MatchingWorkspace() {
   const [runPage, setRunPage] = useState(0)
   const [selectedId, setSelected] = useState('')
   const [confirmation, setConfirmation] = useState(false)
+  const [executionError, setExecutionError] = useState('')
   const [editorRevision, setEditorRevision] = useState(0)
   const period = periodOverride ?? metadata.data?.periods.find(p => p.is_current)?.id ?? metadata.data?.periods[0]?.id ?? ''
   const runLoader = useCallback(() => loadRuns(period, runPage), [period, runPage])
@@ -49,14 +51,16 @@ export function MatchingWorkspace() {
     {tab === 'run' && <Card><h2>Ejecutar matching</h2><Select label="Configuración para ejecutar" value={configurationId} onChange={e => setConfiguration(e.target.value)}><option value="">Selecciona una configuración activa</option>{configOptions.map(c => <option key={c.id} value={c.id}>{c.name} · {c.algorithm_version}</option>)}</Select>
       {config && <p>Umbral configurado: {config.minimum_recommended_score ?? 'sin configurar'} / 100. Semántica: {jsonObject(config.rules).semanticEnabled === true ? 'solicitada; depende del proveedor' : 'desactivada'}.</p>}
       <Alert title="Recomendaciones sin asignación">Se evaluará todo el pool elegible del periodo. Los bloqueos y scores quedarán registrados en una nueva ejecución histórica.</Alert>
-      <Button disabled={!period || !config || blockedByRunning || runs.loading} onClick={() => setConfirmation(true)}>Revisar y ejecutar</Button>{blockedByRunning && <p role="status">Esta configuración tiene una ejecución en curso.</p>}
+      {executionError && <Alert tone="error" title={executionError}>Actualiza el historial y revisa la última ejecución antes de volver a ejecutar.</Alert>}
+      <Button disabled={!period || !config || blockedByRunning || runs.loading || Boolean(runs.error) || Boolean(executionError)} onClick={() => setConfirmation(true)}>Revisar y ejecutar</Button>{blockedByRunning && <p role="status">Esta configuración tiene una ejecución en curso.</p>}
       <ConfirmDialog open={confirmation} title="Confirmar ejecución de matching" confirmLabel="Ejecutar compatibilidad" onCancel={() => { setConfirmation(false); runs.reload() }} onConfirm={async () => {
-        if (!config) return
+        if (!config || executionError || runs.loading || runs.error || blockedByRunning) return
         try { const id = await executeMatching(period, config.id); setRunPage(0); setSelected(id); setTab('results') }
+        catch (cause) { setExecutionError(errorMessage(cause)); setConfirmation(false) }
         finally { runs.reload() }
       }}>Periodo: {data.periods.find(p => p.id === period)?.name}. Configuración: {config?.name}. Esta operación calcula candidatos y conserva una nueva ejecución; no crea asignaciones.</ConfirmDialog>
     </Card>}
-    {(tab === 'results' || tab === 'overview' || tab === 'run') && period && <Card><h2>Historial de ejecuciones</h2><Button variant="secondary" onClick={runs.reload}>Actualizar historial</Button>
+    {(tab === 'results' || tab === 'overview' || tab === 'run') && period && <Card><h2>Historial de ejecuciones</h2><Button variant="secondary" onClick={() => { setExecutionError(''); runs.reload() }}>Actualizar historial</Button>
       {runs.data && <><ul className="module-list">{runs.data.rows.map(r => <li key={r.id}><div><p>{new Date(r.created_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })} · {runStateLabel(r.status)}</p><p>{data.configurations.find(c => c.id === r.matching_configuration_id)?.name ?? r.matching_configuration_id}</p></div><Button variant="secondary" aria-pressed={selected?.id === r.id} onClick={() => { setSelected(r.id); setTab('results') }}>Ver ejecución</Button></li>)}</ul>
       <div className="module-actions"><Button variant="secondary" disabled={!runPage} onClick={() => { setRunPage(runPage - 1); setSelected('') }}>Historial anterior</Button><Button variant="secondary" disabled={(runPage + 1) * PAGE_SIZE >= runs.data.count} onClick={() => { setRunPage(runPage + 1); setSelected('') }}>Historial siguiente</Button></div></>}
     </Card>}

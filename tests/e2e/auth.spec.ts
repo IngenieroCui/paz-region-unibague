@@ -112,3 +112,30 @@ test('PKCE recovery callback ignores external destination, updates password and 
   await update
   await expect(page.getByText('Contraseña actualizada')).toBeVisible()
 })
+
+test('expired sessions with an invalid refresh token cannot open a protected route', async ({ page }) => {
+  await api(page, ['ADMIN'])
+  await page.route('**/auth/v1/token**', route => route.fulfill({ status: 400, json: { code: 'refresh_token_not_found', message: 'Invalid Refresh Token', error: 'invalid_grant' } }))
+  const expiredAt = Math.floor(Date.now() / 1000) - 120
+  const expiredToken = [Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'), Buffer.from(JSON.stringify({ sub: user.id, role: 'authenticated', exp: expiredAt })).toString('base64url'), 'expired-fixture'].join('.')
+  await page.addInitScript(session => localStorage.setItem('sb-pyr-e2e-auth-token', JSON.stringify(session)), { access_token: expiredToken, refresh_token: 'expired-refresh', expires_at: expiredAt, expires_in: 3600, token_type: 'bearer', user })
+  await page.goto('/app/admin/matching')
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByRole('heading', { name: 'Matching', exact: true })).toHaveCount(0)
+})
+
+test('a stalled role lookup fails closed, rejects its late result and permits explicit retry', async ({ page }) => {
+  await api(page, ['ADMIN'])
+  await login(page)
+  await expect(page).toHaveURL(/\/app\/admin$/)
+  let held: import('@playwright/test').Route | undefined
+  const hold = (route: import('@playwright/test').Route) => { held = route }
+  await page.route('**/rpc/pyr_unibague_current_roles', hold)
+  await page.goto('/app/admin/matching')
+  await expect(page.getByRole('heading', { name: 'No pudimos verificar tu sesión', exact: true })).toBeVisible({ timeout: 20_000 })
+  await held?.fulfill({ json: ['ADMIN'] })
+  await expect(page.getByRole('heading', { name: 'Matching', exact: true })).toHaveCount(0)
+  await page.unroute('**/rpc/pyr_unibague_current_roles', hold)
+  await page.getByRole('button', { name: 'Reintentar', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Matching', exact: true })).toBeVisible()
+})

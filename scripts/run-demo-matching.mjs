@@ -4,7 +4,7 @@ const ledger = JSON.parse(await readFile(process.env.PYR_P12_LEDGER || 'work/p12
 const account = ledger.accounts.find(a => a.role === 'ADMIN')
 if (!account) throw new Error('No ADMIN demo account')
 const client = await publicClient()
-const signed = check(await client.auth.signInWithPassword({ email: account.email, password: account.password }), 'Login ADMIN matching')
+check(await client.auth.signInWithPassword({ email: account.email, password: account.password }), 'Login ADMIN matching')
 const { data: configurations, error: configError } = await client.from('PYRUnibague_MatchingConfigurations').select('id,academic_period_id,name').eq('is_active', true).order('created_at')
 if (configError || !configurations?.length) throw new Error('No active matching configuration')
 const configuration = configurations.find(c => c.name.includes('PYR-DEMO-2026B')) ?? configurations.at(-1)

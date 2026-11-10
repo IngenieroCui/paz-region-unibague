@@ -251,23 +251,6 @@ async function apply(ctx, m, preflight) {
       await persist()
     }
     // This demo requires persisted matching results, not automatic assignments.
-    return
-    const snap = check(await a.rpc('pyr_unibague_assignment_snapshot', { p_period_id: period.id, p_run_id: m.run_id }), 'Snapshot real')
-    const { transform } = await import('esbuild')
-    const source = await readFile('src/features/optimizer/solveAssignments.ts', 'utf8')
-    const js = (await transform(source, { loader: 'ts', format: 'esm' })).code
-    const { solveAssignments } = await import('data:text/javascript;base64,' + Buffer.from(js).toString('base64'))
-    // Real candidates/scores, scoped to scenario students 1/2 and scenario positions.
-    const wanted = new Set(m.students.slice(0,2)), positions = new Set(m.positions)
-    const proposal = solveAssignments({ ...snap, students: snap.students.filter(s => wanted.has(s.id)), positions: snap.positions.filter(p => positions.has(p.id)), candidates: snap.candidates.filter(c => wanted.has(c.studentId) && positions.has(c.positionId)) })
-    const actions = proposal.rows.map(r => ({ kind: 'confirm', student_id: r.studentId, position_id: r.positionId, candidate_id: r.candidateId, source: 'MATCHING' }))
-    if (actions.length) check(await a.rpc('pyr_unibague_confirm_assignment_batch', { p_period_id: period.id, p_run_id: m.run_id, p_revision: snap.revision, p_actions: actions }), 'Confirmación optimista ADMIN')
-    const group = await ensure(orgA, 'Groups', 'group', { project_id: project.id, name: prefix + 'Equipo interdisciplinario' })
-    for (const id of wanted) {
-      const active = await rows(a, 'Assignments', { student_id: id, academic_period_id: period.id, is_active: true })
-      assert.equal(active.length, 1); assert.ok(positions.has(active[0].project_position_id))
-      await ensure(orgA, 'GroupMembers', 'member-' + active[0].id, { group_id: group.id, assignment_id: active[0].id })
-    }
   }
 }
 

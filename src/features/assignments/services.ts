@@ -25,6 +25,7 @@ export async function loadAssignmentSnapshot(periodId: string, runId: string | n
   const db = await assignmentClient(); const result = await db.rpc('pyr_unibague_assignment_snapshot', { p_period_id: periodId, p_run_id: runId }); assignmentError(result.error)
   const snapshot = result.data as unknown as AssignmentSnapshot
   if (!snapshot || snapshot.periodId !== periodId || typeof snapshot.revision !== 'string' || !Array.isArray(snapshot.students) || !Array.isArray(snapshot.positions) || !Array.isArray(snapshot.candidates) || !Array.isArray(snapshot.existing)) throw new FeatureError('Respuesta incompleta del servidor de asignaciones.')
+  if (runId ? !snapshot.run || snapshot.run.id !== runId || snapshot.run.periodId !== periodId || snapshot.run.status !== 'completed' : snapshot.run !== null) throw new FeatureError('Respuesta incompleta del servidor de asignaciones.')
   return snapshot
 }
 export async function commitAssignments(snapshot: AssignmentSnapshot, actions: AssignmentAction[]) {

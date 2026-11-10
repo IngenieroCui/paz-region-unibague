@@ -26,6 +26,10 @@ it('stale batches tell the admin to recalculate without claiming partial success
   await expect(commitAssignments(pool([[99]]), [{ kind: 'confirm', student_id: 's0' }])).rejects.toMatchObject({ code: 'P0001', message: expect.stringContaining('no se confirmó ninguna fila') })
 })
 it('malformed snapshots fail closed', async () => { rpc.mockResolvedValue({ data: {}, error: null }); await expect(loadAssignmentSnapshot('period', 'run')).rejects.toThrow(/incompleta/) })
+it('rejects a snapshot from a different matching run in the same period', async () => {
+  rpc.mockResolvedValue({ data: pool([[99]]), error: null })
+  await expect(loadAssignmentSnapshot('period', 'another-run')).rejects.toThrow(/incompleta/)
+})
 it('network failure after sending a decision requires history refresh before retry', async () => {
   rpc.mockRejectedValue(new TypeError('Network connection lost'))
   await expect(commitAssignments(pool([[99]]), [{ kind: 'confirm', student_id: 's0' }])).rejects.toMatchObject({ code: 'UNCERTAIN_COMMIT', message: expect.stringContaining('Actualiza cupos e historial') })

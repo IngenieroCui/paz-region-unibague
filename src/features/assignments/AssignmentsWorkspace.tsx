@@ -18,8 +18,8 @@ export function AssignmentsWorkspace() {
   const metadata = useResource(loadAssignmentMetadata)
   const [periodSelection, setPeriod] = useState(() => new URLSearchParams(window.location.search).get('period') ?? ''); const [runId, setRun] = useState(''); const [tab, setTab] = useState('overview')
   const period = periodSelection || metadata.data?.periods.find(p => p.is_current)?.id || metadata.data?.periods[0]?.id || ''
-  if (metadata.loading) return <p role="status">Cargando asignaciones…</p>
-  if (metadata.error) return <ErrorState title={metadata.error} onRetry={() => void metadata.reload()} />
+  if (metadata.loading && !metadata.data) return <p role="status">Cargando asignaciones…</p>
+  if (metadata.error && !metadata.data) return <ErrorState title={metadata.error} onRetry={() => void metadata.reload()} />
   const runs = metadata.data?.runs.filter(r => r.academic_period_id === period) ?? []
   return <div className="module-stack assignments-workspace">
     <PageHeader eyebrow="Administración" title="Asignaciones" description="Optimización global, revisión y decisiones definitivas por periodo." />
@@ -27,7 +27,8 @@ export function AssignmentsWorkspace() {
     <nav aria-label="Secciones de asignaciones" className="module-actions">{[['overview', 'Resumen'], ['optimize', 'Optimizar y revisar'], ['manual', 'Intervención manual'], ['history', 'Historial']].map(([key, label]) => <Button key={key} variant={tab === key ? 'primary' : 'secondary'} aria-pressed={tab === key} onClick={() => setTab(key!)}>{label}</Button>)}</nav>
     <div className="assignment-filters"><Select label="Periodo académico" value={period} onChange={e => { setPeriod(e.target.value); setRun('') }}>{metadata.data?.periods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</Select>
       <Select label="Ejecución completada" value={runId} onChange={e => setRun(e.target.value)}><option value="">Sin ejecución · intervención manual</option>{runs.map(r => <option key={r.id} value={r.id}>{new Date(r.created_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })} · {r.id}</option>)}</Select></div>
-    <Button variant="secondary" onClick={() => void metadata.reload()}>Actualizar ejecuciones</Button>
+    <Button variant="secondary" loading={metadata.loading} onClick={() => void metadata.reload()}>Actualizar ejecuciones</Button>
+    {metadata.error && <ErrorState title={metadata.error} onRetry={() => void metadata.reload()} />}
     {period ? <PeriodWorkspace key={`${period}/${runId}`} periodId={period} runId={runId} tab={tab} periodLabel={metadata.data?.periods.find(p => p.id === period)?.name ?? period} /> : <EmptyState title="Sin periodos académicos">Configura un periodo real antes de asignar.</EmptyState>}
   </div>
 }
@@ -92,7 +93,7 @@ function PeriodWorkspace({ periodId, runId, tab, periodLabel }: { periodId: stri
     {error && <Alert tone="error" title={error} />}
     {success && <Alert tone="success" title={success}><a href="/app/admin/advisors">Revisar asesor individual</a> · <a href="/app/admin/groups">Vincular equipo del proyecto</a></Alert>}
     <p>Regla conservadora provisional: proyecto aprobado y organización aprobada con verificación. Requiere validación institucional; no constituye normativa oficial.</p>
-    <p>Los vínculos con asesores y equipos están pendientes de integración. La decisión confirma estudiante y plaza.</p>
+    <p>La confirmación registra el vínculo de asesoría cuando existe. El equipo se selecciona después; los pendientes se informan al confirmar.</p>
     {tab === 'overview' && <Card><h2>Resumen · {periodLabel}</h2><dl className="assignment-metrics">{[
       ['Estudiantes elegibles', snapshot.students.filter(s => s.active && s.eligible).length], ['Plazas habilitadas', snapshot.positions.filter(p => p.active && p.approved && p.validated).length],
       ['Cupos habilitados', snapshot.positions.filter(p => p.active && p.approved && p.validated).reduce((n, p) => n + p.capacity, 0)], ['Confirmados', existing.length],
