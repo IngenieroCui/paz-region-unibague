@@ -1,0 +1,89 @@
+{
+  "mapping_id": "canonical-1.0",
+  "description": "Contrato de entrada canónico del motor (encabezados en español). Las hojas institucionales reales deben exportarse a este contrato o mapearse con un archivo de mapeo propio.",
+  "header_row": 1,
+  "entities": {
+    "students": {
+      "sheet": ["Estudiantes"],
+      "required": ["student_id", "period", "academic_program"],
+      "columns": {
+        "student_id": ["ID_Estudiante"],
+        "period": ["Periodo"],
+        "academic_program": ["Programa"],
+        "origin_municipality": ["Municipio_Origen"],
+        "eligible": ["Habilitado"],
+        "expectations_text": ["Expectativas"],
+        "learning_goals_text": ["Aprendizajes_Esperados"],
+        "skills_text": ["Habilidades"],
+        "interests_text": ["Intereses"],
+        "desired_work_text": ["Trabajo_Deseado"],
+        "modality_preference": ["Modalidad_Preferida"]
+      }
+    },
+    "vacancies": {
+      "sheet": ["Plazas"],
+      "required": ["vacancy_id", "period", "capacity", "status", "vacancy_type"],
+      "columns": {
+        "vacancy_id": ["ID_Plaza"],
+        "period": ["Periodo"],
+        "capacity": ["Cupos"],
+        "status": ["Estado"],
+        "vacancy_type": ["Tipo_Plaza"],
+        "project_id": ["ID_Proyecto"],
+        "project_name": ["Nombre_Proyecto"],
+        "project_description": ["Descripcion_Proyecto"],
+        "project_line": ["Linea_Proyecto"],
+        "organization_id": ["ID_Organizacion"],
+        "organization_name": ["Nombre_Organizacion"],
+        "department": ["Departamento"],
+        "municipality": ["Municipio"],
+        "modality": ["Modalidad"],
+        "program_profile": ["Perfil_Programa"],
+        "program_profile_alt": ["Perfil_Programa_Alterno"],
+        "activities_text": ["Actividades"],
+        "requirements_text": ["Requisitos"],
+        "org_needs_text": ["Necesidades_Organizacion"],
+        "call_code": ["Codigo_Convocatoria"]
+      }
+    },
+    "decisions": {
+      "sheet": ["Decisiones_Directas"],
+      "optional_sheet": true,
+      "required": ["student_id", "period", "direct_type", "approval_status"],
+      "columns": {
+        "student_id": ["ID_Estudiante"],
+        "period": ["Periodo"],
+        "direct_type": ["Tipo_Directa"],
+        "approval_status": ["Estado_Aprobacion"],
+        "confirmed_vacancy_id": ["ID_Plaza_Confirmada"],
+        "placement_confirmed": ["Ubicacion_Confirmada"],
+        "approved_municipality": ["Municipio_Aprobado"],
+        "approved_modalities": ["Modalidades_Aprobadas"],
+        "call_code": ["Codigo_Convocatoria"]
+      }
+    },
+    "enrollments": {
+      "sheet": ["Matriculas_SIGA"],
+      "optional_sheet": true,
+      "required": ["student_id", "vacancy_id", "period"],
+      "columns": {
+        "student_id": ["ID_Estudiante"],
+        "vacancy_id": ["ID_Plaza"],
+        "period": ["Periodo"],
+        "status": ["Estado"]
+      }
+    },
+    "labels": {
+      "sheet": ["Etiquetas"],
+      "optional_sheet": true,
+      "required": ["student_id", "vacancy_id", "period", "value", "source"],
+      "columns": {
+        "student_id": ["ID_Estudiante"],
+        "vacancy_id": ["ID_Plaza"],
+        "period": ["Periodo"],
+        "value": ["Etiqueta"],
+        "source": ["Fuente_Etiqueta"]
+      }
+    }
+  }
+}

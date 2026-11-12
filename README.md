@@ -1,5 +1,7 @@
 # paz_region_unibague
 
+> **Re-alcance (nov-2026):** el entregable vigente es el motor independiente Excel → Excel en [`matching_engine/`](matching_engine/README.md). La plataforma descrita abajo se conserva como referencia y ya no evoluciona. Ver [docs/RE_SCOPE_2026_11.md](docs/RE_SCOPE_2026_11.md) y [docs/data-source-audit.md](docs/data-source-audit.md).
+
 Plataforma de gestión del programa **Paz y Región de la Universidad de Ibagué**.
 
 **Demo actual:** esta rama apunta a Supabase `paz-region-demo` (`irykykwhvattrduuqxhj`). Google y el registro público permanecen desactivados. El despliegue protegido de Vercel conserva SSO; los usuarios autorizados pueden iniciar sesión con las cuentas ficticias creadas por el seeder.

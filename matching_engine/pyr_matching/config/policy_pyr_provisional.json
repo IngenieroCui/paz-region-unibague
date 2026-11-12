@@ -1,0 +1,87 @@
+{
+  "policy_id": "pyr-provisional-2026-11-12",
+  "policy_status": "PROVISIONAL_NO_APROBADA_POR_UNIBAGUE",
+  "algorithm_version": "hybrid-pyr-v0.2",
+  "notes": "Todos los pesos, umbrales y reglas son valores por defecto de ingeniería pendientes de aprobación institucional. Ver docs/POLICY_DECISIONS.md.",
+  "weights": {
+    "program": 30,
+    "semantic": 35,
+    "lexical": 10,
+    "skills": 10,
+    "location": 10,
+    "modality": 5
+  },
+  "minimum_recommended_score": 50,
+  "alt_profile_score": 85,
+  "location_match_score": 100,
+  "location_mismatch_score": 40,
+  "top_k": 5,
+  "top_k_students_per_vacancy": 10,
+  "program_profile_rule": "hard",
+  "allowed_vacancy_statuses": ["APROBADA"],
+  "siga_vacancy_types": ["NORMAL"],
+  "direct_type_vacancy_types": {
+    "MUNICIPIO_ORIGEN": ["MUNICIPIO_ORIGEN", "NORMAL"],
+    "CASO_ESPECIAL": ["CASO_ESPECIAL", "NORMAL"],
+    "CONVOCATORIA": ["CONVOCATORIA", "CONVOCATORIA_UNIBAGUE"]
+  },
+  "direct_types_requiring_exact_vacancy": ["CONVOCATORIA"],
+  "direct_types_requiring_approved_municipality": ["MUNICIPIO_ORIGEN"],
+  "reserve_proposed_direct_capacity": true,
+  "pending_direct_receive_siga_recommendations": false,
+  "active_enrollment_statuses": ["MATRICULADO", "CONFIRMADO", "INSCRITO"],
+  "semantic": {
+    "backend": "tfidf",
+    "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "fallback_backend": "tfidf"
+  },
+  "value_aliases": {
+    "vacancy_type": {
+      "NORMAL": "NORMAL",
+      "MUNICIPIO_DE_ORIGEN": "MUNICIPIO_ORIGEN",
+      "MUNICIPIO_ORIGEN": "MUNICIPIO_ORIGEN",
+      "CASO_ESPECIAL": "CASO_ESPECIAL",
+      "CONVOCATORIA": "CONVOCATORIA",
+      "CONVOCATORIA_UNIBAGUE": "CONVOCATORIA_UNIBAGUE"
+    },
+    "status": {
+      "APROBADA": "APROBADA",
+      "APROBADO": "APROBADA"
+    },
+    "direct_type": {
+      "CASO_ESPECIAL": "CASO_ESPECIAL",
+      "MUNICIPIO_DE_ORIGEN": "MUNICIPIO_ORIGEN",
+      "MUNICIPIO_ORIGEN": "MUNICIPIO_ORIGEN",
+      "PAZ_Y_REGION_EN_TU_TERRITORIO": "MUNICIPIO_ORIGEN",
+      "CONVOCATORIA": "CONVOCATORIA",
+      "CONVOCATORIA_UNIBAGUE": "CONVOCATORIA"
+    },
+    "approval_status": {
+      "APROBADO": "APROBADO",
+      "APROBADA": "APROBADO",
+      "SI": "APROBADO",
+      "PENDIENTE": "PENDIENTE",
+      "EN_REVISION": "PENDIENTE",
+      "RECHAZADO": "RECHAZADO",
+      "RECHAZADA": "RECHAZADO",
+      "NO": "RECHAZADO"
+    }
+  },
+  "training": {
+    "accepted_label_sources": ["REVISION_EXPERTA_PAR", "EVALUACION_RESULTADO_VALIDADA"],
+    "rejected_label_sources_reason": {
+      "ASIGNACION_HISTORICA": "Una asignación histórica no es una etiqueta de idoneidad: refleja libre elección SIGA, restricciones de disponibilidad y asignaciones forzadas (sesgo de selección).",
+      "MATRICULA_SIGA": "La matrícula SIGA es una elección del estudiante sujeta a orden de llegada, no un juicio de idoneidad."
+    },
+    "positive_threshold": 0.5,
+    "min_labels": 200,
+    "min_positive": 20,
+    "min_periods": 2,
+    "l2": 1.0,
+    "learning_rate": 0.5,
+    "epochs": 800,
+    "seed": 20261112,
+    "promotion_min_auc_delta": 0.0,
+    "eval_k": 3
+  }
+}
