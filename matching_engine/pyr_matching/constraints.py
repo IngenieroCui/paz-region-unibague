@@ -16,6 +16,7 @@ BLOCKER_TEXT = {
     "TIPO_PLAZA_NO_HABILITADO": "El tipo de plaza no corresponde a este flujo (SIGA o tipo de directa).",
     "PROGRAMA_NO_COMPATIBLE": "El programa del estudiante no está en el perfil ni en el perfil alterno de la plaza.",
     "PROGRAMA_NO_VERIFICABLE": "Falta el programa del estudiante; la regla de perfil no puede verificarse.",
+    "PERFIL_PLAZA_NO_VERIFICABLE": "La plaza no registra perfil académico (ni alterno); la regla obligatoria de perfil no puede verificarse. Requiere revisión institucional.",
     "MUNICIPIO_RESTRINGIDO": "La plaza está fuera del municipio aprobado institucionalmente.",
     "MUNICIPIO_NO_VERIFICABLE": "La plaza no tiene municipio; no puede verificarse la restricción aprobada.",
     "MODALIDAD_RESTRINGIDA": "La modalidad de la plaza no está entre las modalidades aprobadas.",
@@ -39,6 +40,15 @@ def program_relation(student: Student, vacancy: Vacancy) -> str:
     if prog == alt:
         return "alt"
     return "none"
+
+
+def missing_profile_mode(policy: Policy) -> str:
+    """'block' (default, fail safe) or 'review' (allowed but flagged REQUIERE_REVISION_PERFIL)."""
+    return policy.get("missing_vacancy_profile", "block")
+
+
+def needs_profile_review(student: Student, vacancy: Vacancy, policy: Policy) -> bool:
+    return policy["program_profile_rule"] == "hard" and missing_profile_mode(policy) == "review" and program_relation(student, vacancy) == "unknown_vacancy"
 
 
 def check_pair(
@@ -67,6 +77,9 @@ def check_pair(
             b.append("PROGRAMA_NO_COMPATIBLE")
         elif rel == "unknown_student":
             b.append("PROGRAMA_NO_VERIFICABLE")
+        elif rel == "unknown_vacancy" and missing_profile_mode(policy) == "block":
+            # v0.2 let these pairs through: an unverifiable mandatory rule must fail safe.
+            b.append("PERFIL_PLAZA_NO_VERIFICABLE")
     if decision is not None:
         if decision.approved_municipality:
             if not vacancy.municipality:

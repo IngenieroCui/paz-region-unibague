@@ -18,11 +18,12 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from . import __version__
+from .audit import audit_result
 from .constraints import BLOCKER_TEXT, check_pair
 from .optimizer import Edge, min_cost_assignment
 from .policy import Policy
 from .schema import OUTPUT_SCHEMA_VERSION, DirectDecision, InputBundle, Student, Vacancy
-from .scoring import PairScore, score_pair
+from .scoring import PairScore, backend_texts, score_pair
 from .semantic import build_backend
 
 
@@ -56,10 +57,14 @@ def validate(bundle: InputBundle, period: str, policy: Policy) -> tuple[list[dic
         issues.append({"code": "SIN_ESTUDIANTES_EN_PERIODO", "sheet": "Estudiantes", "detail": period})
     if not vc:
         issues.append({"code": "SIN_PLAZAS_EN_PERIODO", "sheet": "Plazas", "detail": period})
-    for name, ids in (("Estudiantes", [s.student_id for s in st]), ("Plazas", [v.vacancy_id for v in vc])):
-        for dup, n in Counter(ids).items():
+    for name, recs, key in (("Estudiantes", st, "student_id"), ("Plazas", vc, "vacancy_id")):
+        for dup, n in Counter(getattr(r, key) for r in recs).items():
             if n > 1:
-                issues.append({"code": "ID_DUPLICADO", "sheet": name, "id": dup})
+                srcs = sorted({r.source for r in recs if getattr(r, key) == dup and r.source})
+                issue = {"code": "ID_DUPLICADO", "sheet": name, "id": dup}
+                if srcs:
+                    issue["fuentes"] = "; ".join(srcs)  # file::sheet::row, never cell contents
+                issues.append(issue)
     for v in vc:
         if not isinstance(v.capacity, int) or v.capacity < 0:
             issues.append({"code": "CUPOS_INVALIDOS", "sheet": "Plazas", "id": v.vacancy_id})
@@ -127,11 +132,13 @@ def run_match(
     semantic_override: str | None = None,
     encoder=None,
     model=None,
+    behavior_model=None,
     simulate_general_assignment: bool = False,
     pairs_detail: str = "top",
     run_timestamp: str | None = None,
 ) -> MatchResult:
     t0 = time.perf_counter()
+    _check_model_compatibility(policy, model, behavior_model)
     issues, warnings = validate(bundle, period, policy)
     if issues:
         raise ValidationFailed(issues)
@@ -147,7 +154,7 @@ def run_match(
 
     backend, sem_warn = build_backend(policy, semantic_override, encoder=encoder)
     warnings += sem_warn
-    backend.prepare([s.professional_text() for s in students] + [v.professional_text() for v in vacancies])
+    backend.prepare(backend_texts(policy, students, vacancies))
     threshold = policy["minimum_recommended_score"]
 
     capacity = {v.vacancy_id: v.capacity for v in vacancies}
@@ -204,7 +211,7 @@ def run_match(
             placed.add(sid)
             if over:
                 warnings.append(f"CONFIRMADA_EXCEDE_CUPOS: plaza {v.vacancy_id} supera sus cupos con asignaciones confirmadas; requiere revisión humana.")
-            ps = score_pair(s, v, policy, backend, [], model)
+            ps = score_pair(s, v, policy, backend, [], model, behavior_model)
             directas.append({
                 "id_estudiante": sid, **_vac_cols(v), "tipo_directa": d.direct_type,
                 "estado": "CONFIRMADA_FIJA", "es_asignacion_real": "SI",
@@ -241,7 +248,7 @@ def run_match(
             if b:
                 blocks.update(b)
                 continue
-            ps = score_pair(s, v, policy, backend, [], model)
+            ps = score_pair(s, v, policy, backend, [], model, behavior_model)
             direct_scores[(sid, v.vacancy_id)] = ps
             direct_edges.append(Edge(sid, v.vacancy_id, ps.total))
         if not any(e.student_id == sid for e in direct_edges):
@@ -299,7 +306,7 @@ def run_match(
             if b:
                 blocks.update(b)
                 continue
-            scored.append(score_pair(s, v, policy, backend, [], model))
+            scored.append(score_pair(s, v, policy, backend, [], model, behavior_model))
         scored.sort(key=_rank_key)
         if not scored:
             unplaced(s.student_id, "SIN_RECOMENDACION", "SIN_OPCIONES_ELEGIBLES", "Revisar oferta de plazas para su programa o gestionar plaza.", "SIGA", _blocker_summary(blocks))
@@ -312,6 +319,8 @@ def run_match(
                 "compatibilidad": ps.total, "sobre_umbral": "SI" if ps.total >= threshold else "NO",
                 "cobertura_evidencia": round(ps.coverage, 4), "confianza_evidencia": ps.confidence,
                 "tipo_resultado": "RECOMENDACION_NO_VINCULANTE",
+                "componentes_sin_evidencia": ",".join(k for k in ps.missing if k != "historical") or None,
+                "alertas": ",".join(ps.flags) or None,
                 "explicacion": ps.explanation,
             })
             if pairs_detail == "top":
@@ -358,6 +367,8 @@ def run_match(
         "version_motor": __version__,
         "version_algoritmo": policy["algorithm_version"] + (f"+{model.model_id}" if model else ""),
         "modelo_supervisado": model.model_id if model else "NINGUNO (no entrenado; línea base explicable)",
+        "modelo_comportamiento_historico": (behavior_model.model_id + " (EXPERIMENTAL; peso " + f"{policy.weights.get('historical', 0):g})") if behavior_model else "NINGUNO",
+        "componentes_entrenados": "re-ranqueador supervisado " + model.model_id if model else "ninguno: pesos configurados manualmente (provisionales), no aprendidos",
         "politica_id": policy["policy_id"],
         "politica_estado": policy.get("policy_status"),
         "politica_huella": policy.fingerprint,
@@ -397,13 +408,6 @@ def run_match(
         "archivos_fuente_sha256": "; ".join(f"{k}={v}" for k, v in sorted(bundle.source_files.items())),
         "advertencias": len(warnings),
     }
-    # Defensive invariant: no output row may break a hard rule or capacity.
-    violations = _audit(directas, simulacion, plazas, capacity)
-    summary["violaciones_restricciones_duras"] = len(violations)
-    if violations:  # pragma: no cover - would be an engine bug
-        raise AssertionError("Invariante violado: " + "; ".join(violations))
-    summary["duracion_ms"] = round((time.perf_counter() - t0) * 1000, 1)
-
     result = MatchResult(warnings=warnings, summary=summary)
     result.tables = {
         "Asignaciones_Directas": sorted(directas, key=lambda r: (r["estado"], r["id_estudiante"])),
@@ -415,7 +419,35 @@ def run_match(
     }
     if simulate_general_assignment:
         result.tables["Simulacion_No_Vinculante"] = sorted(simulacion, key=lambda r: r["id_estudiante"])
+
+    # Defensive invariants. (1) legacy bookkeeping check; (2) independent recomputation from inputs that
+    # separates institutional (historical) conflicts from engine-generated violations.
+    legacy = _audit(directas, simulacion, plazas, capacity)
+    audit_rows, audit_counts = audit_result(bundle, period, policy, result.tables)
+    summary.update(audit_counts)
+    summary["violaciones_restricciones_duras"] = audit_counts["violaciones_generadas_por_motor"] + len(legacy)
+    if legacy or audit_counts["violaciones_generadas_por_motor"]:  # pragma: no cover - would be an engine bug
+        raise AssertionError("Invariante violado: " + "; ".join(legacy + [f"{r['codigo']} {r['id_estudiante']} {r['id_plaza']}" for r in audit_rows if r["origen"] == "GENERADO_POR_MOTOR"]))
+    result.tables["Auditoria_Restricciones"] = audit_rows
+    summary["duracion_ms"] = round((time.perf_counter() - t0) * 1000, 1)
     return result
+
+
+def _check_model_compatibility(policy: Policy, model, behavior_model) -> None:
+    """A model can only re-score pairs for the algorithm/feature schema it was trained on, and a
+    historical-BEHAVIOUR model can never act as the suitability re-ranker (and vice versa)."""
+    if model is not None:
+        track = getattr(model, "track", "suitability")
+        if track != "suitability":
+            raise ValueError(f"MODELO_NO_ES_DE_IDONEIDAD: el modelo {model.model_id} es de pista '{track}'; no puede usarse como re-ranqueador de idoneidad.")
+        base = getattr(model, "algorithm_base", None)
+        if base and base != policy["algorithm_version"]:
+            raise ValueError(f"MODELO_INCOMPATIBLE: {model.model_id} fue entrenado sobre {base}, la política usa {policy['algorithm_version']}.")
+    if behavior_model is not None:
+        if getattr(behavior_model, "track", None) != "behavior":
+            raise ValueError("El modelo de comportamiento histórico debe tener pista 'behavior'.")
+        if policy["algorithm_version"] != "hybrid-pyr-v0.3":
+            raise ValueError("La señal histórica solo existe en hybrid-pyr-v0.3.")
 
 
 def _pair_row(ps: PairScore, contexto: str, period: str) -> dict:
@@ -428,6 +460,8 @@ def _pair_row(ps: PairScore, contexto: str, period: str) -> dict:
         row[f"peso_efectivo_{k}"] = round(v, 4)
     row["bloqueos"] = ",".join(ps.blockers)
     row["modelo"] = ps.model_id or ""
+    row["sin_evidencia"] = ",".join(k for k in ps.missing if k != "historical") or None
+    row["alertas"] = ",".join(ps.flags) or None
     return row
 
 

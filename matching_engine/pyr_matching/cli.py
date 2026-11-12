@@ -1,6 +1,7 @@
 """Command line: `pyr-match <command>` (or `python -m pyr_matching <command>`).
 
-Exit codes: 0 ok · 2 validation/mapping error · 3 not trainable (missing/invalid labels) · 1 unexpected.
+Exit codes: 0 ok · 2 validation/mapping error · 3 not trainable (missing/invalid labels) ·
+4 model/registry refused (incompatible, not approved, wrong track) · 1 unexpected.
 Logs contain counts, codes and IDs only – never names, documents or free-text answers.
 """
 from __future__ import annotations
@@ -43,7 +44,8 @@ def main(argv=None) -> int:
     m.add_argument("--json-out", default=None, help="Además, exporta el resultado estructurado (contrato JSON).")
     m.add_argument("--semantic", choices=["tfidf", "sentence-transformers", "none"], default=None, help="Sobrescribe el backend semántico de la política.")
     m.add_argument("--model", default=None, help="Ruta a model.json de un modelo supervisado promovido (opcional).")
-    m.add_argument("--registry", default=None, help="Usa el modelo activo del registro (si existe).")
+    m.add_argument("--registry", default=None, help="Usa el modelo activo del registro (si existe y es compatible con la política).")
+    m.add_argument("--behavior-model", default=None, help="model.json de comportamiento histórico (EXPERIMENTAL; solo v0.3 y solo si la política le da peso).")
     m.add_argument("--simulate", action="store_true", help="Agrega hoja de simulación NO vinculante de asignación general.")
     m.add_argument("--pairs", choices=["none", "top", "all"], default="top", help="Detalle de Pares_Evaluados.")
     m.add_argument("--timestamp", default=None, help="Marca de tiempo fija (reproducibilidad).")
@@ -59,10 +61,19 @@ def main(argv=None) -> int:
     t.add_argument("--labels", nargs="+", required=True, help=".xlsx con hoja Etiquetas.")
     t.add_argument("--registry", required=True, help="Directorio del registro de modelos (fuera de git).")
 
-    g = sub.add_parser("registry", help="Lista, activa o revierte modelos.")
+    g = sub.add_parser("registry", help="Lista, verifica, activa (con aprobación) o revierte modelos.")
     g.add_argument("--registry", required=True)
-    g.add_argument("action", choices=["list", "activate", "rollback-to-baseline"])
+    g.add_argument("action", choices=["list", "check", "activate", "rollback", "rollback-to-baseline"])
     g.add_argument("--model-id", default=None)
+    g.add_argument("--policy", default=None, help="Política vigente contra la que se verifica la compatibilidad.")
+    g.add_argument("--approved-by", default=None, help="Rol/persona que aprueba la activación (obligatorio para activar).")
+    g.add_argument("--reason", default=None)
+    g.add_argument("--track", choices=["suitability", "behavior"], default="suitability")
+
+    dm = sub.add_parser("download-model", help="Descarga explícita (una vez) del modelo público de embeddings. No envía datos.")
+    dm.add_argument("--model", default=None, help="Por defecto, el de la política.")
+    dm.add_argument("--policy", default=None)
+    dm.add_argument("--cache-folder", default=None)
 
     s = sub.add_parser("make-sample", help="Genera libros sintéticos de ejemplo (sin datos reales).")
     s.add_argument("--out", required=True)
@@ -71,22 +82,103 @@ def main(argv=None) -> int:
     s.add_argument("--vacancies", type=int, default=80)
     s.add_argument("--seed", type=int, default=7)
 
+    hb = sub.add_parser("historical-build", help="Reconstruye el histórico canónico (seudonimizado) desde exportaciones Excel locales.")
+    hb.add_argument("--manifest", required=True, help="JSON con las fuentes {kind, period, path, sheet?} y capacity_mode.")
+    hb.add_argument("--out-dir", required=True, help="Carpeta institucional FUERA de git.")
+    hb.add_argument("--pseudonym-key-file", default=None, help="Archivo con la clave secreta (por defecto variable PYR_PSEUDONYM_KEY).")
+    hb.add_argument("--capacity-mode", choices=["none", "approved_column", "row_count", "observed_count"], default=None,
+                    help="Reconstrucción de cupos (requiere autorización institucional; por defecto la del manifiesto o none).")
+    hb.add_argument("--policy", default=None)
+    hb.add_argument("--export-engine-period", default=None, help="Además exporta ese periodo en el contrato Excel del motor.")
+    hb.add_argument("--allow-inside-repo", action="store_true", help="Solo para pruebas: permite escribir dentro del repositorio.")
+
+    hs = sub.add_parser("make-historical-sample", help="Genera libros históricos SINTÉTICOS en formato institucional + manifiesto.")
+    hs.add_argument("--out-dir", required=True)
+    hs.add_argument("--seed", type=int, default=11)
+
+    tb = sub.add_parser("train-behavior", help="Pista A (EXPERIMENTAL): modelo de comportamiento histórico. No es idoneidad.")
+    tb.add_argument("--dataset", required=True, help="historico_canonico.json/.xlsx producido por historical-build.")
+    tb.add_argument("--registry", required=True, help="Registro de la pista 'behavior' (carpeta distinta a la de idoneidad, fuera de git).")
+    tb.add_argument("--policy", default=None, help="Política v0.3 (por defecto config/policy_pyr_v03_provisional.json).")
+    tb.add_argument("--test-period", default=None, help="Periodo de prueba intocado (por defecto el último).")
+    tb.add_argument("--candidate-mode", choices=["eligible_with_uptake", "eligible_all"], default="eligible_with_uptake")
+    tb.add_argument("--semantic", choices=["tfidf", "sentence-transformers", "none"], default=None)
+
     a = ap.parse_args(argv)
     try:
+        if a.cmd == "train-behavior":
+            from .behavior import NotEnoughHistory, train_behavior
+            from .historical import load_dataset
+            from .policy import POLICY_V03_PATH
+
+            pol = Policy.load(a.policy or POLICY_V03_PATH)
+            try:
+                art = train_behavior(load_dataset(a.dataset), pol, a.registry, a.test_period, a.candidate_mode, a.semantic,
+                                     command="pyr-match " + " ".join(shlex.quote(x) for x in (argv or sys.argv[1:])))
+            except NotEnoughHistory as exc:
+                print(json.dumps({"estado": "HISTORIA_INSUFICIENTE", "motivos": exc.reasons, "reporte": exc.report}, indent=2, ensure_ascii=False))
+                return 3
+            print(json.dumps({k: art[k] for k in ("model_id", "status", "report", "metrics", "limitations")}, indent=2, ensure_ascii=False))
+            return 0
+        if a.cmd == "make-historical-sample":
+            from .historical.synthetic import make_historical_sample
+
+            print(f"Manifiesto sintético: {make_historical_sample(a.out_dir, seed=a.seed)}")
+            return 0
+        if a.cmd == "historical-build":
+            from .historical import HistoricalConfigError, Pseudonymizer, UnsafeOutputLocation, build_historical_dataset, write_dataset
+            from .historical.store import export_engine_workbook
+
+            try:
+                manifest = json.loads(Path(a.manifest).read_text(encoding="utf-8"))
+                if a.capacity_mode:
+                    manifest["capacity_mode"] = a.capacity_mode
+                pz = Pseudonymizer.from_env_or_file(a.pseudonym_key_file)
+                ds = build_historical_dataset(manifest, pz, Policy.load(a.policy), base_dir=Path(a.manifest).parent)
+                paths = write_dataset(ds, a.out_dir, a.allow_inside_repo)
+                if a.export_engine_period:
+                    paths["engine_xlsx"] = export_engine_workbook(ds, a.export_engine_period, Path(a.out_dir) / f"insumo_motor_{a.export_engine_period}.xlsx", a.allow_inside_repo)
+            except (HistoricalConfigError, UnsafeOutputLocation, ValueError) as exc:
+                print(f"HISTORICO: {exc}", file=sys.stderr)
+                return 2
+            print(json.dumps({"meta": ds.meta, "salidas": {k: str(v) for k, v in paths.items()}}, indent=2, ensure_ascii=False))
+            return 0
         if a.cmd == "make-sample":
             from .fixtures import hand_scenario, random_scenario
 
             path = hand_scenario(a.out) if a.kind == "hand" else random_scenario(a.out, n_students=a.students, n_vacancies=a.vacancies, seed=a.seed)
             print(f"Libro sintético escrito en {path}")
             return 0
-        if a.cmd == "registry":
-            from .training import Registry
+        if a.cmd == "download-model":
+            from .semantic import download_model
 
-            reg = Registry(a.registry)
-            if a.action == "activate":
-                reg.activate(a.model_id)
-            elif a.action == "rollback-to-baseline":
-                reg.activate(None)
+            pol = Policy.load(a.policy)
+            name = a.model or pol["semantic"]["embedding_model"]
+            download_model(name, a.cache_folder)
+            print(f"Modelo disponible localmente: {name}")
+            return 0
+        if a.cmd == "registry":
+            from .training import Registry, RegistryError
+
+            reg = Registry(a.registry, track=a.track)
+            pol = Policy.load(a.policy) if a.policy else None
+            try:
+                if a.action == "check":
+                    if not (a.model_id and pol):
+                        print("check requiere --model-id y --policy", file=sys.stderr)
+                        return 2
+                    probs = reg.activation_problems(a.model_id, pol)
+                    print(json.dumps({"model_id": a.model_id, "activable": not probs, "problemas": probs}, indent=2, ensure_ascii=False))
+                    return 0 if not probs else 4
+                if a.action == "activate":
+                    reg.activate(a.model_id, pol, a.approved_by, a.reason)
+                elif a.action == "rollback":
+                    reg.rollback(pol, a.approved_by)
+                elif a.action == "rollback-to-baseline":
+                    reg.activate(None, pol, a.approved_by, a.reason)
+            except RegistryError as exc:
+                print(f"REGISTRO: {exc}", file=sys.stderr)
+                return 4
             print(json.dumps(reg.index(), indent=2, ensure_ascii=False))
             return 0
 
@@ -102,16 +194,24 @@ def main(argv=None) -> int:
             return 2 if issues else 0
 
         if a.cmd == "match":
-            model = None
-            if a.model:
-                from .training import LogisticModel
+            model = behavior = None
+            try:
+                if a.model:
+                    from .training import LogisticModel
 
-                model = LogisticModel.load(a.model)
-            elif a.registry:
-                from .training import Registry
+                    model = LogisticModel.load(a.model, policy=policy)
+                elif a.registry:
+                    from .training import Registry
 
-                model = Registry(a.registry).active_model()
-            res = run_match(bundle, a.period, policy, semantic_override=a.semantic, model=model,
+                    model = Registry(a.registry).active_model(policy)
+                if a.behavior_model:
+                    from .behavior import BehaviorModel
+
+                    behavior = BehaviorModel.load(a.behavior_model, policy)
+            except ValueError as exc:
+                print(f"MODELO RECHAZADO: {exc}", file=sys.stderr)
+                return 4
+            res = run_match(bundle, a.period, policy, semantic_override=a.semantic, model=model, behavior_model=behavior,
                             simulate_general_assignment=a.simulate, pairs_detail=a.pairs, run_timestamp=a.timestamp)
             write_result(res, a.out)
             if a.json_out:

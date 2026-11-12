@@ -43,4 +43,11 @@ OUTPUT_DICTIONARY = [
     _d("Pares_Evaluados", "peso_efectivo_<componente>", "Peso renormalizado aplicado en esta pareja.", "0-100"),
     _d("Pares_Evaluados", "bloqueos", "Códigos de reglas duras que bloquean la pareja.", "códigos"),
     _d("Resumen_Ejecucion", "clave/valor", "Periodo, versiones (motor, algoritmo, política, esquema, backend semántico, modelo), conteos, coberturas, advertencias y huellas SHA-256 de archivos fuente.", "texto"),
+    _d("Recomendaciones_SIGA", "componentes_sin_evidencia", "Componentes sin evidencia para esta pareja (desconocidos: no penalizan; sus pesos se renormalizan).", "lista de componentes"),
+    _d("Recomendaciones_SIGA", "alertas", "REQUIERE_REVISION_PERFIL = la plaza no registra perfil académico (solo con política missing_vacancy_profile=review).", "texto"),
+    _d("Pares_Evaluados", "sin_evidencia", "Componentes sin evidencia para la pareja.", "lista"),
+    _d("Auditoria_Restricciones", "origen", "HISTORICO_INSTITUCIONAL = conflicto ya presente en decisiones institucionales (el motor no lo modifica, solo lo reporta). GENERADO_POR_MOTOR = violación en filas producidas por el motor (debe ser 0; si no, la ejecución se aborta).", "HISTORICO_INSTITUCIONAL | GENERADO_POR_MOTOR"),
+    _d("Auditoria_Restricciones", "codigo", "Regla verificada de forma independiente desde los insumos.", "texto"),
+    _d("Resumen_Ejecucion", "conflictos_historicos_institucionales", "Número de conflictos en decisiones institucionales existentes (sobrecupo, fuera de perfil, doble asignación).", "entero"),
+    _d("Resumen_Ejecucion", "violaciones_generadas_por_motor", "Violaciones de reglas duras o cupos en filas generadas por el motor, recalculadas de forma independiente. Siempre 0.", "0"),
 ]

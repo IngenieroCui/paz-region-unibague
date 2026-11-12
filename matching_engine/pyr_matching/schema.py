@@ -8,6 +8,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+
+def _src():
+    """Source provenance 'file::sheet::row' (diagnostics only; excluded from equality/hash)."""
+    return field(default=None, compare=False)
+
 OUTPUT_SCHEMA_VERSION = "pyr-match-result/1.0"
 FEATURE_SCHEMA_VERSION = "pyr-features/1.0"
 
@@ -31,11 +36,22 @@ class Student:
     interests_text: str | None = None
     desired_work_text: str | None = None
     modality_preference: str | None = None
+    source: str | None = _src()
 
     def professional_text(self) -> str:
         return " ".join(
             t for t in (self.expectations_text, self.learning_goals_text, self.skills_text, self.interests_text, self.desired_work_text) if t
         )
+
+    # v0.3 field-aware views (each is compared with the matching side of the plaza).
+    def aspiration_text(self) -> str:
+        return " ".join(t for t in (self.expectations_text, self.learning_goals_text) if t)
+
+    def interest_text(self) -> str:
+        return " ".join(t for t in (self.interests_text, self.desired_work_text) if t)
+
+    def capability_text(self) -> str:
+        return self.skills_text or ""
 
 
 @dataclass(frozen=True)
@@ -60,6 +76,7 @@ class Vacancy:
     requirements_text: str | None = None
     org_needs_text: str | None = None
     call_code: str | None = None
+    source: str | None = _src()
 
     def professional_text(self) -> str:
         return " ".join(
@@ -67,6 +84,12 @@ class Vacancy:
             for t in (self.project_name, self.project_line, self.project_description, self.activities_text, self.requirements_text, self.org_needs_text)
             if t
         )
+
+    def project_text(self) -> str:
+        return " ".join(t for t in (self.project_name, self.project_line, self.project_description, self.activities_text) if t)
+
+    def requirement_text(self) -> str:
+        return " ".join(t for t in (self.requirements_text, self.org_needs_text) if t)
 
 
 @dataclass(frozen=True)
@@ -81,6 +104,7 @@ class DirectDecision:
     approved_modalities: tuple[str, ...] = ()
     call_code: str | None = None
     row: int | None = None  # source row, for diagnostics only
+    source: str | None = _src()
 
 
 @dataclass(frozen=True)
@@ -90,6 +114,7 @@ class Enrollment:
     period: str
     status: str | None = "MATRICULADO"
     row: int | None = None
+    source: str | None = _src()
 
 
 @dataclass(frozen=True)
@@ -99,6 +124,7 @@ class Label:
     period: str
     value: float
     source: str | None
+    origin: str | None = _src()
 
 
 @dataclass
