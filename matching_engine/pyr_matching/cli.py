@@ -104,8 +104,69 @@ def main(argv=None) -> int:
     tb.add_argument("--candidate-mode", choices=["eligible_with_uptake", "eligible_all"], default="eligible_with_uptake")
     tb.add_argument("--semantic", choices=["tfidf", "sentence-transformers", "none"], default=None)
 
+    ev = sub.add_parser("evaluate-historical", help="Evaluación temporal: comportamiento histórico vs factibilidad (no idoneidad).")
+    ev.add_argument("--dataset", required=True)
+    ev.add_argument("--out-dir", required=True, help="Carpeta institucional fuera de git (Excel, JSON, Markdown).")
+    ev.add_argument("--test-period", default=None)
+    ev.add_argument("--candidate-mode", choices=["eligible_with_uptake", "eligible_all"], default="eligible_with_uptake")
+    ev.add_argument("--embeddings", action="store_true", help="Incluye embeddings locales (modelo ya descargado).")
+    ev.add_argument("--policy-v03", default=None)
+    ev.add_argument("--allow-inside-repo", action="store_true")
+
+    ft = sub.add_parser("feedback-template", help="Ejecuta match y genera el libro de revisión experta de parejas.")
+    _common(ft)
+    ft.add_argument("--out", required=True)
+    ft.add_argument("--per-student", type=int, default=3)
+    ft.add_argument("--blind", action="store_true", help="Oculta puntaje y explicación (reduce sesgo de anclaje; recomendado para etiquetas).")
+    ft.add_argument("--semantic", choices=["tfidf", "sentence-transformers", "none"], default=None)
+    ft.add_argument("--timestamp", default=None)
+    ft.add_argument("--allow-inside-repo", action="store_true")
+
+    fi = sub.add_parser("feedback-import", help="Valida y versiona revisiones APROBADAS en un almacén fuera de git.")
+    fi.add_argument("--files", nargs="+", required=True)
+    fi.add_argument("--store", required=True)
+    fi.add_argument("--allow-inside-repo", action="store_true")
+
+    rt = sub.add_parser("retrain", help="Reentrena un candidato con la retroalimentación aprobada (nunca lo activa).")
+    _common(rt)
+    rt.add_argument("--feedback-store", required=True)
+    rt.add_argument("--registry", required=True)
+    rt.add_argument("--report-out", default=None)
+
+    mj = sub.add_parser("match-json", help="Contrato JSON pyr-match-request/1.0 -> pyr-match-result/1.0 (integración).")
+    mj.add_argument("--request", required=True)
+    mj.add_argument("--out", required=True)
+    mj.add_argument("--policy", default=None, help="Ruta de política (si no, la indicada en la solicitud).")
+
     a = ap.parse_args(argv)
     try:
+        if a.cmd == "evaluate-historical":
+            from .evaluation import evaluate_historical, write_evaluation
+            from .historical import load_dataset
+            from .policy import POLICY_V03_PATH
+
+            rep = evaluate_historical(load_dataset(a.dataset), Policy.load(a.policy_v03 or POLICY_V03_PATH), None, a.test_period, a.candidate_mode, a.embeddings)
+            paths = write_evaluation(rep, a.out_dir, a.allow_inside_repo)
+            print(json.dumps({"estado": rep.get("estado"), "periodo_prueba": rep.get("periodo_prueba"), "salidas": {k: str(v) for k, v in paths.items()},
+                              "descargo": rep.get("descargo")}, indent=2, ensure_ascii=False))
+            return 0
+        if a.cmd == "feedback-import":
+            from .feedback import FeedbackError, import_feedback
+
+            try:
+                print(json.dumps(import_feedback(a.files, a.store, a.allow_inside_repo), indent=2, ensure_ascii=False))
+            except FeedbackError as exc:
+                print(f"RETROALIMENTACION: {exc}", file=sys.stderr)
+                return 2
+            return 0
+        if a.cmd == "match-json":
+            from .api import match_request
+
+            req = json.loads(Path(a.request).read_text(encoding="utf-8"))
+            res = match_request(req, Policy.load(a.policy) if a.policy else None)
+            Path(a.out).write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+            print(json.dumps({"status": res.get("status"), "out": a.out}, ensure_ascii=False))
+            return 0 if res.get("status") == "OK" else 2
         if a.cmd == "train-behavior":
             from .behavior import NotEnoughHistory, train_behavior
             from .historical import load_dataset
@@ -235,6 +296,23 @@ def main(argv=None) -> int:
             write_result(res, a.out)
             print(json.dumps(res.summary, indent=2, ensure_ascii=False))
             return 0
+
+        if a.cmd == "feedback-template":
+            from .feedback import make_review_workbook
+
+            res = run_match(bundle, a.period, policy, semantic_override=a.semantic, pairs_detail="all", run_timestamp=a.timestamp)
+            out = make_review_workbook(res, bundle, a.period, a.out, policy, a.per_student, a.blind, a.allow_inside_repo)
+            print(f"Libro de revisión: {out}")
+            return 0
+
+        if a.cmd == "retrain":
+            from .retrain import retrain, write_report
+
+            rep = retrain(bundle, policy, a.feedback_store, a.registry, command="pyr-match " + " ".join(shlex.quote(x) for x in (argv or sys.argv[1:])))
+            if a.report_out:
+                write_report(rep, a.report_out)
+            print(json.dumps(rep, indent=2, ensure_ascii=False, default=str))
+            return 3 if rep["estado"] == "NO_ENTRENABLE" else 0
 
         if a.cmd == "train":
             from .training import NotTrainable, train

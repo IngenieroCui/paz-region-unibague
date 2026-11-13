@@ -54,3 +54,18 @@ La activación verifica: pista `suitability`, estado `PROMOVIBLE`, mismo algorit
 
 ## Antes de promover a producción
 Revisar con la Coordinación: métricas vs línea base, brecha de sobreajuste, auditoría por programa/municipio, tamaño del periodo de prueba, y que las etiquetas no provengan de un solo semestre (no sobreajustar 2026B).
+
+## Ciclo con revisión experta (v0.3)
+```bash
+.venv/Scripts/pyr-match feedback-template --inputs insumo_2027A.xlsx --period 2027A --out D:/pyr_privado/revision_2027A.xlsx --blind
+```
+Revisores autorizados califican `evaluacion_idoneidad` (1–5 o `NO_EVALUABLE`) con un `id_revisor` seudónimo; un aprobador **distinto** marca `estado_aprobacion=APROBADA` y `aprobado_por`. `--blind` oculta puntaje y explicación (recomendado para etiquetas: evita el anclaje).
+```bash
+.venv/Scripts/pyr-match feedback-import --files D:/pyr_privado/revision_2027A.xlsx --store D:/pyr_privado/retro
+```
+Rechaza y cuenta: filas no aprobadas, huella de fila alterada (IDs modificados), sin revisor o aprobador, aprobador = revisor, valores fuera de dominio y `NO_EVALUABLE`. Varias revisiones de la misma pareja se promedian y se marca el desacuerdo. Los comentarios **no se almacenan** ni se usan. Cada importación crea una versión inmutable con huella; una versión alterada se detecta al cargar.
+```bash
+.venv/Scripts/pyr-match retrain --inputs D:/pyr_privado/insumos_2027A_2027B.xlsx --period 2027B --feedback-store D:/pyr_privado/retro --registry D:/pyr_registry --report-out D:/pyr_privado/reentreno.json
+```
+Pasos: suficiencia (mínimos de la política) → candidato con partición temporal → comparación con la línea base **y** con el modelo activo → subgrupos → registro con las versiones de retroalimentación usadas → **activación humana** (`registry activate --approved-by`) → `registry rollback` si es necesario. Código 3 = datos insuficientes.
+
