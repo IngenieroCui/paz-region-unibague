@@ -9,6 +9,23 @@ Motor independiente, explicable y versionado para la Universidad de Ibagué. Rec
 
 > No aprueba casos especiales, no selecciona ganadores de convocatoria y no matricula estudiantes. **No está entrenado** con resultados de PyR: la línea base es determinista; el re-ranqueador supervisado solo se habilita con etiquetas institucionales validadas.
 
+## Novedades v0.3 (`hybrid-pyr-v0.3`, motor 0.3.0)
+| Área | Estado | Detalle |
+|---|---|---|
+| Correcciones v0.2 | **Funcional** | Consolidación multi-hoja/multi-archivo con procedencia y duplicados explícitos · perfil de plaza faltante = bloqueo seguro · registro con verificación de política, aprobador y pistas separadas · protección contra inyección de fórmulas en Excel · auditoría independiente: `conflictos_historicos_institucionales` vs `violaciones_generadas_por_motor` (hoja `Auditoria_Restricciones`) |
+| Histórico canónico | **Funcional** (probado con datos sintéticos en formato institucional) | `historical-build`: seudonimización HMAC, PRE/POST, cobertura, problemas, procedencia. [docs/HISTORICAL_DATA.md](docs/HISTORICAL_DATA.md) |
+| Puntaje v0.3 | **Funcional, pesos provisionales NO aprendidos** | Semántica por campo (aspiraciones↔proyecto, habilidades↔requisitos, intereses↔proyecto), evidencia faltante explícita. Política `config/policy_pyr_v03_provisional.json` (v0.2 sigue siendo el defecto y conserva paridad) |
+| Embeddings locales | **Funcional, opt-in** | MiniLM multilingüe local, sin red por defecto (`download-model` explícito), lotes y caché opcional |
+| Pista A — comportamiento histórico | **EXPERIMENTAL** | `train-behavior`: logit condicional sobre elecciones SIGA; no es idoneidad; peso 0 |
+| Pista B — idoneidad supervisada | **Infraestructura lista, NO entrenada** | No existen etiquetas validadas (B4) |
+| Evaluación histórica temporal | **Funcional (herramienta)**; sin métricas reales | `evaluate-historical`: predicción vs factibilidad vs calidad, separadas. [docs/EVALUATION.md](docs/EVALUATION.md) |
+| Revisión experta y reentrenamiento | **Funcional** | `feedback-template` → `feedback-import` (versionado, validado) → `retrain` (nunca activa) → `registry activate --approved-by` / `rollback` |
+| Integración JSON | **Funcional** | `pyr_matching.api.match_request` / `match-json` (`pyr-match-request/1.0`, campos desconocidos rechazados). [docs/INTEGRATION.md](docs/INTEGRATION.md) |
+
+```bash
+.venv/Scripts/pyr-match match --inputs ejemplo.xlsx --period 2027A --out resultados.xlsx --policy pyr_matching/config/policy_pyr_v03_provisional.json
+```
+
 ## Instalación
 
 ```bash
@@ -63,6 +80,9 @@ Sin Excel: construir `pyr_matching.schema.InputBundle` y llamar `pyr_matching.pi
 | [docs/FAIRNESS_PRIVACY.md](docs/FAIRNESS_PRIVACY.md) | Datos excluidos, minimización, auditorías |
 | [docs/RETRAINING_PLAYBOOK.md](docs/RETRAINING_PLAYBOOK.md) | Cuándo y cómo entrenar, promover y revertir |
 | [docs/DEMO.md](docs/DEMO.md) | Escenario sintético verificable a mano |
+| [docs/HISTORICAL_DATA.md](docs/HISTORICAL_DATA.md) | Histórico canónico: fuentes, seudonimización, PRE/POST, cupos |
+| [docs/EVALUATION.md](docs/EVALUATION.md) | Evaluación temporal y su interpretación |
+| [docs/INTEGRATION.md](docs/INTEGRATION.md) | Contrato JSON e integración con la plataforma institucional |
 | [../docs/data-source-audit.md](../docs/data-source-audit.md) | Auditoría de fuentes institucionales |
 
 ## Pruebas

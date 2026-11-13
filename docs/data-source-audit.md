@@ -104,3 +104,11 @@ En 2026A/2026B existen además `Ev. Plazas` y `Consolidado Plaza`: valoraciones 
 - **B4** — No existen etiquetas validadas de idoneidad. Las valoraciones `Ev. Plazas` podrían ser señal de resultado (calidad de plaza), previa validación; no se usan para entrenar.
 - **B5** — P3, P4 y P5 no se releyeron en esta sesión.
 - Ningún dato institucional fue copiado al repositorio; todas las pruebas usan datos sintéticos.
+
+## 6. Adenda 12-nov-2026 (v0.3) — verificación de encabezados por periodo
+Lectura de solo lectura, **solo fila 1**, vía conector Google Sheets: `Estudiantes` y `Proy Def` (Tablero 2025A y 2025B), `Estudiantes` y `Proyectos` (Tablero 2026A y 2026B), `Respuestas de formulario 1` (Preinscripción 2025A y 2026B), `Ev. Plazas` (BD proyectos 2026A). Hallazgos:
+- `Proyectos`/`Proy Def` tienen la misma estructura en los 4 periodos: una fila por plaza con bloques repetidos `Nombre/Código/Cédula` (estudiantes ubicados) y `Tipo asignación`; 2026A/2026B añaden `Aprobados` (semántica sin confirmar). Sigue sin existir `ID_Plaza` ni `Cupos` (B2).
+- `Estudiantes` 2025A/2025B tienen **dos** columnas `Municipio origen` (se usa la primera).
+- `Ev. Plazas` es una evaluación por estudiante-plaza (asesor y estudiante, con `Puntaje Total` doble): señal de calidad POST-ubicación, no de idoneidad (D14).
+- **Incidente de minimización**: la lectura del encabezado de `Ev. Plazas` usó el rango `1:2` y devolvió una fila con datos personales de un estudiante. No se registró en ningún archivo, log, prueba ni salida; desde entonces solo se leyó la fila 1. Recomendación: compartir con el equipo exportaciones con solo encabezados, o vistas sin columnas identificatorias.
+- No se leyeron registros: el histórico canónico se construye localmente desde exportaciones institucionales con `pyr-match historical-build` (ver `matching_engine/docs/HISTORICAL_DATA.md`). **No se calcularon coberturas ni métricas sobre datos reales.**

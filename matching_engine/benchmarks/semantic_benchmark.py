@@ -27,6 +27,24 @@ PAIRS = [
     ("Quiero mejorar la atención en el hospital del pueblo.", "Gestión de calidad de los servicios de la ESE municipal."),
     ("Me apasiona la música y quiero formar bandas con jóvenes.", "Escuela de formación artística y bandas sinfónicas juveniles."),
     ("Quiero ayudar a reducir la basura del municipio.", "Plan de gestión integral de residuos sólidos y reciclaje."),
+    ("Quiero acompañar a mujeres emprendedoras del campo.", "Fortalecimiento de iniciativas productivas lideradas por mujeres rurales."),
+    ("Me interesa la prevención de la violencia en los colegios.", "Estrategias de convivencia escolar y resolución pacífica de conflictos."),
+    ("Deseo organizar los archivos y documentos de la alcaldía.", "Gestión documental y organización del archivo histórico municipal."),
+    ("Quiero enseñar a usar computadores a personas mayores.", "Alfabetización digital para adultos y adultos mayores."),
+    ("Me gustaría trabajar en la protección de animales silvestres.", "Conservación de fauna y monitoreo de biodiversidad en áreas protegidas."),
+    ("Quiero apoyar a familias a ahorrar y manejar su dinero.", "Educación financiera para hogares de bajos ingresos."),
+    ("Me interesa el turismo y mostrar la cultura de la región.", "Diseño de rutas de turismo comunitario y patrimonio cultural."),
+    ("Deseo ayudar a que la gente conozca sus derechos.", "Consultorio jurídico y pedagogía en derechos humanos."),
+    ("Quiero mejorar la nutrición de los niños.", "Seguridad alimentaria y huertas escolares para la primera infancia."),
+    ("Me apasiona el deporte y entrenar a jóvenes.", "Escuelas deportivas y aprovechamiento del tiempo libre juvenil."),
+    ("Quiero apoyar a jóvenes que consumen drogas.", "Prevención del consumo de sustancias psicoactivas en adolescentes."),
+    ("Me gustaría hacer mapas del territorio con drones.", "Cartografía social y levantamiento topográfico con sensores remotos."),
+    ("Quiero apoyar procesos de reconciliación entre vecinos.", "Mediación comunitaria y construcción de paz territorial."),
+    ("Deseo diseñar la imagen y publicidad de pequeñas empresas.", "Branding y comunicación visual para mipymes locales."),
+    ("Quiero apoyar el abastecimiento de agua potable en veredas.", "Sistemas de acueducto rural y tratamiento de agua para consumo."),
+    ("Me interesa la energía solar.", "Instalación y mantenimiento de paneles fotovoltaicos en zonas no interconectadas."),
+    ("Quiero ayudar a niños con dificultades de aprendizaje.", "Apoyo psicopedagógico e inclusión educativa en escuelas públicas."),
+    ("Me gustaría asesorar a la cooperativa en costos de producción.", "Análisis de costos y rentabilidad de la asociación cafetera."),
 ]
 
 
@@ -34,13 +52,15 @@ def evaluate(backend) -> dict:
     queries = [q for q, _ in PAIRS]
     docs = [d for _, d in PAIRS]
     backend.prepare(queries + docs)
-    hits, rr = 0, 0.0
+    hits, rr, r3 = 0, 0.0, 0
     for i, q in enumerate(queries):
         ranked = sorted(range(len(docs)), key=lambda j: (-(backend.similarity(q, docs[j]) or 0.0), j))
         pos = ranked.index(i) + 1
         hits += pos == 1
+        r3 += pos <= 3
         rr += 1 / pos
-    return {"backend": backend.version, "n": len(PAIRS), "top1_accuracy": round(hits / len(PAIRS), 3), "mrr": round(rr / len(PAIRS), 3)}
+    return {"backend": backend.version, "n": len(PAIRS), "top1_accuracy": round(hits / len(PAIRS), 3), "mrr": round(rr / len(PAIRS), 3),
+            "recall@3": round(r3 / len(PAIRS), 3)}
 
 
 if __name__ == "__main__":
@@ -50,5 +70,10 @@ if __name__ == "__main__":
     a = ap.parse_args()
     out = [evaluate(TfidfBackend())]
     if a.embeddings:
-        out.append(evaluate(SentenceTransformerBackend(a.model)))
+        import time
+
+        t = time.perf_counter()
+        r = evaluate(SentenceTransformerBackend(a.model))
+        r["segundos_incl_carga_modelo"] = round(time.perf_counter() - t, 2)
+        out.append(r)
     print(json.dumps(out, indent=2, ensure_ascii=False))

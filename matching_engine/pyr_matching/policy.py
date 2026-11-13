@@ -14,7 +14,14 @@ from .text import strip_accents
 
 COMPONENTS_V02 = ("program", "skills", "semantic", "lexical", "location", "modality")
 ALGORITHM_VERSION_V02 = "hybrid-pyr-v0.2"
+# v0.3: field-aware semantics (aspirations vs project, capabilities vs requirements, interests vs project)
+# plus an optional, EXPERIMENTAL historical-behaviour signal whose provisional weight is 0.
+COMPONENTS_V03 = ("program", "semantic", "requirements", "interests", "lexical", "location", "modality", "historical")
+ALGORITHM_VERSION_V03 = "hybrid-pyr-v0.3"
+COMPONENTS_BY_VERSION = {ALGORITHM_VERSION_V02: COMPONENTS_V02, ALGORITHM_VERSION_V03: COMPONENTS_V03}
+FEATURE_SCHEMA_BY_VERSION = {ALGORITHM_VERSION_V02: "pyr-features/1.0", ALGORITHM_VERSION_V03: "pyr-features/2.0"}
 DEFAULT_POLICY_PATH = Path(__file__).resolve().parent / "config" / "policy_pyr_provisional.json"
+POLICY_V03_PATH = Path(__file__).resolve().parent / "config" / "policy_pyr_v03_provisional.json"
 
 
 class PolicyError(ValueError):
@@ -77,6 +84,14 @@ class Policy:
     def weights(self) -> dict[str, float]:
         return self.raw["weights"]
 
+    @property
+    def components(self) -> tuple[str, ...]:
+        return COMPONENTS_BY_VERSION[self.raw["algorithm_version"]]
+
+    @property
+    def feature_schema_version(self) -> str:
+        return FEATURE_SCHEMA_BY_VERSION[self.raw["algorithm_version"]]
+
     def alias(self, kind: str, value: Any) -> str | None:
         c = canon(value)
         if c is None:
@@ -85,11 +100,12 @@ class Policy:
 
     def _validate(self):
         r = self.raw
-        if r.get("algorithm_version") != ALGORITHM_VERSION_V02:
-            raise PolicyError(f"algorithm_version debe ser {ALGORITHM_VERSION_V02}; hybrid-v0.1 vive en la plataforma original.")
+        if r.get("algorithm_version") not in COMPONENTS_BY_VERSION:
+            raise PolicyError(f"algorithm_version debe ser {ALGORITHM_VERSION_V02} o {ALGORITHM_VERSION_V03}; hybrid-v0.1 vive en la plataforma original.")
+        comps = COMPONENTS_BY_VERSION[r["algorithm_version"]]
         w = r.get("weights")
-        if not isinstance(w, dict) or set(w) != set(COMPONENTS_V02):
-            raise PolicyError(f"weights debe definir exactamente {COMPONENTS_V02}.")
+        if not isinstance(w, dict) or set(w) != set(comps):
+            raise PolicyError(f"weights debe definir exactamente {comps}.")
         for k, v in w.items():
             if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0:
                 raise PolicyError(f"Peso inválido para {k}.")
@@ -100,6 +116,8 @@ class Policy:
             raise PolicyError("minimum_recommended_score fuera de [0, 100].")
         if r.get("program_profile_rule") not in ("hard", "soft", "off"):
             raise PolicyError("program_profile_rule debe ser hard, soft u off.")
+        if r.get("missing_vacancy_profile", "block") not in ("block", "review"):
+            raise PolicyError("missing_vacancy_profile debe ser block o review.")
         if not isinstance(r.get("top_k"), int) or r["top_k"] < 1:
             raise PolicyError("top_k debe ser entero >= 1.")
         if r.get("semantic", {}).get("backend") not in ("tfidf", "sentence-transformers", "none"):

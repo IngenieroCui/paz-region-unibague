@@ -32,3 +32,14 @@ Política activa por defecto: `pyr_matching/config/policy_pyr_provisional.json` 
 | D15 | Retención de salidas y registros de modelos | fuera de git; definir plazo | Ley 1581/2012 (habeas data) | Protección de datos |
 | D16 | Transiciones de aprobación (propuesta → confirmada) | la institución re-ingresa la decisión como `Ubicacion_Confirmada=SI` | — | Coordinación PyR |
 | D17 | Estrategia de evaluación | partición temporal (periodos previos → último), AUC/P@k/R@k/NDCG@k, violaciones = 0, auditoría por programa/municipio | — | Equipo + Coordinación |
+
+## Decisiones añadidas en v0.3 (12-nov-2026) — todas PROVISIONALES
+| ID | Decisión | Valor provisional | Evidencia | Responsable sugerido |
+|---|---|---|---|---|
+| D18 | Plaza sin perfil académico con regla de perfil `hard` | `missing_vacancy_profile = block` (bloqueo `PERFIL_PLAZA_NO_VERIFICABLE`); alternativa `review` = permitida con alerta `REQUIERE_REVISION_PERFIL` | v0.2 dejaba pasar parejas inverificables | Coord. Académica |
+| D19 | Pesos `hybrid-pyr-v0.3` | program 30, semantic 30, requirements 10, interests 5, lexical 10, location 10, modality 5, historical 0 | Criterio de ingeniería; **no aprendidos** | Coordinación PyR |
+| D20 | Uso de la señal de comportamiento histórico | peso 0 (desactivada); experimental | Refleja decisiones pasadas, no idoneidad | Coordinación PyR + Comité |
+| D21 | Activación de modelos supervisados | nunca automática (`training.auto_activate=false`); requiere `--approved-by` y política compatible | Salvaguarda | Coordinación PyR |
+| D22 | Reconstrucción de cupos históricos | `none` por defecto; `approved_column` solo con confirmación del significado de `Aprobados` | B2 | Coord. Proyectos |
+| D23 | Backend semántico por defecto | TF-IDF (sin dependencias). Embeddings locales MiniLM recomendados: top-1 0,767 vs 0,30 en benchmark sintético de paráfrasis (30 pares) | `benchmarks/semantic_benchmark.py` | TI / Protección de datos |
+| D24 | Clave de seudonimización histórica | secreto institucional fuera de git; rotarla invalida la continuidad de IDs | Ley 1581/2012 | Protección de datos |

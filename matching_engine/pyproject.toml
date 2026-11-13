@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyr-matching"
-version = "0.2.0"
+version = "0.3.0"
 description = "Motor independiente de emparejamiento estudiante-plaza (Paz y Región, Universidad de Ibagué): Excel in / Excel out, explicable y reentrenable."
 requires-python = ">=3.10"
 dependencies = ["openpyxl>=3.1"]

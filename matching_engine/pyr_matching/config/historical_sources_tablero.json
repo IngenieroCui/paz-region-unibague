@@ -1,0 +1,224 @@
+{
+  "mapping_id": "historical-tablero-2025A-2026B/1.0",
+  "verified": "Encabezados verificados (solo fila 1) el 12-nov-2026 vía conector de solo lectura en: Tablero Maestro 2025A/2025B ('Estudiantes', 'Proy Def'), 2026A/2026B ('Estudiantes', 'Proyectos'), Preinscripción 2025A y 2026B ('Respuestas de formulario 1'), Base de datos proyectos 2026A ('Ev. Plazas'), Formulario convocatoria 2026B (docs/data-source-audit.md §2.4). No se copiaron registros.",
+  "notes": "Solo se leen las columnas listadas. Nombre, Cédula/CC, correo, celular, fecha de nacimiento, sexo, EPS, dirección, acudiente, asesor(a), observaciones, justificaciones y respuestas de caso especial NUNCA se leen. Las columnas 'Código' repetidas en Proyectos/Proy Def son los bloques de estudiantes ubicados en cada fila (solo se usa el código, para unir y seudonimizar).",
+  "kinds": {
+    "preinscripcion": {
+      "default_sheet": [
+        "Respuestas de formulario 1"
+      ],
+      "timing": "PRE_ASIGNACION",
+      "required": [
+        "student_code"
+      ],
+      "columns": {
+        "student_code": [
+          "Código estudiantil"
+        ],
+        "timestamp": [
+          "Marca temporal"
+        ],
+        "expectations_text": [
+          "¿Que expectativas tiene frente a su semestre Paz y Región?",
+          "¿Qué expectativas tiene frente a su semestre Paz y Región?"
+        ],
+        "learning_goals_text": [
+          "¿Qué aprendizajes espera lograr con su experiencia en el Semestre Paz y Región?"
+        ],
+        "skills_text": [
+          "Habilidades"
+        ],
+        "interests_text": [
+          "Intereses"
+        ],
+        "desired_work_text": [
+          "Trabajo_Deseado",
+          "Trabajo deseado"
+        ],
+        "modality_preference": [
+          "Modalidad_Preferida",
+          "Modalidad preferida"
+        ]
+      }
+    },
+    "tablero_estudiantes": {
+      "default_sheet": [
+        "Estudiantes"
+      ],
+      "timing": "MIXTO: programa y municipio de origen = PRE_ASIGNACION; tipo de asignación = POST_ASIGNACION (solo para ASIGNACIONES_OBSERVADAS)",
+      "required": [
+        "student_code",
+        "academic_program"
+      ],
+      "columns": {
+        "student_code": [
+          "Código",
+          "Código estudiantil"
+        ],
+        "academic_program": [
+          "Programa"
+        ],
+        "origin_municipality": [
+          "Municipio origen"
+        ],
+        "allocation_type": [
+          "Tipo asignación",
+          "Tipo Asignación"
+        ]
+      }
+    },
+    "tablero_plazas": {
+      "default_sheet": [
+        "Proyectos",
+        "Proy Def"
+      ],
+      "timing": "MIXTO: descripción/perfil/ubicación = PRE_ASIGNACION; bloques Código y 'Tipo asignación' = POST_ASIGNACION",
+      "required": [
+        "organization_name",
+        "project_name",
+        "vacancy_type"
+      ],
+      "columns": {
+        "status": [
+          "Estado"
+        ],
+        "vacancy_type": [
+          "Tipo de plaza"
+        ],
+        "program_profile": [
+          "Perfil"
+        ],
+        "program_profile_alt": [
+          "Perfil (aternativo)",
+          "Perfil (alternativo)"
+        ],
+        "organization_name": [
+          "Nombre de la Organización"
+        ],
+        "organization_type": [
+          "Tipo de organización"
+        ],
+        "department": [
+          "Departamento"
+        ],
+        "municipality": [
+          "Municipio"
+        ],
+        "project_name": [
+          "Nombre del Proyecto"
+        ],
+        "project_description": [
+          "Descripción del proyecto"
+        ],
+        "project_line": [
+          "Línea de proyecto"
+        ],
+        "modality": [
+          "Modalidad del Proyecto"
+        ],
+        "row_allocation_type": [
+          "Tipo asignación"
+        ],
+        "approved_seats": [
+          "Aprobados"
+        ]
+      },
+      "multi_columns": {
+        "student_codes": [
+          "Código"
+        ]
+      }
+    },
+    "evaluacion_plazas": {
+      "default_sheet": [
+        "Ev. Plazas"
+      ],
+      "timing": "POST_ASIGNACION (resultado; nunca característica de predicción)",
+      "required": [
+        "student_code",
+        "organization_name"
+      ],
+      "columns": {
+        "period": [
+          "Periodo"
+        ],
+        "organization_name": [
+          "Nombre de la Organización"
+        ],
+        "municipality": [
+          "Municipio"
+        ],
+        "academic_program": [
+          "Programa Académico"
+        ],
+        "student_code": [
+          "Código"
+        ],
+        "advisor_total": [
+          {
+            "header": "Puntaje Total",
+            "occurrence": 1
+          }
+        ],
+        "student_total": [
+          {
+            "header": "Puntaje Total",
+            "occurrence": 2
+          }
+        ],
+        "advisor_formative_potential": [
+          "Potencial formativo de los proyectos"
+        ],
+        "advisor_involvement": [
+          "Nivel de involucramiento que le permiten al estudiante"
+        ],
+        "student_relevance": [
+          "Pertinencia del proyecto frente al propósito formativo de Paz y Región"
+        ]
+      }
+    },
+    "convocatoria_organizaciones": {
+      "default_sheet": [
+        "Respuestas de formulario 1"
+      ],
+      "timing": "PRE_ASIGNACION (cuestionario de requisitos 2026B, solo asignación por convocatoria)",
+      "required": [
+        "organization_name"
+      ],
+      "columns": {
+        "program_profile": [
+          "1. Perfil Programa Académico"
+        ],
+        "program_profile_alt": [
+          "1.1 Perfil Programa Académico Alternativo"
+        ],
+        "organization_name": [
+          "2. Nombre de la Organización"
+        ],
+        "requested_seats": [
+          {
+            "prefix": "4. Número de Estudiantes"
+          }
+        ],
+        "activities_text": [
+          {
+            "prefix": "5. Descripción general de las actividades"
+          }
+        ],
+        "modality": [
+          "6. Modalidad"
+        ],
+        "requirements_text": [
+          {
+            "prefix": "7. Requisitos"
+          }
+        ],
+        "commitments_text": [
+          {
+            "prefix": "8. Compromisos"
+          }
+        ]
+      }
+    }
+  }
+}
