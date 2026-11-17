@@ -20,6 +20,7 @@ COMPONENTS_V03 = ("program", "semantic", "requirements", "interests", "lexical",
 ALGORITHM_VERSION_V03 = "hybrid-pyr-v0.3"
 COMPONENTS_BY_VERSION = {ALGORITHM_VERSION_V02: COMPONENTS_V02, ALGORITHM_VERSION_V03: COMPONENTS_V03}
 FEATURE_SCHEMA_BY_VERSION = {ALGORITHM_VERSION_V02: "pyr-features/1.0", ALGORITHM_VERSION_V03: "pyr-features/2.0"}
+SEMANTIC_BACKENDS = ("tfidf", "tfidf-conceptos", "sentence-transformers", "none")
 DEFAULT_POLICY_PATH = Path(__file__).resolve().parent / "config" / "policy_pyr_provisional.json"
 POLICY_V03_PATH = Path(__file__).resolve().parent / "config" / "policy_pyr_v03_provisional.json"
 
@@ -120,8 +121,14 @@ class Policy:
             raise PolicyError("missing_vacancy_profile debe ser block o review.")
         if not isinstance(r.get("top_k"), int) or r["top_k"] < 1:
             raise PolicyError("top_k debe ser entero >= 1.")
-        if r.get("semantic", {}).get("backend") not in ("tfidf", "sentence-transformers", "none"):
-            raise PolicyError("semantic.backend debe ser tfidf, sentence-transformers o none.")
+        sem = r.get("semantic", {})
+        if sem.get("backend") not in SEMANTIC_BACKENDS:
+            raise PolicyError("semantic.backend debe ser " + ", ".join(SEMANTIC_BACKENDS) + ".")
+        if sem.get("fallback_backend", "tfidf") not in SEMANTIC_BACKENDS or sem.get("fallback_backend") == "sentence-transformers":
+            raise PolicyError("semantic.fallback_backend debe ser tfidf, tfidf-conceptos o none.")
+        cw = sem.get("concept_weight", 0.5)
+        if isinstance(cw, bool) or not isinstance(cw, (int, float)) or not 0 <= cw <= 1:
+            raise PolicyError("semantic.concept_weight debe estar en [0, 1].")
         for key in ("allowed_vacancy_statuses", "siga_vacancy_types", "active_enrollment_statuses"):
             if not isinstance(r.get(key), list):
                 raise PolicyError(f"{key} debe ser lista.")

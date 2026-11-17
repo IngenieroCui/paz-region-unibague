@@ -34,6 +34,7 @@ def retrain(bundle: InputBundle, policy: Policy, feedback_store: str | Path, reg
         "estado": art["status"], "model_id": art["model_id"], "activado": art["activated"],
         "paso_2_suficiencia": art["dataset_report"], "paso_4_metricas": art["metrics"],
         "paso_5_compuertas_fallidas": art["promotion_gates_failed"], "paso_5_subgrupos": art["subgroup_auc"],
+        "paso_5_subgrupos_no_evaluables_por_tamano": art.get("subgroups_too_small_for_gate", {}),
         "paso_6_registro": str(Path(registry_dir) / art["model_id"] / "model.json"),
         "siguiente_paso": ("Revisión humana y, si procede: pyr-match registry activate --model-id " + art["model_id"] +
                            " --policy <política> --approved-by \"<rol>\"") if art["status"] == "PROMOVIBLE" else "No promover; conservar el modelo activo o la línea base.",

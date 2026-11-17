@@ -24,6 +24,8 @@ Qué hace: une etiquetas con insumos; descarta parejas bloqueadas por reglas dur
 
 Salida: `<registry>/<model_id>/model.json` con versión del motor, esquema de características, huellas de política y dataset (sin datos crudos), hiperparámetros, semilla, métricas, comando y fuentes de etiquetas.
 
+**v0.3.1:** dos compuertas más. `RECHAZADO_EMPEORA_ORDEN_POR_ESTUDIANTE` si el NDCG graduado@`eval_k` por estudiante en prueba cae por debajo de la línea base más `promotion_min_ndcg_delta` (0.0): en la simulación, varios modelos subían el AUC global y a la vez ordenaban peor las opciones de cada estudiante. La compuerta de subgrupos solo veta con subgrupos de al menos `min_subgroup_labels` (30) parejas y `min_subgroup_per_class` (5) de cada clase; los menores quedan en `subgroups_too_small_for_gate` / `paso_5_subgrupos_no_evaluables_por_tamano` para revisión humana obligatoria.
+
 **v0.3: el entrenamiento nunca activa un modelo** (salvo `training.auto_activate=true` explícito en la política). El candidato queda `PROMOVIBLE` solo si: supera a la línea base (`promotion_min_auc_delta`), supera al modelo activo compatible, no degrada ningún subgrupo de programa/municipio más de `max_subgroup_auc_drop` y la prueba tiene al menos `min_test_labels` parejas. En otro caso: `RECHAZADO_NO_SUPERA_LINEA_BASE`, `RECHAZADO_NO_SUPERA_MODELO_ACTIVO`, `RECHAZADO_DEGRADA_SUBGRUPO` o `RECHAZADO_PRUEBA_INSUFICIENTE`.
 
 Exit 3 = `NO_ENTRENABLE` con motivos (`NO_HAY_ETIQUETAS`, `FUENTE_NO_ACEPTADA`, `POCAS_ETIQUETAS`, `POCOS_POSITIVOS`, `POCOS_PERIODOS`, `UNA_SOLA_CLASE_EN_*`).
@@ -57,8 +59,9 @@ Revisar con la Coordinación: métricas vs línea base, brecha de sobreajuste, a
 
 ## Ciclo con revisión experta (v0.3)
 ```bash
-.venv/Scripts/pyr-match feedback-template --inputs insumo_2027A.xlsx --period 2027A --out D:/pyr_privado/revision_2027A.xlsx --blind
+.venv/Scripts/pyr-match feedback-template --inputs insumo_2027A.xlsx --period 2027A --out D:/pyr_privado/revision_2027A.xlsx --blind --explore 2
 ```
+`--explore N` (v0.3.1) agrega N parejas elegibles **no recomendadas** por estudiante (muestra reproducible, contexto `SIGA_EXPLORACION`). Sin ellas todas las etiquetas caen en las opciones que el motor ya ponía arriba y el modelo casi no ve casos débiles. En modo ciego también se ocultan el rango y el orden, así que el revisor no distingue recomendadas de exploración. Simulación (`benchmarks/simulacion_reentrenamiento.py`): ver docs/MANUAL_DE_USO.md §9.
 Revisores autorizados califican `evaluacion_idoneidad` (1–5 o `NO_EVALUABLE`) con un `id_revisor` seudónimo; un aprobador **distinto** marca `estado_aprobacion=APROBADA` y `aprobado_por`. `--blind` oculta puntaje y explicación (recomendado para etiquetas: evita el anclaje).
 ```bash
 .venv/Scripts/pyr-match feedback-import --files D:/pyr_privado/revision_2027A.xlsx --store D:/pyr_privado/retro

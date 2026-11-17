@@ -169,6 +169,25 @@ def auc(scores: list[float], labels: list[int]) -> float | None:
     return wins / (len(pos) * len(neg))
 
 
+def graded_ndcg(rows: list[tuple[str, float, float]], k: int) -> dict:
+    """Per-group NDCG@k with GRADED relevance (label value 0..1), averaged over groups with >= 2 labelled
+    pairs and some spread in values. Measures whether a scorer orders each student's options the way
+    reviewers did, which a pooled AUC does not (a model can raise AUC and still order students worse)."""
+    groups = defaultdict(list)
+    for g, s, v in rows:
+        groups[g].append((s, v))
+    vals = []
+    for items in groups.values():
+        if len(items) < 2 or max(v for _, v in items) == min(v for _, v in items):
+            continue
+        ranked = sorted(items, key=lambda t: -t[0])[:k]
+        ideal = sorted((v for _, v in items), reverse=True)[:k]
+        dcg = sum(v / math.log2(i + 2) for i, (_, v) in enumerate(ranked))
+        idcg = sum(v / math.log2(i + 2) for i, v in enumerate(ideal))
+        vals.append(dcg / idcg if idcg else 0.0)
+    return {f"ndcg_graduado@{k}": round(sum(vals) / len(vals), 4) if vals else None, "grupos_con_orden_evaluable": len(vals)}
+
+
 def ranking_metrics(rows: list[tuple[str, float, int]], k: int) -> dict:
     """rows: (group_id, score, label). Precision@k, recall@k, NDCG@k averaged over groups with a positive."""
     groups = defaultdict(list)
@@ -231,7 +250,7 @@ def build_dataset(bundle: InputBundle, policy: Policy, encoder=None):
             continue
         raw = raw_components(s, v, policy, backends[lb.period])
         rows.append({"period": lb.period, "student": s.student_id, "vacancy": v.vacancy_id, "raw": raw,
-                     "y": 1 if lb.value >= tc["positive_threshold"] else 0, "program": s.academic_program or "DESCONOCIDO",
+                     "y": 1 if lb.value >= tc["positive_threshold"] else 0, "value": float(lb.value), "program": s.academic_program or "DESCONOCIDO",
                      "municipality": v.municipality or "DESCONOCIDO"})
     report.update({"etiquetas_sin_union": unjoined, "etiquetas_en_parejas_bloqueadas": blocked, "parejas_utilizables": len(rows)})
     periods = sorted({r["period"] for r in rows}, key=period_key)
@@ -291,7 +310,8 @@ def train(bundle: InputBundle, policy: Policy, registry_dir: str | Path, command
         ll = -sum(y * math.log(max(1e-9, s / 100)) + (1 - y) * math.log(max(1e-9, 1 - s / 100)) for s, y in zip(scores, ys)) / len(ys)
         a = auc(scores, ys)
         return {"auc": None if a is None else round(a, 4), "log_loss_aprox": round(ll, 4), "n": len(split),
-                **ranking_metrics([(r["student"], s, r["y"]) for r, s in zip(split, scores)], k)}
+                **ranking_metrics([(r["student"], s, r["y"]) for r, s in zip(split, scores)], k),
+                **graded_ndcg([(r["student"], s, r.get("value", r["y"])) for r, s in zip(split, scores)], k)}
 
     baseline = lambda r: combine(r["raw"], policy.weights, policy.components)[0]  # noqa: E731
     learned = lambda r: model.predict_score(r["raw"])  # noqa: E731
@@ -323,10 +343,25 @@ def train(bundle: InputBundle, policy: Policy, registry_dir: str | Path, command
         gates.append("RECHAZADO_NO_SUPERA_MODELO_ACTIVO")
     if len(te) < tc.get("min_test_labels", 0):
         gates.append("RECHAZADO_PRUEBA_INSUFICIENTE")
+    # v0.3.1: the model must not order each student's options worse than the baseline (graded NDCG@k on test)
+    nd_delta = tc.get("promotion_min_ndcg_delta")
+    if nd_delta is not None:
+        mk, bk = metrics["modelo_test"].get(f"ndcg_graduado@{k}"), metrics["linea_base_test"].get(f"ndcg_graduado@{k}")
+        if mk is None or bk is None or mk - bk < nd_delta:
+            gates.append("RECHAZADO_EMPEORA_ORDEN_POR_ESTUDIANTE")
     max_drop = tc.get("max_subgroup_auc_drop")
+    # v0.3.1: an AUC computed on a handful of pairs is noise; such subgroups cannot veto a model on their
+    # own, but they are listed (subgrupos_no_evaluables_por_tamano) for mandatory human review.
+    min_n, min_cls = int(tc.get("min_subgroup_labels", 0)), int(tc.get("min_subgroup_per_class", 0))
+    small: dict[str, list[str]] = {}
     if max_drop is not None:
         for attr, d in subgroup.items():
             for g, ma in d["modelo"].items():
+                rs = [r for r in te if r[attr] == g]
+                pos = sum(r["y"] for r in rs)
+                if len(rs) < min_n or min(pos, len(rs) - pos) < min_cls:
+                    small.setdefault(attr, []).append(f"{g} (n={len(rs)}, positivos={pos})")
+                    continue
                 ba = d["linea_base"].get(g)
                 if ma is not None and ba is not None and ba - ma > max_drop:
                     gates.append(f"RECHAZADO_DEGRADA_SUBGRUPO {attr}={g}")
@@ -342,6 +377,7 @@ def train(bundle: InputBundle, policy: Policy, registry_dir: str | Path, command
         "hyperparameters": {k2: tc[k2] for k2 in ("l2", "learning_rate", "epochs", "positive_threshold")}, "seed": tc["seed"],
         "metrics": metrics, "overfitting_gap_auc_train_minus_test": overfit_gap, "fairness_audit": fairness,
         "subgroup_auc": subgroup, "promotion_gates_failed": gates,
+        "subgroups_too_small_for_gate": small, "subgroup_gate_minimums": {"min_subgroup_labels": min_n, "min_subgroup_per_class": min_cls},
         "constraint_violation_rate": 0.0,
         "status": PROMOTABLE if promoted else gates[0].split(" ")[0],
         "requires_human_approval_to_activate": True,

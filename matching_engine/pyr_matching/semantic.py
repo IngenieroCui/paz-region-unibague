@@ -94,6 +94,62 @@ class TfidfBackend:
         return round(max(0.0, min(1.0, cos)) * 100, 4)
 
 
+class TfidfConceptBackend(TfidfBackend):
+    """`tfidf-conceptos` (v0.3.1 default): word TF-IDF (as `tfidf`) PLUS a thematic concept channel.
+
+    Each text gets two L2-normalised vectors: the word/bigram TF-IDF of `TfidfBackend` and a TF-IDF over
+    concept ids from `semantic_lexicon` (e.g. "celulares" and "app móvil" both trigger `tecnologia`).
+    They are concatenated with weights sqrt(1-alpha) / sqrt(alpha) and renormalised, so when both texts
+    have concepts the similarity is ``(1-alpha)*cos_words + alpha*cos_concepts``. Texts without any
+    concept fall back to words only. Offline, deterministic, no dependencies, nothing persisted.
+    """
+
+    name = "tfidf-conceptos"
+
+    def __init__(self, concept_weight: float = 0.5):
+        super().__init__()
+        from .semantic_lexicon import LEXICON_VERSION
+
+        if not 0.0 <= concept_weight <= 1.0:
+            raise ValueError("concept_weight debe estar en [0, 1].")
+        self.alpha = float(concept_weight)
+        self.version = f"tfidf-es-stem6-bigram+{LEXICON_VERSION}@a={self.alpha:g}"
+        self._cidf: dict[str, float] = {}
+
+    @staticmethod
+    def _concepts(text: str) -> list[str]:
+        from .semantic_lexicon import concept_hits
+
+        return concept_hits(normalize_tokens_ordered(text))
+
+    def prepare(self, texts: Iterable[str]) -> None:
+        texts = list(texts)
+        super().prepare(texts)
+        docs = sorted({t for t in texts if t and normalize_tokens(t)})
+        df: Counter[str] = Counter()
+        for d in docs:
+            df.update(set(self._concepts(d)))
+        n = len(docs)
+        self._cidf = {c: math.log((1 + n) / (1 + k)) + 1 for c, k in df.items()}
+
+    def _vec(self, text: str) -> dict[str, float]:
+        key = "concepts::" + text
+        if key in self._cache:
+            return self._cache[key]
+        words = super()._vec(text)
+        tf = Counter(self._concepts(text))
+        cvec = {f"C:{c}": (1 + math.log(k)) * self._cidf.get(c, 1.0) for c, k in tf.items()}
+        cn = math.sqrt(sum(v * v for v in cvec.values()))
+        wa, ca = math.sqrt(1 - self.alpha), math.sqrt(self.alpha)
+        vec = {f: v * wa for f, v in words.items()}
+        if cn:
+            vec.update({f: v / cn * ca for f, v in cvec.items()})
+        norm = math.sqrt(sum(v * v for v in vec.values()))
+        vec = {f: v / norm for f, v in vec.items()} if norm else {}
+        self._cache[key] = vec
+        return vec
+
+
 class SentenceTransformerBackend:
     """Local multilingual embeddings. Offline by default: the model must already be on disk.
 
@@ -209,6 +265,8 @@ def build_backend(policy, override: str | None = None, encoder=None) -> tuple[Se
             choice = cfg.get("fallback_backend", "tfidf")
             if choice == "none":
                 return NoSemanticBackend(), warnings
+    if choice == "tfidf-conceptos":
+        return TfidfConceptBackend(float(cfg.get("concept_weight", 0.5))), warnings
     return TfidfBackend(), warnings
 
 

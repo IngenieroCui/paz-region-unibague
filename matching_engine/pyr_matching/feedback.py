@@ -41,7 +41,17 @@ def _fp(*parts) -> str:
 
 
 def make_review_workbook(result, bundle, period: str, path: str | Path, policy, per_student: int = 3, blind: bool = False,
-                         allow_inside_repo: bool = False) -> Path:
+                         allow_inside_repo: bool = False, explore: int = 0) -> Path:
+    """Build the expert-review workbook.
+
+    * ``per_student``: top-ranked SIGA recommendations per student to review (context ``SIGA_RECOMENDADA``).
+    * ``explore`` (v0.3.1): additionally N eligible, NOT recommended pairs per student, drawn with a
+      seed derived from the run (reproducible), context ``SIGA_EXPLORACION``. Without them every label
+      sits on the engine's own top choices (selection bias; few negatives), and a retrained model cannot
+      learn what makes a pair poor. Recommended: 1-2 together with ``blind=True``.
+    * ``blind``: hides score, components, explanation AND rank, and orders rows by a hash of the review
+      id (not by rank), so reviewers cannot tell recommended from exploration pairs (anchoring bias).
+    """
     p = Path(path)
     assert_safe_output_dir(p.parent, allow_inside_repo)
     smap = {s.student_id: s for s in bundle.students if s.period == period}
@@ -55,21 +65,25 @@ def make_review_workbook(result, bundle, period: str, path: str | Path, policy, 
     for r in result.tables.get("Asignaciones_Directas", []):
         if r["estado"] == "PROPUESTA_REQUIERE_APROBACION":
             rows.append((r, "DIRECTA_PROPUESTA", 1))
+    if explore and explore > 0:
+        rows += _exploration_rows(result, bundle, period, per_student, explore, run_id)
     out = []
-    for r, ctx, rank in sorted(rows, key=lambda x: (x[0]["id_estudiante"], x[2], x[0]["id_plaza"])):
+    for r, ctx, rank in sorted(rows, key=lambda x: (x[0]["id_estudiante"], x[2] if x[2] is not None else 10**6, x[0]["id_plaza"])):
         sid, vid = r["id_estudiante"], r["id_plaza"]
         pr = pairs.get((sid, vid), {})
         comps = "; ".join(f"{k[2:]}={v}" for k, v in pr.items() if k.startswith("c_") and v is not None)
         rid = _fp(run_id, sid, vid, ctx)
         row = {"id_revision": rid, "periodo": period, "id_estudiante": sid, "programa_estudiante": smap[sid].academic_program if sid in smap else None,
                "id_plaza": vid, "proyecto": r.get("proyecto"), "organizacion": r.get("organizacion"), "municipio": r.get("municipio"),
-               "modalidad": r.get("modalidad"), "perfil_programa": r.get("perfil_programa"), "contexto": ctx, "rango": rank,
+               "modalidad": r.get("modalidad"), "perfil_programa": r.get("perfil_programa"), "contexto": ctx, "rango": None if blind else rank,
                "compatibilidad": None if blind else r.get("compatibilidad"), "componentes": None if blind else comps,
                "estado_restricciones": "CUMPLE_REGLAS_OBLIGATORIAS", "cobertura_evidencia": r.get("cobertura_evidencia"),
                "confianza_evidencia": r.get("confianza_evidencia"), "explicacion": None if blind else r.get("explicacion"),
                "huella_fila": _fp(rid, sid, vid, period, ctx), "fuente_etiqueta": LABEL_SOURCE,
                **{c: ("PENDIENTE" if c == "estado_aprobacion" else None) for c in REVIEW_COLS}}
         out.append(row)
+    if blind:  # do not reveal the engine's ordering (rank or recommended-vs-exploration) through row order
+        out.sort(key=lambda row: (row["id_estudiante"], _fp(row["id_revision"], "orden")))
     wb = Workbook()
     ws = wb.active
     ws.title = "Instrucciones"
@@ -88,7 +102,8 @@ def make_review_workbook(result, bundle, period: str, path: str | Path, policy, 
     _write_table(wb.create_sheet("Revision_Pares"), out, list(out[0].keys()) if out else ["sin_registros"])
     meta = {"feedback_schema": FEEDBACK_SCHEMA, "run_id": run_id, "periodo": period, "version_algoritmo": result.summary.get("version_algoritmo"),
             "politica_id": result.summary.get("politica_id"), "politica_huella": result.summary.get("politica_huella"),
-            "modo_ciego": "SI" if blind else "NO", "filas": len(out), "generado_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat()}
+            "modo_ciego": "SI" if blind else "NO", "filas": len(out),
+            "filas_exploracion": sum(1 for r in out if r["contexto"] == "SIGA_EXPLORACION"), "generado_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat()}
     _write_table(wb.create_sheet("Metadatos"), [{"clave": k, "valor": v} for k, v in meta.items()], ["clave", "valor"])
     if out:
         rv = wb["Revision_Pares"]
@@ -102,6 +117,31 @@ def make_review_workbook(result, bundle, period: str, path: str | Path, policy, 
     p.parent.mkdir(parents=True, exist_ok=True)
     wb.save(p)
     return p
+
+
+def _exploration_rows(result, bundle, period: str, per_student: int, explore: int, run_id: str) -> list[tuple[dict, str, None]]:
+    """Seeded sample of eligible, not-recommended SIGA pairs per student (requires pairs_detail="all")."""
+    import random
+
+    vmap = {v.vacancy_id: v for v in bundle.vacancies if v.period == period}
+    top = {(r["id_estudiante"], r["id_plaza"]) for r in result.tables.get("Recomendaciones_SIGA", []) if r["rango"] <= per_student}
+    pool: dict[str, list[dict]] = defaultdict(list)
+    for pr in result.tables.get("Pares_Evaluados", []):
+        if pr.get("contexto") == "SIGA_EVALUADA" and pr.get("elegible") == "SI" and (pr["id_estudiante"], pr["id_plaza"]) not in top:
+            pool[pr["id_estudiante"]].append(pr)
+    out = []
+    for sid in sorted(pool):
+        cands = sorted(pool[sid], key=lambda r: r["id_plaza"])
+        rng = random.Random(_fp(run_id, sid, "exploracion"))
+        for pr in rng.sample(cands, min(explore, len(cands))):
+            v = vmap.get(pr["id_plaza"])
+            if v is None:
+                continue
+            out.append(({"id_estudiante": sid, "id_plaza": v.vacancy_id, "proyecto": v.project_name, "organizacion": v.organization_name,
+                         "municipio": v.municipality, "modalidad": v.modality, "perfil_programa": v.program_profile,
+                         "compatibilidad": pr.get("compatibilidad"), "cobertura_evidencia": pr.get("cobertura_evidencia"),
+                         "confianza_evidencia": pr.get("confianza_evidencia"), "explicacion": None}, "SIGA_EXPLORACION", None))
+    return out
 
 
 class FeedbackError(ValueError):

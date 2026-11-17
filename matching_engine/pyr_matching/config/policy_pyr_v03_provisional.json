@@ -1,8 +1,8 @@
 {
-  "policy_id": "pyr-v03-provisional-2026-11-12",
+  "policy_id": "pyr-v031-provisional-2026-11-16",
   "policy_status": "PROVISIONAL_NO_APROBADA_POR_UNIBAGUE",
   "algorithm_version": "hybrid-pyr-v0.3",
-  "notes": "hybrid-pyr-v0.3 (evolución de v0.2). Todos los pesos, umbrales y reglas son valores por defecto de ingeniería PENDIENTES de aprobación institucional; NO son pesos aprendidos. 'historical' (señal de comportamiento histórico) es EXPERIMENTAL y tiene peso 0. Ver docs/POLICY_DECISIONS.md (D1, D18-D24).",
+  "notes": "hybrid-pyr-v0.3 (evolución de v0.2). Todos los pesos, umbrales y reglas son valores por defecto de ingeniería PENDIENTES de aprobación institucional; NO son pesos aprendidos. 'historical' (señal de comportamiento histórico) es EXPERIMENTAL y tiene peso 0. Ver docs/POLICY_DECISIONS.md (D1, D18-D24). v0.3.1 (2026-11-16): backend semántico por defecto 'tfidf-conceptos' (TF-IDF + léxico temático PyR, sin dependencias ni red; ver docs/MATCHING_ENGINE_PYR.md). Cambia la huella de la política: modelos entrenados con la política anterior deben reentrenarse.",
   "weights": {
     "program": 30,
     "semantic": 30,
@@ -54,9 +54,10 @@
     "INSCRITO"
   ],
   "semantic": {
-    "backend": "tfidf",
+    "backend": "tfidf-conceptos",
+    "concept_weight": 0.5,
     "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-    "fallback_backend": "tfidf",
+    "fallback_backend": "tfidf-conceptos",
     "allow_model_download": false,
     "batch_size": 32,
     "vector_cache_dir": null
@@ -111,10 +112,13 @@
     "epochs": 800,
     "seed": 20261112,
     "promotion_min_auc_delta": 0.0,
+    "promotion_min_ndcg_delta": 0.0,
     "eval_k": 3,
     "auto_activate": false,
     "promotion_requires_human_approval": true,
     "max_subgroup_auc_drop": 0.1,
+    "min_subgroup_labels": 30,
+    "min_subgroup_per_class": 5,
     "min_test_labels": 40
   },
   "missing_vacancy_profile": "block",

@@ -42,7 +42,7 @@ def main(argv=None) -> int:
     _common(m)
     m.add_argument("--out", required=True, help="Ruta del .xlsx de salida.")
     m.add_argument("--json-out", default=None, help="Además, exporta el resultado estructurado (contrato JSON).")
-    m.add_argument("--semantic", choices=["tfidf", "sentence-transformers", "none"], default=None, help="Sobrescribe el backend semántico de la política.")
+    m.add_argument("--semantic", choices=["tfidf", "tfidf-conceptos", "sentence-transformers", "none"], default=None, help="Sobrescribe el backend semántico de la política.")
     m.add_argument("--model", default=None, help="Ruta a model.json de un modelo supervisado promovido (opcional).")
     m.add_argument("--registry", default=None, help="Usa el modelo activo del registro (si existe y es compatible con la política).")
     m.add_argument("--behavior-model", default=None, help="model.json de comportamiento histórico (EXPERIMENTAL; solo v0.3 y solo si la política le da peso).")
@@ -102,7 +102,7 @@ def main(argv=None) -> int:
     tb.add_argument("--policy", default=None, help="Política v0.3 (por defecto config/policy_pyr_v03_provisional.json).")
     tb.add_argument("--test-period", default=None, help="Periodo de prueba intocado (por defecto el último).")
     tb.add_argument("--candidate-mode", choices=["eligible_with_uptake", "eligible_all"], default="eligible_with_uptake")
-    tb.add_argument("--semantic", choices=["tfidf", "sentence-transformers", "none"], default=None)
+    tb.add_argument("--semantic", choices=["tfidf", "tfidf-conceptos", "sentence-transformers", "none"], default=None)
 
     ev = sub.add_parser("evaluate-historical", help="Evaluación temporal: comportamiento histórico vs factibilidad (no idoneidad).")
     ev.add_argument("--dataset", required=True)
@@ -118,7 +118,9 @@ def main(argv=None) -> int:
     ft.add_argument("--out", required=True)
     ft.add_argument("--per-student", type=int, default=3)
     ft.add_argument("--blind", action="store_true", help="Oculta puntaje y explicación (reduce sesgo de anclaje; recomendado para etiquetas).")
-    ft.add_argument("--semantic", choices=["tfidf", "sentence-transformers", "none"], default=None)
+    ft.add_argument("--explore", type=int, default=0,
+                    help="Agrega N parejas elegibles NO recomendadas por estudiante (muestra reproducible) para que el reentrenamiento vea casos débiles. Recomendado: 1-2 con --blind.")
+    ft.add_argument("--semantic", choices=["tfidf", "tfidf-conceptos", "sentence-transformers", "none"], default=None)
     ft.add_argument("--timestamp", default=None)
     ft.add_argument("--allow-inside-repo", action="store_true")
 
@@ -301,7 +303,7 @@ def main(argv=None) -> int:
             from .feedback import make_review_workbook
 
             res = run_match(bundle, a.period, policy, semantic_override=a.semantic, pairs_detail="all", run_timestamp=a.timestamp)
-            out = make_review_workbook(res, bundle, a.period, a.out, policy, a.per_student, a.blind, a.allow_inside_repo)
+            out = make_review_workbook(res, bundle, a.period, a.out, policy, a.per_student, a.blind, a.allow_inside_repo, explore=a.explore)
             print(f"Libro de revisión: {out}")
             return 0
 

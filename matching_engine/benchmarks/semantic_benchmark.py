@@ -4,15 +4,18 @@ Each student-style statement has exactly one intended project description writte
 vocabulary (paraphrase), plus distractors. Metric: top-1 accuracy and mean reciprocal rank.
 Hand-written by the engineering team; NOT institutional data and NOT a validation of PyR quality.
 
-    python benchmarks/semantic_benchmark.py                 # tfidf only
+    python benchmarks/semantic_benchmark.py                 # tfidf + tfidf-conceptos, development and held-out sets
     python benchmarks/semantic_benchmark.py --embeddings    # + paraphrase-multilingual-MiniLM-L12-v2 (local)
+
+`PAIRS` (below) is the DEVELOPMENT set: the concept lexicon was built looking at it. `semantic_holdout.py`
+holds 30 pairs written BEFORE the lexicon and never used to tune it (report both; trust the held-out one).
 """
 from __future__ import annotations
 
 import argparse
 import json
 
-from pyr_matching.semantic import SentenceTransformerBackend, TfidfBackend
+from pyr_matching.semantic import SentenceTransformerBackend, TfidfBackend, TfidfConceptBackend
 
 PAIRS = [
     ("Quiero ayudar a que los niños de veredas aprendan a leer mejor.", "Fortalecimiento de la lectoescritura en escuelas rurales para la primera infancia."),
@@ -63,17 +66,34 @@ def evaluate(backend) -> dict:
             "recall@3": round(r3 / len(PAIRS), 3)}
 
 
+def evaluate_sets(make_backends) -> list[dict]:
+    """Evaluate fresh backends on the development and held-out sets. `make_backends()` -> list of backends."""
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from semantic_holdout import HOLDOUT_PAIRS
+
+    dev = list(PAIRS)
+    out = []
+    for name, pairs in (("desarrollo", dev), ("reservado", HOLDOUT_PAIRS)):
+        PAIRS[:] = pairs
+        for be in make_backends():
+            out.append({"conjunto": name, **evaluate(be)})
+    PAIRS[:] = dev
+    return out
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--embeddings", action="store_true")
     ap.add_argument("--model", default="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     a = ap.parse_args()
-    out = [evaluate(TfidfBackend())]
-    if a.embeddings:
-        import time
 
-        t = time.perf_counter()
-        r = evaluate(SentenceTransformerBackend(a.model))
-        r["segundos_incl_carga_modelo"] = round(time.perf_counter() - t, 2)
-        out.append(r)
-    print(json.dumps(out, indent=2, ensure_ascii=False))
+    def backends():
+        bes = [TfidfBackend(), TfidfConceptBackend(0.5)]
+        if a.embeddings:
+            bes.append(SentenceTransformerBackend(a.model))
+        return bes
+
+    print(json.dumps(evaluate_sets(backends), indent=2, ensure_ascii=False))

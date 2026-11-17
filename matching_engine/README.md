@@ -9,6 +9,18 @@ Motor independiente, explicable y versionado para la Universidad de Ibagué. Rec
 
 > No aprueba casos especiales, no selecciona ganadores de convocatoria y no matricula estudiantes. **No está entrenado** con resultados de PyR: la línea base es determinista; el re-ranqueador supervisado solo se habilita con etiquetas institucionales validadas.
 
+> **Manual de uso completo:** [docs/MANUAL_DE_USO.md](docs/MANUAL_DE_USO.md) (qué entra, qué sale, cómo entrenar más, requisitos, problemas frecuentes).
+
+## Novedades v0.3.1 (motor 0.3.1, política `pyr-v031-provisional-2026-11-16`)
+| Área | Detalle |
+|---|---|
+| Respaldo semántico `tfidf-conceptos` (predeterminado v0.3) | TF-IDF + léxico temático PyR (39 áreas, `pyr_matching/semantic_lexicon.py`), sin dependencias ni red. Paráfrasis, conjunto reservado: top-1 33 % → 90 % (embeddings: 97 %). Simulación: NDCG@5 0.76 → 0.88 |
+| Revisión experta | `feedback-template --explore N` agrega parejas elegibles no recomendadas (reduce sesgo de selección); `--blind` oculta también el rango y desordena filas |
+| Compuertas de promoción | Nueva `RECHAZADO_EMPEORA_ORDEN_POR_ESTUDIANTE` (NDCG graduado por estudiante); compuerta de subgrupos exige tamaño mínimo (30 parejas, 5 por clase) y reporta los pequeños |
+| Simulación | `benchmarks/simulacion_reentrenamiento.py`: verdad latente, revisores simulados y ciclo real de reentrenamiento |
+
+La política v0.3.1 cambia de huella: modelos entrenados con la política v0.3.0 deben reentrenarse.
+
 ## Novedades v0.3 (`hybrid-pyr-v0.3`, motor 0.3.0)
 | Área | Estado | Detalle |
 |---|---|---|
@@ -74,6 +86,7 @@ Sin Excel: construir `pyr_matching.schema.InputBundle` y llamar `pyr_matching.pi
 ## Documentación
 | Documento | Contenido |
 |---|---|
+| [docs/MANUAL_DE_USO.md](docs/MANUAL_DE_USO.md) | **Manual de uso** (operación, entrenamiento, requisitos) |
 | [docs/EXCEL_CONTRACT.md](docs/EXCEL_CONTRACT.md) | Hojas/columnas de entrada y salida, valores permitidos |
 | [docs/MATCHING_ENGINE_PYR.md](docs/MATCHING_ENGINE_PYR.md) | Algoritmo, fases, cambios vs `hybrid-v0.1`, benchmarks |
 | [docs/POLICY_DECISIONS.md](docs/POLICY_DECISIONS.md) | Precedencia de restricciones y registro de decisiones pendientes |

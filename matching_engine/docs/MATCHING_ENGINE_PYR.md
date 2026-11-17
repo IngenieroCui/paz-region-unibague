@@ -32,10 +32,13 @@ Texto profesional estudiante = expectativas + aprendizajes + habilidades + inter
 - `hybrid-v0.1` sigue disponible (`pyr_matching.hybrid_v01`) con **paridad exacta** contra el TypeScript en 160 casos dorados; P6-C en 60 casos dorados + oráculo exhaustivo (150 grafos aleatorios).
 
 ## Backends semánticos
-| Backend | Dependencias | Datos fuera del equipo | Benchmark sintético de paráfrasis (n=12) |
-|---|---|---|---|
-| `tfidf` (defecto) | ninguna | no | top-1 0.167 · MRR 0.320 |
-| `sentence-transformers` `paraphrase-multilingual-MiniLM-L12-v2` | `pip install -e ".[semantic]"` | no (modelo local) | top-1 0.833 · MRR 0.917 |
+| Backend | Dependencias | Datos fuera del equipo | Paráfrasis desarrollo (n=30) | Paráfrasis reservado (n=30) |
+|---|---|---|---|---|
+| `tfidf` (defecto política v0.2) | ninguna | no | top-1 0.30 · MRR 0.40 | top-1 0.33 · MRR 0.46 |
+| `tfidf-conceptos` (defecto política v0.3.1) | ninguna | no | top-1 0.90 · MRR 0.95 | top-1 0.90 · MRR 0.94 |
+| `sentence-transformers` `paraphrase-multilingual-MiniLM-L12-v2` | `pip install -e ".[semantic]"` | no (modelo local) | top-1 0.77 · MRR 0.86 | top-1 0.97 · MRR 0.98 |
+
+`tfidf-conceptos` (v0.3.1) concatena el vector TF-IDF de palabras con un vector TF-IDF de conceptos temáticos (`pyr_matching/semantic_lexicon.py`, versión registrada en `backend_semantico`); con conceptos en ambos textos, similitud = (1−α)·cos_palabras + α·cos_conceptos, α = `semantic.concept_weight` (0.5, elegido solo con el conjunto de desarrollo). El conjunto reservado (`benchmarks/semantic_holdout.py`) se escribió antes del léxico y no se usó para ajustarlo; aun así lo escribió el mismo equipo, por lo que la cifra es optimista. Si los embeddings fallan, el respaldo es `semantic.fallback_backend` (`tfidf-conceptos` en v0.3.1).
 
 Reproducir: `python benchmarks/semantic_benchmark.py --embeddings`. Es un conjunto pequeño y escrito por el equipo: indica que los embeddings capturan paráfrasis que el léxico no, **no** mide calidad en datos reales. Las escalas difieren (embeddings dan cosenos más altos), por lo que el umbral depende del backend (decisión D3). Si el paquete/modelo falta, el motor cae a TF-IDF y lo registra como advertencia `SEMANTIC_BACKEND_UNAVAILABLE`.
 
