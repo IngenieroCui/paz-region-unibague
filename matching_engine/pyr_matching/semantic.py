@@ -94,44 +94,145 @@ class TfidfBackend:
         return round(max(0.0, min(1.0, cos)) * 100, 4)
 
 
+class TfidfConceptBackend(TfidfBackend):
+    """`tfidf-conceptos` (v0.3.1 default): word TF-IDF (as `tfidf`) PLUS a thematic concept channel.
+
+    Each text gets two L2-normalised vectors: the word/bigram TF-IDF of `TfidfBackend` and a TF-IDF over
+    concept ids from `semantic_lexicon` (e.g. "celulares" and "app móvil" both trigger `tecnologia`).
+    They are concatenated with weights sqrt(1-alpha) / sqrt(alpha) and renormalised, so when both texts
+    have concepts the similarity is ``(1-alpha)*cos_words + alpha*cos_concepts``. Texts without any
+    concept fall back to words only. Offline, deterministic, no dependencies, nothing persisted.
+    """
+
+    name = "tfidf-conceptos"
+
+    def __init__(self, concept_weight: float = 0.5):
+        super().__init__()
+        from .semantic_lexicon import LEXICON_VERSION
+
+        if not 0.0 <= concept_weight <= 1.0:
+            raise ValueError("concept_weight debe estar en [0, 1].")
+        self.alpha = float(concept_weight)
+        self.version = f"tfidf-es-stem6-bigram+{LEXICON_VERSION}@a={self.alpha:g}"
+        self._cidf: dict[str, float] = {}
+
+    @staticmethod
+    def _concepts(text: str) -> list[str]:
+        from .semantic_lexicon import concept_hits
+
+        return concept_hits(normalize_tokens_ordered(text))
+
+    def prepare(self, texts: Iterable[str]) -> None:
+        texts = list(texts)
+        super().prepare(texts)
+        docs = sorted({t for t in texts if t and normalize_tokens(t)})
+        df: Counter[str] = Counter()
+        for d in docs:
+            df.update(set(self._concepts(d)))
+        n = len(docs)
+        self._cidf = {c: math.log((1 + n) / (1 + k)) + 1 for c, k in df.items()}
+
+    def _vec(self, text: str) -> dict[str, float]:
+        key = "concepts::" + text
+        if key in self._cache:
+            return self._cache[key]
+        words = super()._vec(text)
+        tf = Counter(self._concepts(text))
+        cvec = {f"C:{c}": (1 + math.log(k)) * self._cidf.get(c, 1.0) for c, k in tf.items()}
+        cn = math.sqrt(sum(v * v for v in cvec.values()))
+        wa, ca = math.sqrt(1 - self.alpha), math.sqrt(self.alpha)
+        vec = {f: v * wa for f, v in words.items()}
+        if cn:
+            vec.update({f: v / cn * ca for f, v in cvec.items()})
+        norm = math.sqrt(sum(v * v for v in vec.values()))
+        vec = {f: v / norm for f, v in vec.items()} if norm else {}
+        self._cache[key] = vec
+        return vec
+
+
 class SentenceTransformerBackend:
+    """Local multilingual embeddings. Offline by default: the model must already be on disk.
+
+    * `allow_download=False` (default) loads with `local_files_only=True`, so a run can never reach the
+      network implicitly. Download once, explicitly, with `pyr-match download-model` (no student data
+      is involved in that step).
+    * Texts are embedded in batches (`batch_size`) and kept in memory for the run.
+    * `cache_dir` (opt-in, keep OUTSIDE git): vectors persisted per model, keyed by SHA-256 of the text,
+      so the raw text is never written. Vectors are still derived from private text: treat the folder as
+      institutional data (see docs/FAIRNESS_PRIVACY.md).
+    """
+
     name = "sentence-transformers"
 
-    def __init__(self, model_name: str, cache_folder: str | None = None, encoder=None):
+    def __init__(self, model_name: str, cache_folder: str | None = None, encoder=None, *, allow_download: bool = False,
+                 batch_size: int = 32, cache_dir: str | None = None):
         self.model_name = model_name
         self.version = f"st:{model_name}"
         self._encoder = encoder  # injectable for tests (callable: list[str] -> list[list[float]])
         self._cache_folder = cache_folder
+        self._allow_download = allow_download
+        self.batch_size = max(1, int(batch_size))
         self._vectors: dict[str, list[float]] = {}
+        self._disk_cache_path = None
+        self._disk: dict[str, list[float]] = {}
+        if cache_dir:
+            from pathlib import Path
+
+            d = Path(cache_dir)
+            d.mkdir(parents=True, exist_ok=True)
+            self._disk_cache_path = d / f"emb_{hashlib.sha256(model_name.encode()).hexdigest()[:12]}.json"
+            if self._disk_cache_path.exists():
+                import json
+
+                self._disk = json.loads(self._disk_cache_path.read_text(encoding="utf-8"))
 
     def _load(self):
         if self._encoder is not None:
             return self._encoder
         from sentence_transformers import SentenceTransformer  # optional dependency
 
-        model = SentenceTransformer(self.model_name, cache_folder=self._cache_folder, device="cpu")
+        model = SentenceTransformer(self.model_name, cache_folder=self._cache_folder, device="cpu",
+                                    local_files_only=not self._allow_download)
         try:
             import sentence_transformers
 
             self.version = f"st:{self.model_name}@sentence-transformers=={sentence_transformers.__version__}"
         except Exception:  # pragma: no cover
             pass
+        bs = self.batch_size
 
         def encode(texts):
-            return [list(map(float, v)) for v in model.encode(texts, batch_size=32, normalize_embeddings=True, show_progress_bar=False)]
+            return [list(map(float, v)) for v in model.encode(texts, batch_size=bs, normalize_embeddings=True, show_progress_bar=False)]
 
         self._encoder = encode
         return encode
 
     def prepare(self, texts: Iterable[str]) -> None:
         unique = sorted({t for t in texts if t and t.strip()})
-        missing = [t for t in unique if t not in self._vectors]
+        missing = []
+        for t in unique:
+            if t in self._vectors:
+                continue
+            key = text_fingerprint(t, 32)
+            if key in self._disk:
+                self._vectors[t] = self._disk[key]
+            else:
+                missing.append(t)
         if missing:
-            vectors = self._load()(missing)
-            if len(vectors) != len(missing):
-                raise RuntimeError("El modelo de embeddings devolvió un número inesperado de vectores.")
-            for t, v in zip(missing, vectors):
-                self._vectors[t] = v
+            enc = self._load()
+            for i in range(0, len(missing), self.batch_size):
+                chunk = missing[i:i + self.batch_size]
+                vectors = enc(chunk)
+                if len(vectors) != len(chunk):
+                    raise RuntimeError("El modelo de embeddings devolvió un número inesperado de vectores.")
+                for t, v in zip(chunk, vectors):
+                    self._vectors[t] = v
+                    if self._disk_cache_path is not None:
+                        self._disk[text_fingerprint(t, 32)] = [round(x, 6) for x in v]
+            if self._disk_cache_path is not None:
+                import json
+
+                self._disk_cache_path.write_text(json.dumps(self._disk), encoding="utf-8")
 
     def similarity(self, a: str, b: str) -> float | None:
         va, vb = self._vectors.get(a), self._vectors.get(b)
@@ -153,7 +254,9 @@ def build_backend(policy, override: str | None = None, encoder=None) -> tuple[Se
     if choice == "none":
         return NoSemanticBackend(), warnings
     if choice == "sentence-transformers":
-        backend = SentenceTransformerBackend(cfg.get("embedding_model"), cfg.get("cache_folder"), encoder=encoder)
+        backend = SentenceTransformerBackend(cfg.get("embedding_model"), cfg.get("cache_folder"), encoder=encoder,
+                                             allow_download=bool(cfg.get("allow_model_download", False)),
+                                             batch_size=cfg.get("batch_size", 32), cache_dir=cfg.get("vector_cache_dir"))
         try:
             backend._load()
             return backend, warnings
@@ -162,8 +265,18 @@ def build_backend(policy, override: str | None = None, encoder=None) -> tuple[Se
             choice = cfg.get("fallback_backend", "tfidf")
             if choice == "none":
                 return NoSemanticBackend(), warnings
+    if choice == "tfidf-conceptos":
+        return TfidfConceptBackend(float(cfg.get("concept_weight", 0.5))), warnings
     return TfidfBackend(), warnings
 
 
-def text_fingerprint(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+def text_fingerprint(text: str, n: int = 12) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:n]
+
+
+def download_model(model_name: str, cache_folder: str | None = None) -> str:
+    """Explicit, one-time model download (public weights only; no institutional data is sent)."""
+    from sentence_transformers import SentenceTransformer
+
+    SentenceTransformer(model_name, cache_folder=cache_folder, device="cpu")
+    return model_name

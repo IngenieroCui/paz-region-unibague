@@ -10,6 +10,11 @@
 
 El optimizador nunca decide elegibilidad: recibe solo aristas que pasaron la capa dura. Un invariante final (`violaciones_restricciones_duras = 0`) audita cupos y unicidad.
 
+## v0.3.2: restricción de perfil y campo profesional
+- La regla de perfil compara programas canónicos (`pyr_matching/programs.py`): conectores, tildes, alias y un solo error de digitación se reconcilian; celdas con varios programas cuentan cada uno; `PENDIENTE`/`N/A`/`#REF!` son desconocidos. Todo lo no exacto queda en la hoja `Normalizacion_Programas`. Ver [PROGRAMAS_UNIBAGUE.md](PROGRAMAS_UNIBAGUE.md).
+- La auditoría re-verifica las filas del motor con una segunda implementación de las reglas duras (`audit._second_opinion`).
+- Componente `occupational` en `hybrid-pyr-v0.3` (esquema `pyr-features/2.1`): máximo, sobre las ramas del perfil ocupacional oficial del programa del estudiante, de la similitud rama ↔ proyecto. `occupational_mode = fallback` lo limita a estudiantes sin texto profesional. Pesos v0.3.2: program 25, occupational 15, semantic 25, requirements 10, interests 5, lexical 5, location 10, modality 5, historical 0.
+
 ## Componentes (0–100; vacío = desconocido)
 | Componente | Peso prov. | Fuente | Cálculo |
 |---|---|---|---|
@@ -32,10 +37,13 @@ Texto profesional estudiante = expectativas + aprendizajes + habilidades + inter
 - `hybrid-v0.1` sigue disponible (`pyr_matching.hybrid_v01`) con **paridad exacta** contra el TypeScript en 160 casos dorados; P6-C en 60 casos dorados + oráculo exhaustivo (150 grafos aleatorios).
 
 ## Backends semánticos
-| Backend | Dependencias | Datos fuera del equipo | Benchmark sintético de paráfrasis (n=12) |
-|---|---|---|---|
-| `tfidf` (defecto) | ninguna | no | top-1 0.167 · MRR 0.320 |
-| `sentence-transformers` `paraphrase-multilingual-MiniLM-L12-v2` | `pip install -e ".[semantic]"` | no (modelo local) | top-1 0.833 · MRR 0.917 |
+| Backend | Dependencias | Datos fuera del equipo | Paráfrasis desarrollo (n=30) | Paráfrasis reservado (n=30) |
+|---|---|---|---|---|
+| `tfidf` (defecto política v0.2) | ninguna | no | top-1 0.30 · MRR 0.40 | top-1 0.33 · MRR 0.46 |
+| `tfidf-conceptos` (defecto política v0.3.1) | ninguna | no | top-1 0.90 · MRR 0.95 | top-1 0.90 · MRR 0.94 |
+| `sentence-transformers` `paraphrase-multilingual-MiniLM-L12-v2` | `pip install -e ".[semantic]"` | no (modelo local) | top-1 0.77 · MRR 0.86 | top-1 0.97 · MRR 0.98 |
+
+`tfidf-conceptos` (v0.3.1) concatena el vector TF-IDF de palabras con un vector TF-IDF de conceptos temáticos (`pyr_matching/semantic_lexicon.py`, versión registrada en `backend_semantico`); con conceptos en ambos textos, similitud = (1−α)·cos_palabras + α·cos_conceptos, α = `semantic.concept_weight` (0.5, elegido solo con el conjunto de desarrollo). El conjunto reservado (`benchmarks/semantic_holdout.py`) se escribió antes del léxico y no se usó para ajustarlo; aun así lo escribió el mismo equipo, por lo que la cifra es optimista. Si los embeddings fallan, el respaldo es `semantic.fallback_backend` (`tfidf-conceptos` en v0.3.1).
 
 Reproducir: `python benchmarks/semantic_benchmark.py --embeddings`. Es un conjunto pequeño y escrito por el equipo: indica que los embeddings capturan paráfrasis que el léxico no, **no** mide calidad en datos reales. Las escalas difieren (embeddings dan cosenos más altos), por lo que el umbral depende del backend (decisión D3). Si el paquete/modelo falta, el motor cae a TF-IDF y lo registra como advertencia `SEMANTIC_BACKEND_UNAVAILABLE`.
 

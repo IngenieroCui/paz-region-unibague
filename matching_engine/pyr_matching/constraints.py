@@ -8,6 +8,7 @@ decision carries an approved municipality. Unknown values that a hard rule needs
 from __future__ import annotations
 
 from .policy import Policy, canon_modality, canon_place
+from .programs import canonical_set, is_placeholder, resolve
 from .schema import DirectDecision, Student, Vacancy
 
 BLOCKER_TEXT = {
@@ -16,6 +17,7 @@ BLOCKER_TEXT = {
     "TIPO_PLAZA_NO_HABILITADO": "El tipo de plaza no corresponde a este flujo (SIGA o tipo de directa).",
     "PROGRAMA_NO_COMPATIBLE": "El programa del estudiante no está en el perfil ni en el perfil alterno de la plaza.",
     "PROGRAMA_NO_VERIFICABLE": "Falta el programa del estudiante; la regla de perfil no puede verificarse.",
+    "PERFIL_PLAZA_NO_VERIFICABLE": "La plaza no registra perfil académico (ni alterno); la regla obligatoria de perfil no puede verificarse. Requiere revisión institucional.",
     "MUNICIPIO_RESTRINGIDO": "La plaza está fuera del municipio aprobado institucionalmente.",
     "MUNICIPIO_NO_VERIFICABLE": "La plaza no tiene municipio; no puede verificarse la restricción aprobada.",
     "MODALIDAD_RESTRINGIDA": "La modalidad de la plaza no está entre las modalidades aprobadas.",
@@ -26,19 +28,34 @@ BLOCKER_TEXT = {
 
 
 def program_relation(student: Student, vacancy: Vacancy) -> str:
-    """'exact' | 'alt' | 'none' | 'unknown_vacancy' | 'unknown_student'."""
-    profile = canon_place(vacancy.program_profile)
-    alt = canon_place(vacancy.program_profile_alt)
+    """'exact' | 'alt' | 'none' | 'unknown_vacancy' | 'unknown_student'.
+
+    v0.3.2: names are compared through the Unibagué program catalogue (`programs.resolve`): connector
+    words, accents, aliases ("Contaduría" = "Contaduría Pública", "Ingeniería Sistemas" = "Ingeniería de
+    Sistemas") and single typing slips are reconciled, a profile cell may list several programs, and
+    placeholders ("PENDIENTE") count as missing. Every non-exact reconciliation is reported by the reader
+    (`PROGRAMA_*` warnings and the `Normalizacion_Programas` output sheet); nothing is silent."""
+    profile = canonical_set(vacancy.program_profile)
+    alt = canonical_set(vacancy.program_profile_alt) - profile
     if not profile and not alt:
         return "unknown_vacancy"
-    prog = canon_place(student.academic_program)
+    prog, _, _ = resolve(student.academic_program)
     if not prog:
         return "unknown_student"
-    if prog == profile:
+    if prog in profile:
         return "exact"
-    if prog == alt:
+    if prog in alt:
         return "alt"
     return "none"
+
+
+def missing_profile_mode(policy: Policy) -> str:
+    """'block' (default, fail safe) or 'review' (allowed but flagged REQUIERE_REVISION_PERFIL)."""
+    return policy.get("missing_vacancy_profile", "block")
+
+
+def needs_profile_review(student: Student, vacancy: Vacancy, policy: Policy) -> bool:
+    return policy["program_profile_rule"] == "hard" and missing_profile_mode(policy) == "review" and program_relation(student, vacancy) == "unknown_vacancy"
 
 
 def check_pair(
@@ -67,9 +84,15 @@ def check_pair(
             b.append("PROGRAMA_NO_COMPATIBLE")
         elif rel == "unknown_student":
             b.append("PROGRAMA_NO_VERIFICABLE")
+        elif rel == "unknown_vacancy" and missing_profile_mode(policy) == "block":
+            # v0.2 let these pairs through: an unverifiable mandatory rule must fail safe.
+            b.append("PERFIL_PLAZA_NO_VERIFICABLE")
     if decision is not None:
         if decision.approved_municipality:
-            if not vacancy.municipality:
+            if is_placeholder(decision.approved_municipality):
+                # e.g. "PENDIENTE": a restriction exists but its value is unknown -> fail safe, never skip it
+                b.append("MUNICIPIO_NO_VERIFICABLE")
+            elif not vacancy.municipality or is_placeholder(vacancy.municipality):
                 b.append("MUNICIPIO_NO_VERIFICABLE")
             elif canon_place(vacancy.municipality) != canon_place(decision.approved_municipality):
                 b.append("MUNICIPIO_RESTRINGIDO")

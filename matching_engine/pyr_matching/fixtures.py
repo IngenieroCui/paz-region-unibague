@@ -10,6 +10,8 @@ from pathlib import Path
 
 from openpyxl import Workbook
 
+from .io_excel import safe_append
+
 PERIOD = "2027A"
 
 ST_COLS = ["ID_Estudiante", "Periodo", "Programa", "Municipio_Origen", "Habilitado", "Expectativas", "Aprendizajes_Esperados",
@@ -83,14 +85,14 @@ def write_workbook(path: str | Path, rows: dict[str, list[list]], labels: list[l
     wb.remove(wb.active)
     for name, cols in (("Estudiantes", ST_COLS), ("Plazas", VC_COLS), ("Decisiones_Directas", DC_COLS), ("Matriculas_SIGA", EN_COLS)):
         ws = wb.create_sheet(name)
-        ws.append(cols)
+        safe_append(ws, cols)
         for r in rows.get(name, []):
-            ws.append(r)
+            safe_append(ws, r)
     if labels is not None:
         ws = wb.create_sheet("Etiquetas")
-        ws.append(LB_COLS)
+        safe_append(ws, LB_COLS)
         for r in labels:
-            ws.append(r)
+            safe_append(ws, r)
     path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(path)
     return path

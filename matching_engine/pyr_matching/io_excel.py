@@ -15,6 +15,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from .output_dictionary import OUTPUT_DICTIONARY
+from .programs import is_placeholder, normalization_report
 from .policy import Policy, canon, canon_modality
 from .schema import DirectDecision, Enrollment, InputBundle, Label, Student, Vacancy
 
@@ -95,39 +96,99 @@ def _cell_bool(v: Any, default: bool) -> bool:
     return c in ("SI", "S", "TRUE", "VERDADERO", "1", "X", "YES", "HABILITADO")
 
 
-def _read_entity(workbooks: list[tuple[str, Any]], entity: str, spec: dict, header_row: int) -> tuple[list[dict], str | None]:
+def _read_entity(workbooks: list[tuple[str, Any]], entity: str, spec: dict, header_row: int) -> tuple[list[dict], list[str]]:
+    """Read EVERY worksheet (in every supplied workbook) whose name matches the entity.
+
+    v0.2 returned after the first matching sheet, silently dropping e.g. a second semester file.
+    Each record now carries `_source` = 'file::sheet::row' so duplicates and conflicts across files
+    are explicit (see `_dedupe`). Returns (records, list of 'file::sheet' read).
+    """
     names = {canon(n) for n in spec["sheet"]}
+    out: list[dict] = []
+    read_from: list[str] = []
     for fname, wb in workbooks:
         for ws in wb.worksheets:
-            if canon(ws.title) in names:
-                rows = ws.iter_rows(min_row=header_row, values_only=True)
-                header = next(rows, None) or ()
-                index = {canon(h): i for i, h in enumerate(header) if canon(h)}
-                cols: dict[str, int] = {}
-                for fld, aliases in spec["columns"].items():
-                    for a in aliases:
-                        if canon(a) in index:
-                            cols[fld] = index[canon(a)]
-                            break
-                missing = [f for f in spec.get("required", []) if f not in cols]
-                if missing:
-                    raise MappingError(f"Hoja '{ws.title}' ({fname}): faltan columnas obligatorias para {entity}: {', '.join(spec['columns'][m][0] for m in missing)}.")
-                out = []
-                for offset, r in enumerate(rows, start=header_row + 1):
-                    if r is None or all(c is None or (isinstance(c, str) and not c.strip()) for c in r):
-                        continue
-                    rec = {f: (r[i] if i < len(r) else None) for f, i in cols.items()}
-                    rec["_row"] = offset
-                    out.append(rec)
-                return out, ws.title
-    if spec.get("optional_sheet"):
-        return [], None
-    raise MappingError(f"No se encontró la hoja obligatoria para {entity} (nombres aceptados: {', '.join(spec['sheet'])}).")
+            if canon(ws.title) not in names:
+                continue
+            rows = ws.iter_rows(min_row=header_row, values_only=True)
+            header = next(rows, None) or ()
+            index: dict[str, int] = {}
+            for i, h in enumerate(header):
+                if canon(h) and canon(h) not in index:  # first occurrence wins (deterministic)
+                    index[canon(h)] = i
+            cols: dict[str, int] = {}
+            for fld, aliases in spec["columns"].items():
+                for a in aliases:
+                    if canon(a) in index:
+                        cols[fld] = index[canon(a)]
+                        break
+            missing = [f for f in spec.get("required", []) if f not in cols]
+            if missing:
+                raise MappingError(f"Hoja '{ws.title}' ({fname}): faltan columnas obligatorias para {entity}: {', '.join(spec['columns'][m][0] for m in missing)}.")
+            read_from.append(f"{fname}::{ws.title}")
+            for offset, r in enumerate(rows, start=header_row + 1):
+                if r is None or all(c is None or (isinstance(c, str) and not c.strip()) for c in r):
+                    continue
+                rec = {f: (r[i] if i < len(r) else None) for f, i in cols.items()}
+                rec["_row"] = offset
+                rec["_source"] = f"{fname}::{ws.title}::{offset}"
+                out.append(rec)
+    if not read_from and not spec.get("optional_sheet"):
+        raise MappingError(f"No se encontró la hoja obligatoria para {entity} (nombres aceptados: {', '.join(spec['sheet'])}).")
+    return out, read_from
+
+
+# Natural keys per entity. Exact duplicates (same key AND same content) coming from different
+# sources are dropped with a warning; conflicting duplicates are kept so validation blocks them.
+DEDUPE_KEYS = {
+    "students": ("student_id", "period"),
+    "vacancies": ("vacancy_id", "period"),
+    "decisions": ("student_id", "period"),
+    "enrollments": ("student_id", "vacancy_id", "period"),
+    "labels": ("student_id", "vacancy_id", "period", "source"),
+}
+
+
+def _sheet_of(rec) -> str:
+    src = getattr(rec, "origin", None) if hasattr(rec, "origin") else getattr(rec, "source", None)
+    return (src or "").rsplit("::", 1)[0]
+
+
+def _dedupe(records: list, entity: str, warnings: list[str]) -> list:
+    key_fields = DEDUPE_KEYS[entity]
+    seen: dict[tuple, Any] = {}
+    out = []
+    dropped = 0
+    for r in records:
+        key = tuple(getattr(r, k) for k in key_fields)
+        prev = seen.get(key)
+        # Equality ignores provenance. Only collapse copies that come from a DIFFERENT sheet/file
+        # (e.g. the same semester exported twice); a repeated row inside one sheet stays blocking.
+        if prev is not None and prev == r and _sheet_of(prev) != _sheet_of(r):
+            dropped += 1
+            continue
+        if prev is None:
+            seen[key] = r
+        out.append(r)
+    if dropped:
+        warnings.append(f"DUPLICADO_EXACTO_ENTRE_FUENTES: {dropped} registro(s) idénticos de {entity} en varias hojas/archivos; se conserva el primero.")
+    return out
+
+
+def _known(v: Any, counter: dict, field_name: str) -> str | None:
+    """Cell text, or None when it is empty or a placeholder ("PENDIENTE", "#REF!", "N/A"...). Placeholders
+    are counted per field and reported, so a pending value is never compared as if it were real data."""
+    s = _cell_str(v)
+    if s is not None and is_placeholder(s):
+        counter[field_name] = counter.get(field_name, 0) + 1
+        return None
+    return s
 
 
 def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = None) -> InputBundle:
     mapping = mapping or load_mapping()
     bundle = InputBundle()
+    ph: dict[str, int] = {}
     bundle.load_warnings += guard_mapping(mapping)
     workbooks = []
     for p in paths:
@@ -137,13 +198,13 @@ def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = 
     hr = mapping.get("header_row", 1)
     E = mapping["entities"]
     try:
-        st_rows, _ = _read_entity(workbooks, "students", E["students"], hr)
+        st_rows, st_src = _read_entity(workbooks, "students", E["students"], hr)
         for r in st_rows:
             bundle.students.append(Student(
                 student_id=_cell_str(r.get("student_id")) or f"<fila {r['_row']} sin ID>",
                 period=_cell_str(r.get("period")) or "",
-                academic_program=_cell_str(r.get("academic_program")),
-                origin_municipality=_cell_str(r.get("origin_municipality")),
+                academic_program=_known(r.get("academic_program"), ph, "Estudiantes.Programa"),
+                origin_municipality=_known(r.get("origin_municipality"), ph, "Estudiantes.Municipio_Origen"),
                 eligible=_cell_bool(r.get("eligible"), True),
                 expectations_text=_cell_str(r.get("expectations_text")),
                 learning_goals_text=_cell_str(r.get("learning_goals_text")),
@@ -151,8 +212,9 @@ def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = 
                 interests_text=_cell_str(r.get("interests_text")),
                 desired_work_text=_cell_str(r.get("desired_work_text")),
                 modality_preference=canon_modality(r.get("modality_preference")),
+                source=r["_source"],
             ))
-        vc_rows, _ = _read_entity(workbooks, "vacancies", E["vacancies"], hr)
+        vc_rows, vc_src = _read_entity(workbooks, "vacancies", E["vacancies"], hr)
         for r in vc_rows:
             bundle.vacancies.append(Vacancy(
                 vacancy_id=_cell_str(r.get("vacancy_id")) or f"<fila {r['_row']} sin ID>",
@@ -161,22 +223,23 @@ def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = 
                 status=policy.alias("status", r.get("status")),
                 vacancy_type=policy.alias("vacancy_type", r.get("vacancy_type")),
                 project_id=_cell_str(r.get("project_id")),
-                project_name=_cell_str(r.get("project_name")),
-                project_description=_cell_str(r.get("project_description")),
+                project_name=_known(r.get("project_name"), ph, "Plazas.Nombre_Proyecto"),
+                project_description=_known(r.get("project_description"), ph, "Plazas.Descripcion_Proyecto"),
                 project_line=_cell_str(r.get("project_line")),
                 organization_id=_cell_str(r.get("organization_id")),
-                organization_name=_cell_str(r.get("organization_name")),
+                organization_name=_known(r.get("organization_name"), ph, "Plazas.Nombre_Organizacion"),
                 department=_cell_str(r.get("department")),
-                municipality=_cell_str(r.get("municipality")),
+                municipality=_known(r.get("municipality"), ph, "Plazas.Municipio"),
                 modality=canon_modality(r.get("modality")),
-                program_profile=_cell_str(r.get("program_profile")),
-                program_profile_alt=_cell_str(r.get("program_profile_alt")),
+                program_profile=_known(r.get("program_profile"), ph, "Plazas.Perfil_Programa"),
+                program_profile_alt=_known(r.get("program_profile_alt"), ph, "Plazas.Perfil_Programa_Alterno"),
                 activities_text=_cell_str(r.get("activities_text")),
                 requirements_text=_cell_str(r.get("requirements_text")),
                 org_needs_text=_cell_str(r.get("org_needs_text")),
                 call_code=_cell_str(r.get("call_code")),
+                source=r["_source"],
             ))
-        dec_rows, _ = _read_entity(workbooks, "decisions", E["decisions"], hr)
+        dec_rows, dec_src = _read_entity(workbooks, "decisions", E["decisions"], hr)
         for r in dec_rows:
             mods = tuple(sorted({m for m in (canon_modality(x) for x in str(r.get("approved_modalities") or "").replace(";", ",").split(",")) if m}))
             bundle.decisions.append(DirectDecision(
@@ -186,12 +249,13 @@ def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = 
                 approval_status=policy.alias("approval_status", r.get("approval_status")),
                 confirmed_vacancy_id=_cell_str(r.get("confirmed_vacancy_id")),
                 placement_confirmed=_cell_bool(r.get("placement_confirmed"), False),
-                approved_municipality=_cell_str(r.get("approved_municipality")),
+                approved_municipality=_known(r.get("approved_municipality"), ph, "Decisiones_Directas.Municipio_Aprobado"),
                 approved_modalities=mods,
                 call_code=_cell_str(r.get("call_code")),
                 row=r["_row"],
+                source=r["_source"],
             ))
-        en_rows, _ = _read_entity(workbooks, "enrollments", E["enrollments"], hr)
+        en_rows, en_src = _read_entity(workbooks, "enrollments", E["enrollments"], hr)
         for r in en_rows:
             bundle.enrollments.append(Enrollment(
                 student_id=_cell_str(r.get("student_id")) or "",
@@ -199,8 +263,9 @@ def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = 
                 period=_cell_str(r.get("period")) or "",
                 status=canon(r.get("status")) or "MATRICULADO",
                 row=r["_row"],
+                source=r["_source"],
             ))
-        lb_rows, _ = _read_entity(workbooks, "labels", E["labels"], hr)
+        lb_rows, lb_src = _read_entity(workbooks, "labels", E["labels"], hr)
         for r in lb_rows:
             try:
                 value = float(r.get("value"))
@@ -208,10 +273,28 @@ def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = 
                 bundle.load_warnings.append(f"ETIQUETA_NO_NUMERICA: fila {r['_row']} ignorada.")
                 continue
             bundle.labels.append(Label(_cell_str(r.get("student_id")) or "", _cell_str(r.get("vacancy_id")) or "",
-                                       _cell_str(r.get("period")) or "", value, canon(r.get("source"))))
+                                       _cell_str(r.get("period")) or "", value, canon(r.get("source")), origin=r["_source"]))
     finally:
         for _, wb in workbooks:
             wb.close()
+    w = bundle.load_warnings
+    bundle.students = _dedupe(bundle.students, "students", w)
+    bundle.vacancies = _dedupe(bundle.vacancies, "vacancies", w)
+    bundle.decisions = _dedupe(bundle.decisions, "decisions", w)
+    bundle.enrollments = _dedupe(bundle.enrollments, "enrollments", w)
+    bundle.labels = _dedupe(bundle.labels, "labels", w)
+    for entity, src in (("estudiantes", st_src), ("plazas", vc_src), ("decisiones", dec_src), ("matriculas", en_src), ("etiquetas", lb_src)):
+        if len(src) > 1:
+            w.append(f"CONSOLIDACION_MULTIHOJA {entity}: {len(src)} hojas leídas ({'; '.join(src)}).")
+    for fld, n in sorted(ph.items()):
+        w.append(f"VALOR_PENDIENTE_COMO_DESCONOCIDO {fld}: {n} celda(s) con marcador (PENDIENTE, N/A, #REF!...) tratadas como vacías.")
+    bundle.program_normalization = normalization_report(
+        [s.academic_program for s in bundle.students] + [v.program_profile for v in bundle.vacancies] + [v.program_profile_alt for v in bundle.vacancies])
+    for r in bundle.program_normalization:
+        if r["metodo"] == "aproximado":
+            w.append(f"PROGRAMA_CORREGIDO_APROX: '{r['valor_original']}' -> '{r['programa_canonico']}' (un error de digitación; revisar en la fuente).")
+        elif r["metodo"] == "no_reconocido":
+            w.append(f"PROGRAMA_NO_RECONOCIDO: '{r['valor_original']}' no está en el catálogo Unibagué; solo coincide con el mismo nombre escrito igual.")
     return bundle
 
 
@@ -223,11 +306,43 @@ HEADER_FILL = PatternFill("solid", fgColor="1F4E78")
 HEADER_FONT = Font(bold=True, color="FFFFFF")
 
 
+# Spreadsheet formula injection (CSV/DDE injection): a cell whose text starts with one of these
+# characters may be evaluated by Excel/LibreOffice/Sheets. Engine outputs echo institutional strings
+# (project names, descriptions, IDs) that must never execute. Fullwidth variants are included.
+FORMULA_TRIGGERS = ("=", "+", "-", "@", "\t", "\r", "\n", "＝", "＋", "－", "＠")
+
+
+def is_formula_like(value: Any) -> bool:
+    return isinstance(value, str) and value.lstrip(" ").startswith(FORMULA_TRIGGERS) if value else False
+
+
+def safe_append(ws, values: list) -> None:
+    """Append a row forcing every string to be stored as an inert text cell.
+
+    openpyxl stores any str starting with '=' as a formula. We write strings as shared strings
+    (data_type 's') and set `quotePrefix` on formula-like cells so Excel shows and keeps them as
+    literal text even after the user edits the cell. The value itself is not altered, so the
+    workbook round-trips byte-for-byte to the JSON contract.
+    """
+    risky = [isinstance(v, str) and is_formula_like(v) for v in values]
+    ws.append([None if r else v for v, r in zip(values, risky)])
+    if not any(risky):
+        return
+    # `ws.max_row` scans the whole sheet (quadratic on large outputs); only needed for the rare risky row.
+    row = getattr(ws, "_current_row", None) or ws.max_row
+    for col, (v, r) in enumerate(zip(values, risky), start=1):
+        if r:
+            cell = ws.cell(row=row, column=col)
+            cell.value = v
+            cell.data_type = "s"  # inert text, never a formula (<f>) element
+            cell.quotePrefix = True
+
+
 def _write_table(ws, rows: list[dict], columns: list[str] | None = None):
     columns = columns or (list(rows[0].keys()) if rows else ["sin_registros"])
-    ws.append(columns)
+    safe_append(ws, columns)
     for r in rows:
-        ws.append([r.get(c) for c in columns])
+        safe_append(ws, [r.get(c) for c in columns])
     for i, c in enumerate(columns, start=1):
         cell = ws.cell(row=1, column=i)
         cell.fill, cell.font = HEADER_FILL, HEADER_FONT
@@ -244,8 +359,10 @@ TABLE_COLUMNS = {
                               "confianza_evidencia", "verificacion_reglas", "excede_cupos", "explicacion"],
     "Recomendaciones_SIGA": ["id_estudiante", "rango", "id_plaza", "id_proyecto", "proyecto", "organizacion", "municipio", "modalidad", "tipo_plaza",
                              "perfil_programa", "cupos_restantes_al_ejecutar", "compatibilidad", "sobre_umbral", "cobertura_evidencia",
-                             "confianza_evidencia", "tipo_resultado", "explicacion"],
+                             "confianza_evidencia", "tipo_resultado", "componentes_sin_evidencia", "alertas", "explicacion"],
     "Sin_Asignacion": ["id_estudiante", "flujo", "estado", "codigo_motivo", "detalle", "siguiente_paso"],
+    "Auditoria_Restricciones": ["origen", "codigo", "id_estudiante", "id_plaza", "detalle"],
+    "Normalizacion_Programas": ["valor_original", "programa_canonico", "metodo", "similitud", "celda_con_varios_programas"],
 }
 
 
@@ -254,7 +371,7 @@ def write_result(result, path: str | Path) -> Path:
     wb = Workbook()
     wb.remove(wb.active)
     order = ["Asignaciones_Directas", "Recomendaciones_SIGA", "Plazas_Disponibles", "Sin_Asignacion", "Idoneidad_Por_Plaza",
-             "Simulacion_No_Vinculante", "Pares_Evaluados"]
+             "Simulacion_No_Vinculante", "Pares_Evaluados", "Auditoria_Restricciones", "Normalizacion_Programas"]
     for name in order:
         if name in result.tables:
             _write_table(wb.create_sheet(name), result.tables[name], TABLE_COLUMNS.get(name))
