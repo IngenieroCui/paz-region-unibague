@@ -78,7 +78,7 @@ def test_behavior_signal_only_used_when_policy_weights_it(hist, v03, tmp_path):
     b = to_input_bundle(hist, ["2026B"], require_capacity=True)
     off = run_match(b, "2026B", v03, behavior_model=bm, run_timestamp="t", pairs_detail="all")
     assert all(r["c_historical"] is None for r in off.tables["Pares_Evaluados"])
-    w = dict(v03.weights, historical=10, semantic=20)
+    w = dict(v03.weights, historical=10, semantic=v03.weights["semantic"] - 10)
     on_pol = Policy({**v03.raw, "weights": w})
     bm.algorithm_base = on_pol["algorithm_version"]
     on = run_match(b, "2026B", on_pol, behavior_model=bm, run_timestamp="t", pairs_detail="all")

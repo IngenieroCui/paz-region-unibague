@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from .constraints import needs_profile_review, program_relation
 from .policy import ALGORITHM_VERSION_V03, COMPONENTS_V02, COMPONENTS_V03, Policy, canon_modality, canon_place
 from .schema import Student, Vacancy
+from .programs import all_branch_texts, branches, resolve
 from .text import js_round, text_score
 
 COMPONENT_LABEL = {
@@ -32,6 +33,7 @@ COMPONENT_LABEL = {
     "requirements": "habilidades/conocimientos vs requisitos",
     "interests": "intereses/trabajo deseado vs proyecto",
     "historical": "señal histórica (EXPERIMENTAL, comportamiento pasado)",
+    "occupational": "campo profesional del programa (mejor rama)",
 }
 
 # Which canonical fields feed each v0.3 component (evidence provenance shown in outputs).
@@ -44,6 +46,7 @@ EVIDENCE_FIELDS_V03 = {
     "location": ("Municipio_Origen", "Municipio"),
     "modality": ("Modalidad_Preferida", "Modalidad"),
     "historical": ("modelo de comportamiento histórico", "modelo de comportamiento histórico"),
+    "occupational": ("Programa -> ramas del perfil ocupacional oficial", "Nombre/Linea/Descripcion_Proyecto+Actividades+Requisitos"),
 }
 
 
@@ -119,6 +122,30 @@ def _blend(a: float | None, b: float | None) -> float | None:
     return sum(vals) / len(vals) if vals else None
 
 
+def occupational_fit(student: Student, vacancy: Vacancy, semantic_backend) -> tuple[float | None, str | None]:
+    """(score 0-100, best branch) between the plaza project and the student's program occupational branches.
+
+    Uses the MAXIMUM over branches: every branch of a program is a legitimate field of work, so a broad
+    program is never diluted by its breadth. None when the program has no catalogued branches or the
+    plaza has no project text. Independent of the student's free text, so it also informs students who
+    wrote nothing (historically most evidence is only the two pre-registration answers)."""
+    prog = resolve(student.academic_program)[0]
+    br = branches(prog)
+    target = " ".join(t for t in (vacancy.project_text(), vacancy.requirement_text()) if t)
+    if not br or not target:
+        return None, None
+    cache = semantic_backend.__dict__.setdefault("_occupational_cache", {})  # per run: the backend is fitted per run
+    key = (prog, target)
+    if key not in cache:
+        best, best_name = None, None
+        for name in sorted(br):
+            sim = semantic_backend.similarity(br[name], target)
+            if sim is not None and (best is None or sim > best):
+                best, best_name = sim, name
+        cache[key] = (best, best_name)
+    return cache[key]
+
+
 def component_scores_v03(student: Student, vacancy: Vacancy, policy: Policy, semantic_backend, behavior_model=None) -> dict[str, float | None]:
     """hybrid-pyr-v0.3 components. Each side compares the RELEVANT fields only (no cross-field mixing)."""
     rel = program_relation(student, vacancy)
@@ -142,8 +169,15 @@ def component_scores_v03(student: Student, vacancy: Vacancy, policy: Policy, sem
     modality = None
     if student.modality_preference and vacancy.modality:
         modality = 100.0 if canon_modality(student.modality_preference) == canon_modality(vacancy.modality) else 0.0
-    raw = {"program": program, "semantic": semantic, "requirements": requirements, "interests": interests, "lexical": lexical,
-           "location": location, "modality": modality, "historical": None}
+    # "fallback" (default): the program's occupational field only informs pairs where the student wrote no
+    # professional text (no aspiration, interest or capability evidence). Measured in the ground-truth
+    # simulator: as an always-on term it added noise over what students actually said; as a fallback it
+    # gives students without text an informed ordering instead of program + location only.
+    occupational = None
+    if policy.get("occupational_mode", "fallback") == "always" or all(x is None for x in (semantic, interests, requirements)):
+        occupational = occupational_fit(student, vacancy, semantic_backend)[0]
+    raw = {"program": program, "occupational": occupational, "semantic": semantic, "requirements": requirements, "interests": interests,
+           "lexical": lexical, "location": location, "modality": modality, "historical": None}
     if behavior_model is not None and policy.weights.get("historical", 0) > 0:
         raw["historical"] = behavior_model.predict_score(raw)
     return raw
@@ -157,7 +191,8 @@ def backend_texts(policy: Policy, students, vacancies) -> list[str]:
     for st in students:
         out += [st.aspiration_text(), st.interest_text(), st.capability_text()]
     for v in vacancies:
-        out += [v.project_text(), v.requirement_text()]
+        out += [v.project_text(), v.requirement_text(), " ".join(t for t in (v.project_text(), v.requirement_text()) if t)]
+    out += all_branch_texts()
     return [t for t in out if t]
 
 

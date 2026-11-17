@@ -173,7 +173,7 @@ def test_training_on_v03_policy(tmp_path):
     pol = Policy.load(POLICY_V03_PATH)
     bundle = _labelled_bundle(tmp_path, pol)
     art = train(bundle, pol, tmp_path / "reg03")
-    assert art["feature_schema_version"] == "pyr-features/2.0" and "historical" not in art["components"]
+    assert art["feature_schema_version"] == "pyr-features/2.1" and "historical" not in art["components"] and "occupational" in art["components"]
     m = LogisticModel.load(tmp_path / "reg03" / art["model_id"] / "model.json", policy=pol)
     res = run_match(bundle, "2026B", pol, model=m, run_timestamp=TS)
     assert res.summary["version_algoritmo"] == f"hybrid-pyr-v0.3+{art['model_id']}"

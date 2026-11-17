@@ -43,3 +43,12 @@ Política activa por defecto: `pyr_matching/config/policy_pyr_provisional.json` 
 | D22 | Reconstrucción de cupos históricos | `none` por defecto; `approved_column` solo con confirmación del significado de `Aprobados` | B2 | Coord. Proyectos |
 | D23 | Backend semántico por defecto | TF-IDF (sin dependencias). Embeddings locales MiniLM recomendados: top-1 0,767 vs 0,30 en benchmark sintético de paráfrasis (30 pares) | `benchmarks/semantic_benchmark.py` | TI / Protección de datos |
 | D24 | Clave de seudonimización histórica | secreto institucional fuera de git; rotarla invalida la continuidad de IDs | Ley 1581/2012 | Protección de datos |
+
+## Decisiones añadidas en v0.3.1–v0.3.2 (16-nov-2026) — todas PROVISIONALES
+| ID | Decisión | Valor provisional | Evidencia | Responsable sugerido |
+|---|---|---|---|---|
+| D25 | Reconciliación de nombres de programa en la regla de perfil | catálogo Unibagué + alias + un solo error de digitación; todo lo no exacto se reporta en `Normalizacion_Programas` | Tablero 2026B: `Ingeniería Sistemas`, `Contaduría`, `Administración de Emrpresas` | Coord. Académica |
+| D26 | Valores `PENDIENTE`, `N/A`, `#REF!` | se tratan como desconocidos; si son una restricción aprobada (municipio), la pareja se bloquea como no verificable | Tablero 2026B | Coordinación PyR |
+| D27 | Componente `occupational` (campo profesional del programa) | peso 15 en modo `fallback` (solo estudiantes sin texto profesional) | simulador: como término fijo empeoraba el orden; como respaldo mejora el top-1 sin estudiantes con texto (0,25 → 0,36) | Coordinación PyR |
+| D28 | Cupos por fila de `Proyectos` | 1 por fila; histórico con `capacity_mode = row_count` | `Aprobados` contiene programas, no cupos; proyectos repetidos por cupo | Coord. Proyectos |
+| D29 | Backend semántico por defecto (reemplaza D23) | `tfidf-conceptos` (sin dependencias); embeddings MiniLM si se pueden instalar | paráfrasis reservado: 0,33 → 0,90 (embeddings 0,97) | TI |

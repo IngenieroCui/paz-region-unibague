@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from . import __version__
+from .programs import CATALOG_VERSION
 from .audit import audit_result
 from .constraints import BLOCKER_TEXT, check_pair
 from .optimizer import Edge, min_cost_assignment
@@ -429,6 +430,9 @@ def run_match(
     if legacy or audit_counts["violaciones_generadas_por_motor"]:  # pragma: no cover - would be an engine bug
         raise AssertionError("Invariante violado: " + "; ".join(legacy + [f"{r['codigo']} {r['id_estudiante']} {r['id_plaza']}" for r in audit_rows if r["origen"] == "GENERADO_POR_MOTOR"]))
     result.tables["Auditoria_Restricciones"] = audit_rows
+    result.tables["Normalizacion_Programas"] = list(getattr(bundle, "program_normalization", []) or [])
+    summary["programas_normalizados_no_exactos"] = len(result.tables["Normalizacion_Programas"])
+    summary["catalogo_programas"] = CATALOG_VERSION
     summary["duracion_ms"] = round((time.perf_counter() - t0) * 1000, 1)
     return result
 

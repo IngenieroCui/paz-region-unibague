@@ -161,3 +161,26 @@ def test_cli_historical_build_and_engine_export(sample, tmp_path, monkeypatch, c
     assert res.summary["plazas_periodo"] == 45
     monkeypatch.delenv("PYR_PSEUDONYM_KEY")
     assert main(["historical-build", "--manifest", str(d / "manifest.json"), "--out-dir", str(tmp_path / "x")]) == 2
+
+
+def test_aprobados_with_program_names_is_diagnosed_and_row_count_gives_one_seat_per_row(tmp_path):
+    """Tablero 2026B (observed 2026-11-16): 'Aprobados' holds the approved student's PROGRAM, and each
+    Proyectos row is one seat even when project and program repeat."""
+    from openpyxl import load_workbook
+
+    m = make_historical_sample(tmp_path)
+    manifest = json.loads(m.read_text(encoding="utf-8"))
+    for f in tmp_path.glob("Tablero_Maestro_*.xlsx"):
+        wb = load_workbook(f)
+        for ws in wb.worksheets:
+            header = [c.value for c in ws[1]]
+            if "Aprobados" in header:
+                col = header.index("Aprobados") + 1
+                for row in range(2, ws.max_row + 1):
+                    if ws.cell(row=row, column=col).value is not None:
+                        ws.cell(row=row, column=col).value = "Ingeniería Civil"
+        wb.save(f)
+    ds = build_historical_dataset({**manifest, "capacity_mode": "approved_column"}, Pseudonymizer(KEY), base_dir=tmp_path)
+    assert any(i["codigo"] == "APROBADOS_NO_NUMERICO" and "row_count" in i["detalle"] for i in ds.issues)
+    rc = build_historical_dataset({**manifest, "capacity_mode": "row_count"}, Pseudonymizer(KEY), base_dir=tmp_path)
+    assert all(p["capacity"] == p["seat_rows"] >= 1 for p in rc.placements)

@@ -112,3 +112,21 @@ Lectura de solo lectura, **solo fila 1**, vía conector Google Sheets: `Estudian
 - `Ev. Plazas` es una evaluación por estudiante-plaza (asesor y estudiante, con `Puntaje Total` doble): señal de calidad POST-ubicación, no de idoneidad (D14).
 - **Incidente de minimización**: la lectura del encabezado de `Ev. Plazas` usó el rango `1:2` y devolvió una fila con datos personales de un estudiante. No se registró en ningún archivo, log, prueba ni salida; desde entonces solo se leyó la fila 1. Recomendación: compartir con el equipo exportaciones con solo encabezados, o vistas sin columnas identificatorias.
 - No se leyeron registros: el histórico canónico se construye localmente desde exportaciones institucionales con `pyr-match historical-build` (ver `matching_engine/docs/HISTORICAL_DATA.md`). **No se calcularon coberturas ni métricas sobre datos reales.**
+
+## 7. Adenda 16-nov-2026 (v0.3.2) — estructura de plazas y nombres de programa
+Lectura de solo lectura del Tablero Maestro 2026B, pestaña `Proyectos`, **solo columnas no personales**: `Tipo de plaza`, `Perfil`, `Perfil (aternativo)`, `Nombre de la Organización`, `Nombre del Proyecto`, `GRUPO SIGA`, `Aprobados`, `Asignación Directa`, `SIGA`; y `Estudiantes.Categoría`/`Programa`. No se leyeron nombres, códigos, cédulas ni contactos de estudiantes.
+
+**¿Una organización pide "3 de estos" en una fila, o son 3 plazas individuales?** Son plazas individuales (confianza ALTA):
+- Cada fila de `Proyectos` es **un cupo para un perfil**. Cuando una organización necesita varios estudiantes, el mismo proyecto aparece en varias filas, aunque sea la misma carrera. Ejemplos 2026B: Fiscalía General de la Nación, 3 filas idénticas de Derecho; Consultorio Jurídico de la Universidad, 8 filas de Derecho, cada una con un área distinta; IBAL, 2 filas por proyecto de Ingeniería Civil y de Derecho; SENA, 2 filas de Ingeniería de Sistemas para "software a la medida".
+- `Aprobados` **no es un número de cupos**: contiene el **programa del estudiante aprobado** en esa fila (una carrera por fila); `Asignación Directa` y `SIGA` repiten ese programa según el mecanismo. Por eso `capacity_mode = approved_column` no sirve con este formato; el constructor histórico ahora lo diagnostica (`APROBADOS_NO_NUMERICO`) y recomienda `row_count`.
+- `GRUPO SIGA` (p. ej. `11 COYAIMA`, 4 filas) agrupa filas de una misma organización/proyecto para la publicación en SIGA; el grupo no reemplaza a la fila como unidad de cupo.
+- El formulario de convocatoria 2026B pregunta "Número de Estudiantes Requeridos": la solicitud agregada se **expande** a N filas en el Tablero.
+- Consecuencia para el contrato del motor: `Cupos = 1` por fila de `Proyectos` y un `ID_Plaza` por fila (sigue sin existir una columna de ID estable; bloqueo B2 reducido a "falta el identificador").
+
+**Nombres de programa (impacto directo en la restricción de perfil):**
+- El Tablero usa nombres cortos o distintos a los oficiales: `Ingeniería Sistemas` (oficial: Ingeniería de Sistemas), `Contaduría` (oficial: Contaduría Pública).
+- Hay errores de digitación en perfiles: `Administración de Emrpresas`.
+- Aparecen programas fuera del catálogo actual: `Administración Financiera`, `Ciencia Política` (cohortes anteriores) y `Fisioterapia UAM` (convenio).
+- Hay perfiles alternos iguales al principal, y una fila con `Tipo de plaza` vacío.
+- Hay marcadores `PENDIENTE` / `PENDIENTE NOMBRE PROYECTO` en organización y proyecto (plazas de municipio de origen aún sin definir).
+- v0.3.2 reconcilia los nombres con el catálogo oficial de 17 programas más los heredados (`docs/PROGRAMAS_UNIBAGUE.md`), trata los marcadores como desconocidos y reporta cada reconciliación no exacta.

@@ -10,6 +10,11 @@
 
 El optimizador nunca decide elegibilidad: recibe solo aristas que pasaron la capa dura. Un invariante final (`violaciones_restricciones_duras = 0`) audita cupos y unicidad.
 
+## v0.3.2: restricción de perfil y campo profesional
+- La regla de perfil compara programas canónicos (`pyr_matching/programs.py`): conectores, tildes, alias y un solo error de digitación se reconcilian; celdas con varios programas cuentan cada uno; `PENDIENTE`/`N/A`/`#REF!` son desconocidos. Todo lo no exacto queda en la hoja `Normalizacion_Programas`. Ver [PROGRAMAS_UNIBAGUE.md](PROGRAMAS_UNIBAGUE.md).
+- La auditoría re-verifica las filas del motor con una segunda implementación de las reglas duras (`audit._second_opinion`).
+- Componente `occupational` en `hybrid-pyr-v0.3` (esquema `pyr-features/2.1`): máximo, sobre las ramas del perfil ocupacional oficial del programa del estudiante, de la similitud rama ↔ proyecto. `occupational_mode = fallback` lo limita a estudiantes sin texto profesional. Pesos v0.3.2: program 25, occupational 15, semantic 25, requirements 10, interests 5, lexical 5, location 10, modality 5, historical 0.
+
 ## Componentes (0–100; vacío = desconocido)
 | Componente | Peso prov. | Fuente | Cálculo |
 |---|---|---|---|

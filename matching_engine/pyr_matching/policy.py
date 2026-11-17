@@ -16,10 +16,12 @@ COMPONENTS_V02 = ("program", "skills", "semantic", "lexical", "location", "modal
 ALGORITHM_VERSION_V02 = "hybrid-pyr-v0.2"
 # v0.3: field-aware semantics (aspirations vs project, capabilities vs requirements, interests vs project)
 # plus an optional, EXPERIMENTAL historical-behaviour signal whose provisional weight is 0.
-COMPONENTS_V03 = ("program", "semantic", "requirements", "interests", "lexical", "location", "modality", "historical")
+# v0.3.2 adds `occupational`: fit between the plaza project and the BEST occupational branch of the
+# student's program (official Unibagué program profiles, see programs.py). Soft; never blocks.
+COMPONENTS_V03 = ("program", "occupational", "semantic", "requirements", "interests", "lexical", "location", "modality", "historical")
 ALGORITHM_VERSION_V03 = "hybrid-pyr-v0.3"
 COMPONENTS_BY_VERSION = {ALGORITHM_VERSION_V02: COMPONENTS_V02, ALGORITHM_VERSION_V03: COMPONENTS_V03}
-FEATURE_SCHEMA_BY_VERSION = {ALGORITHM_VERSION_V02: "pyr-features/1.0", ALGORITHM_VERSION_V03: "pyr-features/2.0"}
+FEATURE_SCHEMA_BY_VERSION = {ALGORITHM_VERSION_V02: "pyr-features/1.0", ALGORITHM_VERSION_V03: "pyr-features/2.1"}
 SEMANTIC_BACKENDS = ("tfidf", "tfidf-conceptos", "sentence-transformers", "none")
 DEFAULT_POLICY_PATH = Path(__file__).resolve().parent / "config" / "policy_pyr_provisional.json"
 POLICY_V03_PATH = Path(__file__).resolve().parent / "config" / "policy_pyr_v03_provisional.json"
@@ -126,6 +128,8 @@ class Policy:
             raise PolicyError("semantic.backend debe ser " + ", ".join(SEMANTIC_BACKENDS) + ".")
         if sem.get("fallback_backend", "tfidf") not in SEMANTIC_BACKENDS or sem.get("fallback_backend") == "sentence-transformers":
             raise PolicyError("semantic.fallback_backend debe ser tfidf, tfidf-conceptos o none.")
+        if r.get("occupational_mode", "fallback") not in ("fallback", "always"):
+            raise PolicyError("occupational_mode debe ser fallback o always.")
         cw = sem.get("concept_weight", 0.5)
         if isinstance(cw, bool) or not isinstance(cw, (int, float)) or not 0 <= cw <= 1:
             raise PolicyError("semantic.concept_weight debe estar en [0, 1].")

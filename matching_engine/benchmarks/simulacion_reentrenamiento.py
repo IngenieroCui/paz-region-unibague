@@ -78,9 +78,9 @@ PROGRAMS = {
     "Ingeniería de Sistemas": ["software", "datos", "comunicacion"],
     "Psicología": ["salud_mental", "victimas", "convivencia", "infancia_educacion"],
     "Contaduría Pública": ["finanzas", "emprendimiento", "agro_mercado", "gestion_publica"],
-    "Ingeniería Ambiental": ["agua", "residuos", "agro_mercado"],
+    "Biología Ambiental": ["agua", "residuos", "agro_mercado"],
     "Derecho": ["derechos", "victimas", "gestion_publica", "convivencia"],
-    "Comunicación Social": ["comunicacion", "victimas", "convivencia", "infancia_educacion"],
+    "Comunicación Social y Periodismo": ["comunicacion", "victimas", "convivencia", "infancia_educacion"],
 }
 MUNIS = ["Ibagué", "Chaparral", "Líbano", "Ortega", "Planadas", "Natagaima", "Melgar"]
 PERIODS = ["2025B", "2026A", "2026B", "2027A", "2027B"]

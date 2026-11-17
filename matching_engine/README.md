@@ -11,6 +11,17 @@ Motor independiente, explicable y versionado para la Universidad de Ibagué. Rec
 
 > **Manual de uso completo:** [docs/MANUAL_DE_USO.md](docs/MANUAL_DE_USO.md) (qué entra, qué sale, cómo entrenar más, requisitos, problemas frecuentes).
 
+## Novedades v0.3.2 (motor 0.3.2, política `pyr-v032-provisional-2026-11-16`)
+| Área | Detalle |
+|---|---|
+| Restricción de perfil reforzada | Catálogo oficial Unibagué (17 programas + heredados) con alias y corrección de un solo error de digitación; nada silencioso: hoja `Normalizacion_Programas` y advertencias `PROGRAMA_*`. Evita excluir estudiantes por `Ingeniería Sistemas` vs `Ingeniería de Sistemas` y nunca convierte una disciplina distinta en otra |
+| Datos pendientes | `PENDIENTE`, `N/A`, `#REF!` se tratan como desconocidos; si eran una restricción aprobada, la pareja se bloquea (falla segura) |
+| Verificador independiente | La auditoría vuelve a comprobar las reglas duras con una implementación escrita aparte, más rangos y duplicados en las recomendaciones |
+| Campo profesional | Componente `occupational`: ramas del perfil ocupacional oficial de cada carrera, mejor rama, solo para estudiantes sin texto ([docs/PROGRAMAS_UNIBAGUE.md](docs/PROGRAMAS_UNIBAGUE.md)) |
+| Léxico | `pyr-conceptos-es/1.1`: 51 áreas (12 nuevas de campos profesionales) |
+| Estructura de plazas | Evidencia 2026B: una fila de `Proyectos` = un cupo; `Aprobados` trae programas, no cupos (diagnóstico `APROBADOS_NO_NUMERICO`, usar `row_count`) |
+| Rendimiento | Escritura de Excel 7 veces más rápida (520 × 370: unos 7 s en total) |
+
 ## Novedades v0.3.1 (motor 0.3.1, política `pyr-v031-provisional-2026-11-16`)
 | Área | Detalle |
 |---|---|
@@ -87,6 +98,7 @@ Sin Excel: construir `pyr_matching.schema.InputBundle` y llamar `pyr_matching.pi
 | Documento | Contenido |
 |---|---|
 | [docs/MANUAL_DE_USO.md](docs/MANUAL_DE_USO.md) | **Manual de uso** (operación, entrenamiento, requisitos) |
+| [docs/PROGRAMAS_UNIBAGUE.md](docs/PROGRAMAS_UNIBAGUE.md) | Catálogo de programas, alias y ramas ocupacionales |
 | [docs/EXCEL_CONTRACT.md](docs/EXCEL_CONTRACT.md) | Hojas/columnas de entrada y salida, valores permitidos |
 | [docs/MATCHING_ENGINE_PYR.md](docs/MATCHING_ENGINE_PYR.md) | Algoritmo, fases, cambios vs `hybrid-v0.1`, benchmarks |
 | [docs/POLICY_DECISIONS.md](docs/POLICY_DECISIONS.md) | Precedencia de restricciones y registro de decisiones pendientes |

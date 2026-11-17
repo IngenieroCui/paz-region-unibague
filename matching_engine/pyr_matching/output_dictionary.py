@@ -49,5 +49,7 @@ OUTPUT_DICTIONARY = [
     _d("Auditoria_Restricciones", "origen", "HISTORICO_INSTITUCIONAL = conflicto ya presente en decisiones institucionales (el motor no lo modifica, solo lo reporta). GENERADO_POR_MOTOR = violación en filas producidas por el motor (debe ser 0; si no, la ejecución se aborta).", "HISTORICO_INSTITUCIONAL | GENERADO_POR_MOTOR"),
     _d("Auditoria_Restricciones", "codigo", "Regla verificada de forma independiente desde los insumos.", "texto"),
     _d("Resumen_Ejecucion", "conflictos_historicos_institucionales", "Número de conflictos en decisiones institucionales existentes (sobrecupo, fuera de perfil, doble asignación).", "entero"),
+    _d("Normalizacion_Programas", "metodo", "Cómo se reconcilió un nombre de programa con el catálogo Unibagué para la regla de perfil: alias (nombre corto u observado), aproximado (un solo error de digitación; revisar la fuente), no_reconocido (no está en el catálogo: solo coincide con el mismo nombre). Los nombres exactos no se listan.", "alias | aproximado | no_reconocido"),
+    _d("Resumen_Ejecucion", "catalogo_programas", "Versión del catálogo de programas usado para la regla de perfil y las ramas ocupacionales.", "texto"),
     _d("Resumen_Ejecucion", "violaciones_generadas_por_motor", "Violaciones de reglas duras o cupos en filas generadas por el motor, recalculadas de forma independiente. Siempre 0.", "0"),
 ]

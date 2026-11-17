@@ -136,3 +136,4 @@ class InputBundle:
     labels: list[Label] = field(default_factory=list)
     source_files: dict[str, str] = field(default_factory=dict)  # path name -> sha256
     load_warnings: list[str] = field(default_factory=list)
+    program_normalization: list[dict] = field(default_factory=list)  # non-exact program-name reconciliations (audit)

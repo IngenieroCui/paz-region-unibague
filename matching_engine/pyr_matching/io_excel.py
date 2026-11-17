@@ -15,6 +15,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from .output_dictionary import OUTPUT_DICTIONARY
+from .programs import is_placeholder, normalization_report
 from .policy import Policy, canon, canon_modality
 from .schema import DirectDecision, Enrollment, InputBundle, Label, Student, Vacancy
 
@@ -174,9 +175,20 @@ def _dedupe(records: list, entity: str, warnings: list[str]) -> list:
     return out
 
 
+def _known(v: Any, counter: dict, field_name: str) -> str | None:
+    """Cell text, or None when it is empty or a placeholder ("PENDIENTE", "#REF!", "N/A"...). Placeholders
+    are counted per field and reported, so a pending value is never compared as if it were real data."""
+    s = _cell_str(v)
+    if s is not None and is_placeholder(s):
+        counter[field_name] = counter.get(field_name, 0) + 1
+        return None
+    return s
+
+
 def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = None) -> InputBundle:
     mapping = mapping or load_mapping()
     bundle = InputBundle()
+    ph: dict[str, int] = {}
     bundle.load_warnings += guard_mapping(mapping)
     workbooks = []
     for p in paths:
@@ -191,8 +203,8 @@ def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = 
             bundle.students.append(Student(
                 student_id=_cell_str(r.get("student_id")) or f"<fila {r['_row']} sin ID>",
                 period=_cell_str(r.get("period")) or "",
-                academic_program=_cell_str(r.get("academic_program")),
-                origin_municipality=_cell_str(r.get("origin_municipality")),
+                academic_program=_known(r.get("academic_program"), ph, "Estudiantes.Programa"),
+                origin_municipality=_known(r.get("origin_municipality"), ph, "Estudiantes.Municipio_Origen"),
                 eligible=_cell_bool(r.get("eligible"), True),
                 expectations_text=_cell_str(r.get("expectations_text")),
                 learning_goals_text=_cell_str(r.get("learning_goals_text")),
@@ -211,16 +223,16 @@ def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = 
                 status=policy.alias("status", r.get("status")),
                 vacancy_type=policy.alias("vacancy_type", r.get("vacancy_type")),
                 project_id=_cell_str(r.get("project_id")),
-                project_name=_cell_str(r.get("project_name")),
-                project_description=_cell_str(r.get("project_description")),
+                project_name=_known(r.get("project_name"), ph, "Plazas.Nombre_Proyecto"),
+                project_description=_known(r.get("project_description"), ph, "Plazas.Descripcion_Proyecto"),
                 project_line=_cell_str(r.get("project_line")),
                 organization_id=_cell_str(r.get("organization_id")),
-                organization_name=_cell_str(r.get("organization_name")),
+                organization_name=_known(r.get("organization_name"), ph, "Plazas.Nombre_Organizacion"),
                 department=_cell_str(r.get("department")),
-                municipality=_cell_str(r.get("municipality")),
+                municipality=_known(r.get("municipality"), ph, "Plazas.Municipio"),
                 modality=canon_modality(r.get("modality")),
-                program_profile=_cell_str(r.get("program_profile")),
-                program_profile_alt=_cell_str(r.get("program_profile_alt")),
+                program_profile=_known(r.get("program_profile"), ph, "Plazas.Perfil_Programa"),
+                program_profile_alt=_known(r.get("program_profile_alt"), ph, "Plazas.Perfil_Programa_Alterno"),
                 activities_text=_cell_str(r.get("activities_text")),
                 requirements_text=_cell_str(r.get("requirements_text")),
                 org_needs_text=_cell_str(r.get("org_needs_text")),
@@ -237,7 +249,7 @@ def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = 
                 approval_status=policy.alias("approval_status", r.get("approval_status")),
                 confirmed_vacancy_id=_cell_str(r.get("confirmed_vacancy_id")),
                 placement_confirmed=_cell_bool(r.get("placement_confirmed"), False),
-                approved_municipality=_cell_str(r.get("approved_municipality")),
+                approved_municipality=_known(r.get("approved_municipality"), ph, "Decisiones_Directas.Municipio_Aprobado"),
                 approved_modalities=mods,
                 call_code=_cell_str(r.get("call_code")),
                 row=r["_row"],
@@ -274,6 +286,15 @@ def read_bundle(paths: list[str | Path], policy: Policy, mapping: dict | None = 
     for entity, src in (("estudiantes", st_src), ("plazas", vc_src), ("decisiones", dec_src), ("matriculas", en_src), ("etiquetas", lb_src)):
         if len(src) > 1:
             w.append(f"CONSOLIDACION_MULTIHOJA {entity}: {len(src)} hojas leídas ({'; '.join(src)}).")
+    for fld, n in sorted(ph.items()):
+        w.append(f"VALOR_PENDIENTE_COMO_DESCONOCIDO {fld}: {n} celda(s) con marcador (PENDIENTE, N/A, #REF!...) tratadas como vacías.")
+    bundle.program_normalization = normalization_report(
+        [s.academic_program for s in bundle.students] + [v.program_profile for v in bundle.vacancies] + [v.program_profile_alt for v in bundle.vacancies])
+    for r in bundle.program_normalization:
+        if r["metodo"] == "aproximado":
+            w.append(f"PROGRAMA_CORREGIDO_APROX: '{r['valor_original']}' -> '{r['programa_canonico']}' (un error de digitación; revisar en la fuente).")
+        elif r["metodo"] == "no_reconocido":
+            w.append(f"PROGRAMA_NO_RECONOCIDO: '{r['valor_original']}' no está en el catálogo Unibagué; solo coincide con el mismo nombre escrito igual.")
     return bundle
 
 
@@ -303,10 +324,14 @@ def safe_append(ws, values: list) -> None:
     literal text even after the user edits the cell. The value itself is not altered, so the
     workbook round-trips byte-for-byte to the JSON contract.
     """
-    ws.append([None if isinstance(v, str) and is_formula_like(v) else v for v in values])
-    row = ws.max_row
-    for col, v in enumerate(values, start=1):
-        if isinstance(v, str) and is_formula_like(v):
+    risky = [isinstance(v, str) and is_formula_like(v) for v in values]
+    ws.append([None if r else v for v, r in zip(values, risky)])
+    if not any(risky):
+        return
+    # `ws.max_row` scans the whole sheet (quadratic on large outputs); only needed for the rare risky row.
+    row = getattr(ws, "_current_row", None) or ws.max_row
+    for col, (v, r) in enumerate(zip(values, risky), start=1):
+        if r:
             cell = ws.cell(row=row, column=col)
             cell.value = v
             cell.data_type = "s"  # inert text, never a formula (<f>) element
@@ -337,6 +362,7 @@ TABLE_COLUMNS = {
                              "confianza_evidencia", "tipo_resultado", "componentes_sin_evidencia", "alertas", "explicacion"],
     "Sin_Asignacion": ["id_estudiante", "flujo", "estado", "codigo_motivo", "detalle", "siguiente_paso"],
     "Auditoria_Restricciones": ["origen", "codigo", "id_estudiante", "id_plaza", "detalle"],
+    "Normalizacion_Programas": ["valor_original", "programa_canonico", "metodo", "similitud", "celda_con_varios_programas"],
 }
 
 
@@ -345,7 +371,7 @@ def write_result(result, path: str | Path) -> Path:
     wb = Workbook()
     wb.remove(wb.active)
     order = ["Asignaciones_Directas", "Recomendaciones_SIGA", "Plazas_Disponibles", "Sin_Asignacion", "Idoneidad_Por_Plaza",
-             "Simulacion_No_Vinculante", "Pares_Evaluados", "Auditoria_Restricciones"]
+             "Simulacion_No_Vinculante", "Pares_Evaluados", "Auditoria_Restricciones", "Normalizacion_Programas"]
     for name in order:
         if name in result.tables:
             _write_table(wb.create_sheet(name), result.tables[name], TABLE_COLUMNS.get(name))

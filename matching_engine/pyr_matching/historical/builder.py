@@ -339,6 +339,7 @@ def _build_period(ds: HistoricalDataset, period: str, kinds: dict[str, list[dict
                 continue
             calls[key] = r
     placements: dict[str, dict] = {}
+    nonnum: dict[str, int] = {}
     seats: list[tuple[str, str, str | None, str]] = []  # (placement_id, sid, row_alloc_type, source)
     for r in kinds.get("tablero_plazas", []):
         org, proj = _text(r.get("organization_name")), _text(r.get("project_name"))
@@ -371,6 +372,10 @@ def _build_period(ds: HistoricalDataset, period: str, kinds: dict[str, list[dict
         a = _num(r.get("approved_seats"))
         if a is not None:
             p["approved_seats"] = max(p["approved_seats"] or 0, int(a))
+        elif _text(r.get("approved_seats")):
+            # Observed in Tablero 2026B (2026-11-16): 'Aprobados' holds the PROGRAM of the approved student of
+            # that row, not a number of seats. Each Proyectos row is one seat (same project/program repeats).
+            nonnum[period] = nonnum.get(period, 0) + 1
         for code in r.get("student_codes") or []:
             sid = pz.student(code)
             if sid:
@@ -431,6 +436,10 @@ def _build_period(ds: HistoricalDataset, period: str, kinds: dict[str, list[dict
             p["capacity"], p["capacity_source"] = p["observed_allocations"], "COTA_INFERIOR_ASIGNACIONES_OBSERVADAS"
         if cap_mode != "none" and p["capacity"] is not None and p["observed_allocations"] > p["capacity"]:
             issue("SOBRECUPO_HISTORICO", period, "plazas", p["placement_id"])
+    if nonnum.get(period):
+        issue("APROBADOS_NO_NUMERICO", period, "tablero_plazas",
+              "la columna 'Aprobados' trae texto (programa del aprobado), no cupos; cada fila es un cupo: usar capacity_mode=row_count",
+              nonnum[period])
     if cap_mode == "approved_column":
         miss = sum(1 for p in placements.values() if p["capacity"] is None)
         if miss:

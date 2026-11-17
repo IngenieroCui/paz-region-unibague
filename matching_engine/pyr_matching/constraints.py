@@ -8,6 +8,7 @@ decision carries an approved municipality. Unknown values that a hard rule needs
 from __future__ import annotations
 
 from .policy import Policy, canon_modality, canon_place
+from .programs import canonical_set, is_placeholder, resolve
 from .schema import DirectDecision, Student, Vacancy
 
 BLOCKER_TEXT = {
@@ -27,17 +28,23 @@ BLOCKER_TEXT = {
 
 
 def program_relation(student: Student, vacancy: Vacancy) -> str:
-    """'exact' | 'alt' | 'none' | 'unknown_vacancy' | 'unknown_student'."""
-    profile = canon_place(vacancy.program_profile)
-    alt = canon_place(vacancy.program_profile_alt)
+    """'exact' | 'alt' | 'none' | 'unknown_vacancy' | 'unknown_student'.
+
+    v0.3.2: names are compared through the Unibagué program catalogue (`programs.resolve`): connector
+    words, accents, aliases ("Contaduría" = "Contaduría Pública", "Ingeniería Sistemas" = "Ingeniería de
+    Sistemas") and single typing slips are reconciled, a profile cell may list several programs, and
+    placeholders ("PENDIENTE") count as missing. Every non-exact reconciliation is reported by the reader
+    (`PROGRAMA_*` warnings and the `Normalizacion_Programas` output sheet); nothing is silent."""
+    profile = canonical_set(vacancy.program_profile)
+    alt = canonical_set(vacancy.program_profile_alt) - profile
     if not profile and not alt:
         return "unknown_vacancy"
-    prog = canon_place(student.academic_program)
+    prog, _, _ = resolve(student.academic_program)
     if not prog:
         return "unknown_student"
-    if prog == profile:
+    if prog in profile:
         return "exact"
-    if prog == alt:
+    if prog in alt:
         return "alt"
     return "none"
 
@@ -82,7 +89,10 @@ def check_pair(
             b.append("PERFIL_PLAZA_NO_VERIFICABLE")
     if decision is not None:
         if decision.approved_municipality:
-            if not vacancy.municipality:
+            if is_placeholder(decision.approved_municipality):
+                # e.g. "PENDIENTE": a restriction exists but its value is unknown -> fail safe, never skip it
+                b.append("MUNICIPIO_NO_VERIFICABLE")
+            elif not vacancy.municipality or is_placeholder(vacancy.municipality):
                 b.append("MUNICIPIO_NO_VERIFICABLE")
             elif canon_place(vacancy.municipality) != canon_place(decision.approved_municipality):
                 b.append("MUNICIPIO_RESTRINGIDO")

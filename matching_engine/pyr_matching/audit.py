@@ -23,6 +23,44 @@ HIST = "HISTORICO_INSTITUCIONAL"
 MOTOR = "GENERADO_POR_MOTOR"
 
 
+def _second_opinion(s, v, policy: Policy, period: str, flow: str, d=None) -> list[str]:
+    """Hard rules re-implemented WITHOUT `constraints.check_pair` (N-version check, v0.3.2).
+
+    Written separately and kept deliberately plain, so a defect in the engine's eligibility layer is not
+    silently repeated by the audit. Shares only the program catalogue (`programs`) and value canonicalisers."""
+    from .policy import canon_modality, canon_place
+    from .programs import canonical_set, is_placeholder, resolve
+
+    out = []
+    if v.period != period:
+        out.append("PERIODO")
+    if not s.eligible:
+        out.append("ESTUDIANTE_NO_HABILITADO")
+    if v.status not in set(policy["allowed_vacancy_statuses"]):
+        out.append("ESTADO_PLAZA")
+    types = policy["siga_vacancy_types"] if flow == "SIGA" else policy["direct_type_vacancy_types"].get(flow, [])
+    if v.vacancy_type not in set(types):
+        out.append("TIPO_PLAZA")
+    if policy["program_profile_rule"] == "hard":
+        allowed = canonical_set(v.program_profile) | canonical_set(v.program_profile_alt)
+        prog = resolve(s.academic_program)[0]
+        if not allowed:
+            if policy.get("missing_vacancy_profile", "block") == "block":
+                out.append("PERFIL_DESCONOCIDO")
+        elif prog is None or prog not in allowed:
+            out.append("PROGRAMA")
+    if d is not None:
+        am = d.approved_municipality
+        if am:
+            vm = v.municipality
+            if is_placeholder(am) or not vm or is_placeholder(vm) or canon_place(vm) != canon_place(am):
+                out.append("MUNICIPIO")
+        if d.approved_modalities:
+            if canon_modality(v.modality) not in set(d.approved_modalities):
+                out.append("MODALIDAD")
+    return out
+
+
 def _row(origen, codigo, sid=None, vid=None, detalle=""):
     return {"origen": origen, "codigo": codigo, "id_estudiante": sid, "id_plaza": vid, "detalle": detalle}
 
@@ -79,6 +117,8 @@ def audit_result(bundle: InputBundle, period: str, policy: Policy, tables: dict[
             rows.append(_row(MOTOR, "CONVOCATORIA_SELECCIONADA_POR_MOTOR", sid, vid))
         for b in check_pair(s, v, policy, period, d.direct_type or "", d):
             rows.append(_row(MOTOR, f"PROPUESTA_{b}", sid, vid))
+        for b in _second_opinion(s, v, policy, period, d.direct_type or "", d):
+            rows.append(_row(MOTOR, f"VERIFICADOR_INDEPENDIENTE_PROPUESTA_{b}", sid, vid))
     for vid, n in sorted(prop_load.items()):
         v = vmap.get(vid)
         if v is not None and n > max(0, v.capacity - inst_load[vid]):
@@ -105,6 +145,19 @@ def audit_result(bundle: InputBundle, period: str, policy: Policy, tables: dict[
             rows.append(_row(MOTOR, "RECOMENDACION_A_ESTUDIANTE_NO_ELECTIVO", sid, vid))
         for b in check_pair(s, v, policy, period, "SIGA", None, free_after_engine(vid)):
             rows.append(_row(MOTOR, f"RECOMENDACION_{b}", sid, vid))
+        for b in _second_opinion(s, v, policy, period, "SIGA"):
+            rows.append(_row(MOTOR, f"VERIFICADOR_INDEPENDIENTE_RECOMENDACION_{b}", sid, vid))
+        if free_after_engine(vid) <= 0:
+            rows.append(_row(MOTOR, "VERIFICADOR_INDEPENDIENTE_RECOMENDACION_SIN_CUPO", sid, vid))
+    by_student: dict[str, list[dict]] = {}
+    for r in recs:
+        by_student.setdefault(r["id_estudiante"], []).append(r)
+    for sid, rs in by_student.items():
+        ranks = sorted(r["rango"] for r in rs)
+        if ranks != list(range(1, len(rs) + 1)) or len(rs) > policy["top_k"]:
+            rows.append(_row(MOTOR, "RANGOS_RECOMENDACION_INCONSISTENTES", sid, None, f"rangos={ranks}"))
+        if len({r["id_plaza"] for r in rs}) != len(rs):
+            rows.append(_row(MOTOR, "PLAZA_RECOMENDADA_DOS_VECES", sid))
     sim_load = Counter(r["id_plaza"] for r in sim)
     for r in sim:
         sid, vid = r["id_estudiante"], r["id_plaza"]
@@ -114,6 +167,8 @@ def audit_result(bundle: InputBundle, period: str, policy: Policy, tables: dict[
             continue
         for b in check_pair(s, v, policy, period, "SIGA"):
             rows.append(_row(MOTOR, f"SIMULACION_{b}", sid, vid))
+        for b in _second_opinion(s, v, policy, period, "SIGA"):
+            rows.append(_row(MOTOR, f"VERIFICADOR_INDEPENDIENTE_SIMULACION_{b}", sid, vid))
     for vid, n in sorted(sim_load.items()):
         if vid in vmap and n > max(0, free_after_engine(vid)):
             rows.append(_row(MOTOR, "SOBRECUPO_GENERADO_SIMULACION", None, vid))
@@ -126,6 +181,6 @@ def audit_result(bundle: InputBundle, period: str, policy: Policy, tables: dict[
     counts = {
         "conflictos_historicos_institucionales": sum(1 for r in rows if r["origen"] == HIST),
         "violaciones_generadas_por_motor": sum(1 for r in rows if r["origen"] == MOTOR),
-        "auditoria_independiente": "SI (reglas recalculadas desde los insumos)",
+        "auditoria_independiente": "SI (reglas recalculadas desde los insumos + verificador escrito por separado)",
     }
     return rows, counts
