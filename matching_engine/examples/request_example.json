@@ -1,0 +1,190 @@
+{
+ "schema_version": "pyr-match-request/1.0",
+ "period": "2027A",
+ "options": {
+  "semantic": "tfidf",
+  "simulate": false,
+  "pairs": "top"
+ },
+ "students": [
+  {
+   "student_id": "E01",
+   "academic_program": "Ingeniería de Sistemas",
+   "origin_municipality": "Ibagué",
+   "expectations_text": "Quiero aplicar desarrollo de software y sistemas de información para la gestión comunitaria.",
+   "learning_goals_text": "Aprender a construir sistemas de información útiles para organizaciones."
+  },
+  {
+   "student_id": "E02",
+   "academic_program": "Psicología",
+   "origin_municipality": "Chaparral",
+   "expectations_text": "Acompañar procesos psicosociales con jóvenes y familias del territorio.",
+   "learning_goals_text": "Fortalecer habilidades de intervención psicosocial comunitaria."
+  },
+  {
+   "student_id": "E03",
+   "academic_program": "Contaduría Pública",
+   "origin_municipality": "Ibagué",
+   "expectations_text": "Apoyar la contabilidad y finanzas de asociaciones campesinas.",
+   "learning_goals_text": "Aprender gestión financiera de organizaciones rurales."
+  },
+  {
+   "student_id": "E04",
+   "academic_program": "Ingeniería de Sistemas",
+   "origin_municipality": "Líbano",
+   "expectations_text": "Desarrollar herramientas digitales y software para el municipio de Líbano.",
+   "learning_goals_text": "Gestión de datos municipales."
+  },
+  {
+   "student_id": "E05",
+   "academic_program": "Psicología",
+   "origin_municipality": "Ibagué",
+   "expectations_text": "Acompañamiento psicosocial y salud mental comunitaria.",
+   "learning_goals_text": null
+  },
+  {
+   "student_id": "E06",
+   "academic_program": "Contaduría Pública",
+   "origin_municipality": "Ortega",
+   "expectations_text": "Finanzas solidarias.",
+   "learning_goals_text": null
+  }
+ ],
+ "vacancies": [
+  {
+   "vacancy_id": "V01",
+   "project_id": "PRY-V01",
+   "project_name": "Proyecto V01",
+   "project_description": "Desarrollo de software y sistemas de información para la gestión comunitaria de juntas de acción comunal.",
+   "project_line": "Desarrollo comunitario",
+   "organization_id": "ORG-V01",
+   "organization_name": "Organización sintética V01",
+   "department": "Tolima",
+   "municipality": "Ibagué",
+   "modality": "Presencial",
+   "capacity": 1,
+   "status": "Aprobada",
+   "vacancy_type": "Normal",
+   "program_profile": "Ingeniería de Sistemas",
+   "program_profile_alt": null
+  },
+  {
+   "vacancy_id": "V02",
+   "project_id": "PRY-V02",
+   "project_name": "Proyecto V02",
+   "project_description": "Acompañamiento psicosocial a jóvenes y familias en el territorio.",
+   "project_line": "Desarrollo comunitario",
+   "organization_id": "ORG-V02",
+   "organization_name": "Organización sintética V02",
+   "department": "Tolima",
+   "municipality": "Chaparral",
+   "modality": "Presencial",
+   "capacity": 2,
+   "status": "Aprobada",
+   "vacancy_type": "Normal",
+   "program_profile": "Psicología",
+   "program_profile_alt": null
+  },
+  {
+   "vacancy_id": "V03",
+   "project_id": "PRY-V03",
+   "project_name": "Proyecto V03",
+   "project_description": "Contabilidad y finanzas de una asociación campesina.",
+   "project_line": "Desarrollo comunitario",
+   "organization_id": "ORG-V03",
+   "organization_name": "Organización sintética V03",
+   "department": "Tolima",
+   "municipality": "Ibagué",
+   "modality": "Presencial",
+   "capacity": 1,
+   "status": "Aprobada",
+   "vacancy_type": "Normal",
+   "program_profile": "Contaduría Pública",
+   "program_profile_alt": "Ingeniería de Sistemas"
+  },
+  {
+   "vacancy_id": "V04",
+   "project_id": "PRY-V04",
+   "project_name": "Proyecto V04",
+   "project_description": "Herramientas digitales y software para la gestión de datos del municipio.",
+   "project_line": "Desarrollo comunitario",
+   "organization_id": "ORG-V04",
+   "organization_name": "Organización sintética V04",
+   "department": "Tolima",
+   "municipality": "Líbano",
+   "modality": "Presencial",
+   "capacity": 1,
+   "status": "Aprobada",
+   "vacancy_type": "Municipio de origen",
+   "program_profile": "Ingeniería de Sistemas",
+   "program_profile_alt": "Psicología"
+  },
+  {
+   "vacancy_id": "V05",
+   "project_id": "PRY-V05",
+   "project_name": "Proyecto V05",
+   "project_description": "Acompañamiento psicosocial y promoción de salud mental comunitaria.",
+   "project_line": "Desarrollo comunitario",
+   "organization_id": "ORG-V05",
+   "organization_name": "Organización sintética V05",
+   "department": "Tolima",
+   "municipality": "Ibagué",
+   "modality": "Semipresencial - Asiste en algunas jornadas a la organización",
+   "capacity": 1,
+   "status": "Aprobada",
+   "vacancy_type": "Caso especial",
+   "program_profile": "Psicología",
+   "program_profile_alt": null
+  },
+  {
+   "vacancy_id": "V06",
+   "project_id": "PRY-V06",
+   "project_name": "Proyecto V06",
+   "project_description": "Finanzas solidarias para cooperativas.",
+   "project_line": "Desarrollo comunitario",
+   "organization_id": "ORG-V06",
+   "organization_name": "Organización sintética V06",
+   "department": "Tolima",
+   "municipality": "Ortega",
+   "modality": "Presencial",
+   "capacity": 1,
+   "status": "Aprobada",
+   "vacancy_type": "Convocatoria",
+   "program_profile": "Contaduría Pública",
+   "program_profile_alt": null
+  }
+ ],
+ "decisions": [
+  {
+   "student_id": "E04",
+   "direct_type": "Municipio de origen",
+   "approval_status": "Aprobado",
+   "confirmed_vacancy_id": null,
+   "placement_confirmed": false,
+   "approved_municipality": "Líbano",
+   "approved_modalities": []
+  },
+  {
+   "student_id": "E05",
+   "direct_type": "Caso especial",
+   "approval_status": "Aprobado",
+   "confirmed_vacancy_id": null,
+   "placement_confirmed": false,
+   "approved_municipality": "Ibagué",
+   "approved_modalities": [
+    "Semipresencial"
+   ]
+  },
+  {
+   "student_id": "E06",
+   "direct_type": "Convocatoria",
+   "approval_status": "Aprobado",
+   "confirmed_vacancy_id": "V06",
+   "placement_confirmed": true,
+   "approved_municipality": null,
+   "approved_modalities": []
+  }
+ ],
+ "enrollments": [],
+ "policy": "v0.3"
+}

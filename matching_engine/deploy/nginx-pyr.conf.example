@@ -1,0 +1,17 @@
+# Proxy inverso HTTPS delante del servicio (el servicio escucha solo en 127.0.0.1:8080).
+server {
+    listen 443 ssl;
+    server_name pyr-motor.unibague.edu.co;          # ajustar
+    ssl_certificate     /etc/ssl/certs/pyr.crt;     # ajustar (p. ej. Let's Encrypt)
+    ssl_certificate_key /etc/ssl/private/pyr.key;
+
+    client_max_body_size 25m;                       # igual a PYR_API_MAX_MB
+    proxy_read_timeout 300s;                        # una corrida grande con --simulate puede tardar ~1 min
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+}

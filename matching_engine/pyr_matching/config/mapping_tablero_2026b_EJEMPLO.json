@@ -1,0 +1,80 @@
+{
+  "mapping_id": "tablero-maestro-2026b-EJEMPLO-NO-VERIFICADO",
+  "status": "EJEMPLO_NO_VERIFICADO: encabezados observados el 12-nov-2026 en Tablero Maestro 2026B (solo fila 1). Las columnas marcadas como pendientes NO existen en la fuente y deben ser agregadas por la Universidad (ver docs/data-source-audit.md, bloqueos B1-B3). No usar en producción sin validación institucional.",
+  "pendientes_institucionales": [
+    "Plazas: ID_Plaza estable y Cupos (no observados en la pestaña Proyectos).",
+    "Plazas y Estudiantes: columna Periodo (el periodo está implícito en el nombre del libro).",
+    "Decisiones_Directas: hoja consolidada con Tipo_Directa, Estado_Aprobacion (APROBADO/PENDIENTE/RECHAZADO), Municipio_Aprobado y plaza confirmada, derivada de Caso especial / Morigen / Convoc sin justificaciones.",
+    "Expectativas/Aprendizajes viven en la preinscripción: unir por Código estudiantil en una hoja Estudiantes consolidada."
+  ],
+  "header_row": 1,
+  "entities": {
+    "students": {
+      "sheet": ["Estudiantes"],
+      "required": ["student_id", "period", "academic_program"],
+      "columns": {
+        "student_id": ["Código", "Código estudiantil"],
+        "period": ["Periodo"],
+        "academic_program": ["Programa"],
+        "origin_municipality": ["Municipio origen"],
+        "eligible": ["Habilitado"],
+        "expectations_text": ["¿Que expectativas tiene frente a su semestre Paz y Región?"],
+        "learning_goals_text": ["¿Qué aprendizajes espera lograr con su experiencia en el Semestre Paz y Región?"],
+        "skills_text": ["Habilidades"],
+        "interests_text": ["Intereses"],
+        "desired_work_text": ["Trabajo_Deseado"],
+        "modality_preference": ["Modalidad_Preferida"]
+      }
+    },
+    "vacancies": {
+      "sheet": ["Proyectos"],
+      "required": ["vacancy_id", "period", "capacity", "status", "vacancy_type"],
+      "columns": {
+        "vacancy_id": ["ID_Plaza"],
+        "period": ["Periodo"],
+        "capacity": ["Cupos"],
+        "status": ["Estado"],
+        "vacancy_type": ["Tipo de plaza"],
+        "project_name": ["Nombre del Proyecto"],
+        "project_description": ["Descripción del proyecto"],
+        "project_line": ["Línea de proyecto"],
+        "organization_name": ["Nombre de la Organización"],
+        "department": ["Departamento"],
+        "municipality": ["Municipio"],
+        "modality": ["Modalidad del Proyecto"],
+        "program_profile": ["Perfil"],
+        "program_profile_alt": ["Perfil (aternativo)", "Perfil (alternativo)"],
+        "requirements_text": ["7. Requisitos (académicos, habilidades, conocimientos Etc.)"],
+        "activities_text": ["5.  Descripción general de las actividades a realizar por el estudiante, en el marco del Semestre de Paz y Región."]
+      }
+    },
+    "decisions": {
+      "sheet": ["Decisiones_Directas"],
+      "optional_sheet": true,
+      "required": ["student_id", "period", "direct_type", "approval_status"],
+      "columns": {
+        "student_id": ["Código", "Código estudiantil"],
+        "period": ["Periodo"],
+        "direct_type": ["Tipo_Directa", "TIPO DE CASO"],
+        "approval_status": ["Estado_Aprobacion"],
+        "confirmed_vacancy_id": ["ID_Plaza_Confirmada"],
+        "placement_confirmed": ["Ubicacion_Confirmada"],
+        "approved_municipality": ["Municipio_Aprobado"],
+        "approved_modalities": ["Modalidades_Aprobadas"],
+        "call_code": ["Código de convocatoria"]
+      }
+    },
+    "enrollments": {
+      "sheet": ["Matriculas_SIGA"],
+      "optional_sheet": true,
+      "required": ["student_id", "vacancy_id", "period"],
+      "columns": {"student_id": ["Código"], "vacancy_id": ["ID_Plaza"], "period": ["Periodo"], "status": ["Estado"]}
+    },
+    "labels": {
+      "sheet": ["Etiquetas"],
+      "optional_sheet": true,
+      "required": ["student_id", "vacancy_id", "period", "value", "source"],
+      "columns": {"student_id": ["ID_Estudiante"], "vacancy_id": ["ID_Plaza"], "period": ["Periodo"], "value": ["Etiqueta"], "source": ["Fuente_Etiqueta"]}
+    }
+  }
+}
