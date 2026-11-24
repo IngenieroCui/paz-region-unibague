@@ -6,7 +6,7 @@ cases, selects call winners, or enrolls students: institutional decisions remain
 Public API (stable, versioned by OUTPUT_SCHEMA_VERSION):
     from pyr_matching import match_files, run_match, Policy, read_bundle, write_result
 """
-__version__ = "0.3.2"
+__version__ = "1.0.0"
 
 from .policy import Policy  # noqa: E402
 from .schema import OUTPUT_SCHEMA_VERSION  # noqa: E402

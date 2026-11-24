@@ -9,7 +9,17 @@ Motor independiente, explicable y versionado para la Universidad de Ibagué. Rec
 
 > No aprueba casos especiales, no selecciona ganadores de convocatoria y no matricula estudiantes. **No está entrenado** con resultados de PyR: la línea base es determinista; el re-ranqueador supervisado solo se habilita con etiquetas institucionales validadas.
 
+> **Versión 1.0.0 (entrega).** Empiece por la [guía de entrega](docs/GUIA_ENTREGA_v1.0.0.md): cómo funciona, cómo entrenarlo más, [requisitos mínimos y recomendados](docs/REQUISITOS.md) y [despliegue en servidor con API HTTP](docs/DESPLIEGUE_Y_API.md) para subir el Excel y recibir el resultado. Cambios: [CHANGELOG.md](CHANGELOG.md).
+
 > **Manual de uso completo:** [docs/MANUAL_DE_USO.md](docs/MANUAL_DE_USO.md) (qué entra, qué sale, cómo entrenar más, requisitos, problemas frecuentes).
+
+## Novedades v1.0.0
+| Área | Detalle |
+|---|---|
+| API HTTP | `pyr-match serve`: `POST /v1/match/excel?period=2027A` recibe el Excel y devuelve `resultados.xlsx` (o JSON); validación, contrato JSON, token Bearer, límite de tamaño, sin dependencias nuevas |
+| Despliegue | `Dockerfile`, unidad systemd, proxy nginx HTTPS y cliente de ejemplo en `deploy/` |
+| Documentación | Guía de entrega, requisitos mínimos/recomendados, despliegue y API |
+| Algoritmo | Sin cambios respecto a 0.3.2 (resultados idénticos) |
 
 ## Novedades v0.3.2 (motor 0.3.2, política `pyr-v032-provisional-2026-11-16`)
 | Área | Detalle |
@@ -92,12 +102,16 @@ res.summary                      # dict con versiones, conteos, coberturas
 res.tables["Recomendaciones_SIGA"]  # list[dict]
 payload = res.to_json_dict()      # contrato JSON versionado: schema_version = "pyr-match-result/1.0"
 ```
+Por HTTP (otra aplicación sube el Excel): `pyr-match serve` y `POST /v1/match/excel?period=2027A` — ver [docs/DESPLIEGUE_Y_API.md](docs/DESPLIEGUE_Y_API.md).
 Sin Excel: construir `pyr_matching.schema.InputBundle` y llamar `pyr_matching.pipeline.run_match(bundle, period, Policy.load())`. Detalles: [docs/INTEGRATION.md](docs/INTEGRATION.md).
 
 ## Documentación
 | Documento | Contenido |
 |---|---|
+| [docs/GUIA_ENTREGA_v1.0.0.md](docs/GUIA_ENTREGA_v1.0.0.md) | **Guía de entrega v1.0.0** (punto de partida) |
 | [docs/MANUAL_DE_USO.md](docs/MANUAL_DE_USO.md) | **Manual de uso** (operación, entrenamiento, requisitos) |
+| [docs/REQUISITOS.md](docs/REQUISITOS.md) | Requisitos mínimos y recomendados (uso, reentrenamiento, servidor) |
+| [docs/DESPLIEGUE_Y_API.md](docs/DESPLIEGUE_Y_API.md) | Servidor HTTP, Docker/systemd, HTTPS, conexión desde otras aplicaciones |
 | [docs/PROGRAMAS_UNIBAGUE.md](docs/PROGRAMAS_UNIBAGUE.md) | Catálogo de programas, alias y ramas ocupacionales |
 | [docs/EXCEL_CONTRACT.md](docs/EXCEL_CONTRACT.md) | Hojas/columnas de entrada y salida, valores permitidos |
 | [docs/MATCHING_ENGINE_PYR.md](docs/MATCHING_ENGINE_PYR.md) | Algoritmo, fases, cambios vs `hybrid-v0.1`, benchmarks |

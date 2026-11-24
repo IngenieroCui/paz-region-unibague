@@ -4,7 +4,7 @@
 1. **Lote Excel (recomendado para empezar)**: la plataforma exporta el contrato de entrada, ejecuta `pyr-match match`, importa `resultados.xlsx` o `--json-out`.
 2. **Biblioteca Python**: `from pyr_matching import match_files` o `pipeline.run_match(InputBundle, period, Policy)` con registros construidos desde la base institucional (sin Excel).
 3. **Contrato JSON versionado (v0.3)**: `pyr_matching.api.match_request(dict) -> dict` o `pyr-match match-json --request req.json --out res.json`. Solicitud `pyr-match-request/1.0`, respuesta `pyr-match-result/1.0`. Ejemplo sintético: [`examples/request_example.json`](../examples/request_example.json).
-4. **Servicio**: si la plataforma no es Python, envolver `match_request` en un servicio interno (p. ej. FastAPI) desplegado por TI de la Universidad. No se incluye servidor: no hay autenticación ni despliegue en este entregable.
+4. **Servicio HTTP (v1.0.0)**: `pyr-match serve` expone `POST /v1/match/excel` (sube el Excel, devuelve el Excel transformado), `POST /v1/validate/excel` y `POST /v1/match/json`, con token Bearer. Despliegue con Docker o systemd detrás de HTTPS: [DESPLIEGUE_Y_API.md](DESPLIEGUE_Y_API.md).
 
 ## Contrato JSON de solicitud (`pyr-match-request/1.0`)
 ```json

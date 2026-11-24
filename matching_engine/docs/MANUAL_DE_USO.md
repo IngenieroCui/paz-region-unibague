@@ -1,6 +1,6 @@
 # Manual de uso del motor de emparejamiento Paz y Región
 
-Motor `pyr-matching` versión 0.3.2, algoritmo `hybrid-pyr-v0.3`, política provisional `pyr-v032-provisional-2026-11-16`. Universidad de Ibagué, programa Paz y Región. Noviembre de 2026.
+Motor `pyr-matching` versión 1.0.0 (algoritmo sin cambios desde 0.3.2), algoritmo `hybrid-pyr-v0.3`, política provisional `pyr-v032-provisional-2026-11-16`. Universidad de Ibagué, programa Paz y Región. Noviembre de 2026.
 
 ## 1. Para qué sirve
 
@@ -40,7 +40,7 @@ En Linux o macOS se usa `.venv/bin/python` en lugar de `.venv/Scripts/python`. P
 .venv/Scripts/python -m pytest -q
 ```
 
-El resultado esperado es `337 passed, 2 skipped` (las dos omitidas requieren el modelo de embeddings).
+El resultado esperado (v1.0.0) es `349 passed, 2 skipped` (las dos omitidas requieren el modelo de embeddings).
 
 Opcional, embeddings locales:
 
@@ -319,6 +319,8 @@ payload = res.to_json_dict()   # schema_version = "pyr-match-result/1.0"
 ```
 
 También existe un contrato JSON de entrada (`pyr-match-request/1.0`) con `pyr-match match-json` o `pyr_matching.api.match_request`. Los campos desconocidos o sensibles se rechazan. Detalles en `docs/INTEGRATION.md` y un ejemplo en `examples/request_example.json`.
+
+Desde la v1.0.0 también hay una API HTTP (`pyr-match serve`) para que otra aplicación suba el Excel y reciba el libro de resultados: ver `docs/DESPLIEGUE_Y_API.md`. Requisitos de equipo y servidor: `docs/REQUISITOS.md`.
 
 ## 10. Pruebas y resultados (versiones 0.3.1 y 0.3.2)
 

@@ -1,0 +1,24 @@
+# systemd: /etc/systemd/system/pyr-matching.service
+# Instalación previa (como root):
+#   useradd --system --home /opt/pyr pyr
+#   git clone <repo> /opt/pyr/src && python3 -m venv /opt/pyr/venv
+#   /opt/pyr/venv/bin/pip install /opt/pyr/src/matching_engine
+#   install -m 600 -o pyr deploy/env.example /etc/pyr-matching.env   (y completar)
+# Luego: systemctl daemon-reload && systemctl enable --now pyr-matching
+[Unit]
+Description=Motor de emparejamiento Paz y Región (API HTTP)
+After=network.target
+
+[Service]
+User=pyr
+EnvironmentFile=/etc/pyr-matching.env
+ExecStart=/opt/pyr/venv/bin/pyr-match serve --host 127.0.0.1 --port 8080
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/pyr/registro
+
+[Install]
+WantedBy=multi-user.target

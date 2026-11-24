@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shlex
 import sys
 from pathlib import Path
@@ -140,8 +141,20 @@ def main(argv=None) -> int:
     mj.add_argument("--out", required=True)
     mj.add_argument("--policy", default=None, help="Ruta de política (si no, la indicada en la solicitud).")
 
+    sv = sub.add_parser("serve", help="Servidor HTTP (API REST) para recibir Excel/JSON y devolver resultados. Sin dependencias extra.")
+    sv.add_argument("--host", default=os.environ.get("PYR_HOST", "127.0.0.1"), help="Interfaz (0.0.0.0 para exponer en un servidor).")
+    sv.add_argument("--port", type=int, default=int(os.environ.get("PYR_PORT", "8080")))
+    sv.add_argument("--policy", default=None, help="Política por defecto (o variable PYR_POLICY).")
+    sv.add_argument("--mapping", default=None, help="Mapeo de encabezados (o PYR_MAPPING).")
+    sv.add_argument("--registry", default=None, help="Registro de modelos; usa el modelo ACTIVO compatible (o PYR_REGISTRY).")
+    sv.add_argument("--max-mb", type=float, default=None, help="Tamaño máximo de carga en MB (o PYR_API_MAX_MB, por defecto 25).")
+
     a = ap.parse_args(argv)
     try:
+        if a.cmd == "serve":
+            from .server import config_from_env, serve
+
+            return serve(a.host, a.port, config_from_env(policy=a.policy, mapping=a.mapping, registry=a.registry, max_mb=a.max_mb))
         if a.cmd == "evaluate-historical":
             from .evaluation import evaluate_historical, write_evaluation
             from .historical import load_dataset

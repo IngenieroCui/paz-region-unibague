@@ -16,3 +16,4 @@ hf/
 *.csv
 !tests/fixtures/*.xlsx
 resultados*.json
+deploy/.env
